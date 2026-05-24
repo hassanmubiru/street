@@ -1,0 +1,49 @@
+name: Publish
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Permissions: `id-token: write` is required for OIDC token exchange.
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      # Primary publish path: use NPM_TOKEN secret if provided (legacy token approach).
+      - name: Publish (using NPM_TOKEN)
+        if: secrets.NPM_TOKEN != ''
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
+
+      # Fallback path: attempt OIDC-based publish. This will only succeed
+      # if you have configured a Trusted Publisher in npm (GitHub Actions).
+      - name: Publish (using OIDC)
+        if: secrets.NPM_TOKEN == ''
+        run: |
+          echo "Attempting OIDC publish. Ensure npm trust for this repo is configured."
+          npm publish --access public
+
+# Notes:
+# - To use OIDC (tokenless) publishing, enable a Trusted Publisher in npm for
+#   GitHub Actions and follow npm's OIDC setup guide.
+# - After enabling OIDC you can remove `NPM_TOKEN` from repository secrets and
+#   rely on the `Publish (using OIDC)` path.
