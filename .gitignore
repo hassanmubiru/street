@@ -1,0 +1,8 @@
+# Ignore docs build and temporary files
+docs/
+
+# Node modules
+node_modules/
+
+# Environment files
+.env
