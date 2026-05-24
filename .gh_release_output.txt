@@ -1,0 +1,4 @@
+Command 'gh' not found, but can be installed with:
+sudo snap install gh  # version 2.86.0-112-gc30647b78, or
+sudo apt  install gh  # version 2.45.0-1ubuntu0.3
+See 'snap info gh' for additional versions.
