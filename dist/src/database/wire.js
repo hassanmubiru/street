@@ -256,6 +256,10 @@ export class PgConnection {
                 break;
             case BackendMsg.ErrorResponse: {
                 const err = this._parseError(body);
+                // Move to ready state immediately to avoid leaving the connection
+                // stuck in "query" if the client checks isReady right after an error.
+                if (this.state === 'query')
+                    this.state = 'ready';
                 if (this.state === 'authenticating') {
                     if (this.authReject) {
                         this.authReject(err);
@@ -271,8 +275,10 @@ export class PgConnection {
                         this.queryReject(err);
                         this.queryReject = null;
                     }
+                    // Clear any pending resolve to avoid duplicate callbacks when ReadyForQuery arrives
+                    this.queryResolve = null;
                 }
-                // After error, server sends ReadyForQuery
+                // After error, server will still send ReadyForQuery; ignore duplicate handling
                 break;
             }
             case BackendMsg.NoticeResponse:
