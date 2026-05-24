@@ -1,0 +1,111 @@
+// src/database/migrations.ts
+// Ordered, idempotent SQL migration runner with tracking table.
+
+import { readdir, readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { PgPool } from './pool.js';
+import { Injectable } from '../core/container.js';
+
+const MIGRATIONS_TABLE = 'street_migrations';
+
+@Injectable()
+export class StreetMigrationRunner {
+  constructor(private readonly pool: PgPool) {}
+
+  /** Run all pending migrations from the migrations directory */
+  async run(migrationsDir: string): Promise<void> {
+    await this._ensureTable();
+
+    const appliedSet = await this._getApplied();
+    const files = await this._getMigrationFiles(migrationsDir);
+
+    for (const file of files) {
+      if (appliedSet.has(file)) {
+        console.log(`[migrations] Skipping already applied: ${file}`);
+        continue;
+      }
+
+      const fullPath = join(migrationsDir, file);
+      const sql = await readFile(fullPath, 'utf8');
+
+      console.log(`[migrations] Applying: ${file}`);
+
+      await this.pool.transaction(async (conn) => {
+        await conn.query(sql);
+        await conn.query(
+          `INSERT INTO ${MIGRATIONS_TABLE} (name, applied_at) VALUES ('${file.replace(/'/g, "''")}', NOW())`
+        );
+      });
+
+      console.log(`[migrations] Applied: ${file}`);
+    }
+
+    console.log('[migrations] All migrations complete.');
+  }
+
+  /** Rollback the last N migrations (requires rollback SQL files) */
+  async rollback(migrationsDir: string, steps = 1): Promise<void> {
+    const applied = await this._getAppliedOrdered();
+    const toRollback = applied.slice(-steps).reverse();
+
+    for (const name of toRollback) {
+      const rollbackFile = name.replace(/\.sql$/, '.rollback.sql');
+      const fullPath = join(migrationsDir, rollbackFile);
+
+      let sql: string;
+      try {
+        sql = await readFile(fullPath, 'utf8');
+      } catch {
+        throw new Error(`Rollback file not found: ${rollbackFile}`);
+      }
+
+      console.log(`[migrations] Rolling back: ${name}`);
+      await this.pool.transaction(async (conn) => {
+        await conn.query(sql);
+        await conn.query(
+          `DELETE FROM ${MIGRATIONS_TABLE} WHERE name = '${name.replace(/'/g, "''")}'`
+        );
+      });
+
+      console.log(`[migrations] Rolled back: ${name}`);
+    }
+  }
+
+  private async _ensureTable(): Promise<void> {
+    await this.pool.query(`
+      CREATE TABLE IF NOT EXISTS ${MIGRATIONS_TABLE} (
+        id         SERIAL PRIMARY KEY,
+        name       VARCHAR(255) NOT NULL UNIQUE,
+        applied_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+      )
+    `);
+  }
+
+  private async _getApplied(): Promise<Set<string>> {
+    const result = await this.pool.query(
+      `SELECT name FROM ${MIGRATIONS_TABLE} ORDER BY applied_at ASC`
+    );
+    return new Set(result.rows.map((r) => r['name'] ?? '').filter(Boolean));
+  }
+
+  private async _getAppliedOrdered(): Promise<string[]> {
+    const result = await this.pool.query(
+      `SELECT name FROM ${MIGRATIONS_TABLE} ORDER BY applied_at ASC`
+    );
+    return result.rows.map((r) => r['name'] ?? '').filter(Boolean);
+  }
+
+  private async _getMigrationFiles(dir: string): Promise<string[]> {
+    let entries: string[];
+    try {
+      entries = await readdir(dir);
+    } catch {
+      console.warn(`[migrations] Directory not found: ${dir}`);
+      return [];
+    }
+
+    return entries
+      .filter((f) => f.endsWith('.sql') && !f.endsWith('.rollback.sql'))
+      .sort(); // lexicographic = timestamp order
+  }
+}

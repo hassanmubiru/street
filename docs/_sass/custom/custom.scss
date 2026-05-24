@@ -1,0 +1,47 @@
+// docs/_sass/custom/custom.scss
+// Custom styles layered on top of just-the-docs dark theme.
+
+// Brand colour: street uses a deep amber accent
+$brand-color: #f59e0b;
+
+// Override just-the-docs link colour
+.site-nav .nav-list-link.active {
+  color: $brand-color !important;
+}
+
+// Syntax highlight adjustments for dark theme readability
+.highlight {
+  border-radius: 6px;
+  margin: 1rem 0;
+}
+
+// Code inline — slightly warmer in dark mode
+code.language-plaintext {
+  background-color: #1e1e2e;
+  color: #cdd6f4;
+}
+
+// Table improvements
+table {
+  display: table;
+  width: 100%;
+}
+
+// Badge-style inline labels
+.label-yellow {
+  background-color: #f59e0b;
+  color: #000;
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+// Callout boxes
+.callout {
+  border-left: 4px solid $brand-color;
+  background: rgba(245,158,11,0.08);
+  padding: 0.8rem 1rem;
+  border-radius: 0 6px 6px 0;
+  margin: 1rem 0;
+}

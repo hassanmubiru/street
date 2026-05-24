@@ -1,0 +1,82 @@
+# ── Site identity ─────────────────────────────────────────────────────────────
+title:       "street"
+description: "Production-grade, memory-safe TypeScript backend framework"
+url:         "https://your-org.github.io"
+baseurl:     "/street"
+lang:        "en"
+
+# ── Theme ─────────────────────────────────────────────────────────────────────
+remote_theme: just-the-docs/just-the-docs
+# Or use local gem:
+# theme: just-the-docs
+
+# ── just-the-docs configuration ───────────────────────────────────────────────
+color_scheme:    dark
+search_enabled:  true
+search_tokenizer_separator: /[\s\-/]+/
+
+heading_anchors: true
+back_to_top:     true
+back_to_top_text: "Back to top"
+
+# Nav footer links
+footer_content: >
+  Copyright &copy; 2024 street contributors.
+  Distributed under the <a href="https://github.com/your-org/street/blob/main/LICENSE">MIT license.</a>
+
+# Aux links (top-right navigation)
+aux_links:
+  "GitHub":
+    - "https://github.com/your-org/street"
+  "npm":
+    - "https://www.npmjs.com/package/@streetjs/core"
+
+aux_links_new_tab: true
+
+# Enable "Edit on GitHub" links on each page
+gh_edit_link:           true
+gh_edit_link_text:      "Edit this page on GitHub"
+gh_edit_repository:     "https://github.com/your-org/street"
+gh_edit_branch:         "main"
+gh_edit_source:         docs
+gh_edit_view_mode:      "edit"
+
+# Code copy button
+enable_copy_code_button: true
+
+# ── Navigation order ──────────────────────────────────────────────────────────
+# Pages use front-matter nav_order to control position.
+# Top-level sections defined here for clarity.
+
+# ── Plugins ───────────────────────────────────────────────────────────────────
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+  - jekyll-relative-links
+
+relative_links:
+  enabled:     true
+  collections: true
+
+# ── Build settings ────────────────────────────────────────────────────────────
+markdown:    kramdown
+highlighter: rouge
+
+kramdown:
+  input:        GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class:  highlight
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+
+# ── Exclusions ────────────────────────────────────────────────────────────────
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - "*.gemspec"

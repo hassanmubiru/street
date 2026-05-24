@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "./dist",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": false,
+    "stripInternal": true,
+    "rootDir": "./src"
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests",
+    "src/main.ts",
+    "src/controllers/**",
+    "src/services/**",
+    "src/domain/**",
+    "src/config/index.ts",
+    "src/cli/commands.ts"
+  ]
+}

@@ -1,0 +1,264 @@
+# street
+
+**Production-grade, memory-safe TypeScript backend framework built on Node.js core modules.**
+
+[![CI](https://github.com/your-org/street/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/your-org/street/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)](https://www.typescriptlang.org/)
+[![Node](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
+
+---
+
+## What is street?
+
+`street` is a full-stack TypeScript backend framework that gives you everything needed to build production APIs — without reaching for a single third-party abstraction library. It is built entirely from Node.js core modules (`node:http`, `node:net`, `node:crypto`, `node:stream`, `node:cluster`) plus two carefully chosen dependencies: `reflect-metadata` for decorator metadata and `ws` for WebSocket support.
+
+Every system in street is engineered with one overriding principle: **bounded memory at all times**. Buffers are capped. Caches are evicted. Streams apply backpressure. Connections are pooled. Secrets are never persisted. This makes street suitable for long-running production servers without memory leak anxiety.
+
+---
+
+## Key Features
+
+| Feature | Implementation |
+|---|---|
+| **IoC Container** | Constructor injection, singleton registry, circular dep detection |
+| **HTTP Router** | Compiled regex routes, param extraction, pipeline middleware |
+| **PostgreSQL Driver** | Pure wire-protocol v3 (no `pg`), streaming row-by-row, backpressure |
+| **Repository Pattern** | Generic typed repositories, ACID transactions, migration runner |
+| **JWT (HMAC-SHA256)** | Pure `node:crypto`, timing-safe verification |
+| **AES-256-GCM Sessions** | Per-request IV, tamper-detection, no plaintext on disk |
+| **Vault Mode** | KEK-based config decryption via scrypt + AES-256-GCM |
+| **Multipart Uploads** | Streams directly to disk, ≤30 MB heap regardless of file size |
+| **WebSocket Server** | Heartbeat, bounded connections, clean teardown |
+| **Server-Sent Events** | Heartbeat keep-alive, safe close |
+| **LRU Cache** | TTL expiry, bounded count, periodic sweep |
+| **Sliding Window Rate Limiter** | BigInt nanosecond precision, stale-entry sweep |
+| **XSS Sanitizer** | Recursive deep object sanitization |
+| **Telemetry** | Ring-buffer history, P50/P99 latency, heap profiling |
+| **Cluster Coordinator** | IPC heartbeat, auto-restart, `node:cluster` only |
+| **Webhook Dispatcher** | HMAC-SHA256 signed, retry with exponential backoff |
+| **CLI Kernel** | `@Command` decorator, argv parser, DI integration |
+| **OpenAPI Generator** | Auto-generated spec from route decorators |
+
+---
+
+## Architecture Philosophy
+
+### Why no `express`, `pg`, `zod`, or `prisma`?
+
+Each abstraction you add is a leak surface, a version conflict, and a maintenance burden. street trades familiar API comfort for **total control**:
+
+- **No ORM** — You write SQL. The driver executes it row-by-row with backpressure.
+- **No validation library** — Schema rules are plain TypeScript objects validated inline.
+- **No body-parser** — The server's own stream parser enforces byte caps and never buffers fully.
+- **No JWT library** — HMAC-SHA256 with `node:crypto` is 15 lines, not a CVE surface.
+
+### Memory safety is not optional
+
+Every component enforces an upper bound on memory:
+
+- HTTP bodies capped at 1 MB (configurable)
+- Upload streams written chunk-by-chunk to disk
+- Database results streamed row-by-row, never buffered
+- Rate limiter logs bounded per-IP
+- Telemetry uses a ring buffer, not an append-only array
+- LRU cache evicts LRU on overflow
+- WebSocket connections capped at a configurable max
+- Webhook queue bounded at 10,000 items
+
+---
+
+## Installation
+
+### Prerequisites
+
+- Node.js ≥ 20
+- PostgreSQL ≥ 14
+- npm ≥ 9
+
+### Quick install
+
+```bash
+git clone https://github.com/your-org/street.git my-app
+cd my-app
+bash street-build.sh
+```
+
+Or manually:
+
+```bash
+npm install
+npx tsc
+```
+
+### Environment setup
+
+Copy the example env and fill in your values:
+
+```bash
+cp .env.example .env
+```
+
+```bash
+# .env
+PORT=3000
+HOST=0.0.0.0
+NODE_ENV=development
+
+PG_HOST=localhost
+PG_PORT=5432
+PG_DATABASE=myapp
+PG_USER=myapp
+PG_PASSWORD=secret
+
+JWT_SECRET=change-this-to-a-random-32-char-minimum-secret
+SESSION_KEY=0000000000000000000000000000000000000000000000000000000000000000  # 64 hex chars
+
+# Optional: Vault Mode encrypted config
+KEK=my-key-encryption-key
+```
+
+---
+
+## Quick Start
+
+A minimal API server in 20 lines:
+
+```typescript
+// src/main.ts
+import 'reflect-metadata';
+import { streetApp } from './http/server.js';
+import { container } from './core/container.js';
+import { Injectable } from './core/container.js';
+import { Controller, Get } from './core/decorators.js';
+import type { StreetContext } from './core/context.js';
+
+@Injectable()
+@Controller('/api')
+class HelloController {
+  @Get('/hello')
+  async hello(ctx: StreetContext): Promise<void> {
+    ctx.json({ message: 'Hello from street!' });
+  }
+}
+
+const app = streetApp({ port: 3000 });
+app.registerController(HelloController);
+await app.listen();
+```
+
+```bash
+npx tsc && node dist/src/main.js
+# [street] Listening on http://0.0.0.0:3000
+
+curl http://localhost:3000/api/hello
+# {"message":"Hello from street!"}
+```
+
+---
+
+## CLI Usage
+
+street ships with a built-in CLI kernel. Commands run when `process.argv` contains a known command name; otherwise the HTTP server boots.
+
+```bash
+# Run database migrations
+node dist/src/main.js migrate
+
+# Create a user
+node dist/src/main.js user:create --email alice@example.com --name Alice --password secret123
+
+# List users
+node dist/src/main.js user:list --page 1 --limit 10
+
+# Show help
+node dist/src/main.js --help
+```
+
+---
+
+## Docker Deployment
+
+```bash
+# Build
+docker build -t my-app:latest .
+
+# Run
+docker run -d \
+  -p 3000:3000 \
+  -e PG_HOST=db \
+  -e PG_DATABASE=myapp \
+  -e PG_USER=myapp \
+  -e PG_PASSWORD=secret \
+  -e JWT_SECRET=my-jwt-secret-at-least-32-chars \
+  -e SESSION_KEY=64hexchars... \
+  my-app:latest
+```
+
+The Dockerfile uses a **distroless Node 20** runtime image. The process runs as `nonroot` (UID 65532). No shell, no package manager, minimal attack surface.
+
+---
+
+## Example API
+
+The bundled example implements a full user management API:
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/users` | List users (paginated) |
+| `GET` | `/api/users/:id` | Get user by UUID |
+| `POST` | `/api/users` | Register new user |
+| `POST` | `/api/users/login` | Login, returns JWT |
+| `PUT` | `/api/users/:id` | Update user |
+| `DELETE` | `/api/users/:id` | Delete user |
+| `GET` | `/api/users/:id/stream` | SSE event stream |
+| `POST` | `/api/users/upload` | Multipart file upload |
+| `GET` | `/api/health` | Health + telemetry |
+| `GET` | `/api/metrics` | Latency history |
+| `GET` | `/api/openapi.json` | OpenAPI 3.1 spec |
+
+---
+
+## Documentation
+
+| Section | Contents |
+|---|---|
+| [Getting Started](docs/getting-started/installation.md) | Install, configure, first server |
+| [Dependency Injection](docs/core/dependency-injection.md) | `@Injectable`, container, resolution |
+| [Routing](docs/core/routing.md) | Route decorators, params, middleware |
+| [Controllers](docs/core/controllers.md) | `@Controller`, full handler patterns |
+| [Validation](docs/core/validation.md) | Schema validation, field rules |
+| [Exception Handling](docs/core/exception-handling.md) | Typed exceptions, global error handler |
+| [PostgreSQL Driver](docs/database/postgres-wire-driver.md) | Wire protocol, queries, streaming |
+| [Repositories](docs/database/repositories.md) | Generic repository, typed rows |
+| [Transactions](docs/database/transactions.md) | ACID, `BEGIN`/`COMMIT`/`ROLLBACK` |
+| [Streaming Results](docs/database/streaming-results.md) | Backpressure, row-by-row streaming |
+| [Migrations](docs/database/migrations.md) | SQL migrations, idempotency |
+| [JWT](docs/security/jwt.md) | Sign, verify, timing-safe |
+| [Sessions](docs/security/encrypted-sessions.md) | AES-256-GCM, tamper detection |
+| [Vault Mode](docs/security/vault-mode.md) | KEK, scrypt key derivation |
+| [Rate Limiting](docs/security/rate-limiting.md) | Sliding window, BigInt timing |
+| [XSS Protection](docs/security/xss-protection.md) | Deep sanitization |
+| [WebSocket](docs/realtime/websocket.md) | Events, broadcast, heartbeat |
+| [SSE](docs/realtime/sse.md) | Server-Sent Events, keep-alive |
+| [File Uploads](docs/storage/multipart-uploads.md) | Streaming to disk, cleanup |
+| [Telemetry](docs/performance/telemetry.md) | Heap, latency, request tracking |
+| [Caching](docs/performance/caching.md) | LRU, TTL, eviction |
+| [Clustering](docs/performance/clustering.md) | Workers, IPC heartbeat, restart |
+| [Memory Safety](docs/performance/memory-safety.md) | Principles, bounded behavior |
+| [CLI](docs/cli/commands.md) | `@Command`, argv, flags |
+| [Docker](docs/deployment/docker.md) | Distroless, multi-stage |
+| [Production](docs/deployment/production.md) | Env vars, security hardening |
+| [CI/CD](docs/deployment/ci-cd.md) | GitHub Actions, PostgreSQL service |
+| [Integration Tests](docs/testing/integration-tests.md) | `node:test`, live DB, cleanup |
+| [User API Example](docs/examples/user-api.md) | Full CRUD walkthrough |
+| [Secure Auth Example](docs/examples/secure-auth.md) | JWT + session auth |
+| [Streaming Query](docs/examples/streaming-query.md) | Large dataset streaming |
+| [WebSocket Chat](docs/examples/websocket-chat.md) | Real-time messaging |
+| [File Upload Service](docs/examples/file-upload-service.md) | Multipart upload end-to-end |
+
+---
+
+## License
+
+MIT © street contributors

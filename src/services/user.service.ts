@@ -1,0 +1,176 @@
+// src/services/user.service.ts
+// User service: registration, auth, CRUD. Uses PBKDF2 for password hashing.
+
+import { pbkdf2, randomBytes, timingSafeEqual } from 'node:crypto';
+import { promisify } from 'node:util';
+import { Injectable } from '../core/container.js';
+import { UserRepository } from './user.repository.js';
+import { JwtService } from '../security/jwt.js';
+import { AppConfig } from '../config/index.js';
+import type { User, UserPublic, CreateUserDto, UpdateUserDto, LoginDto } from '../domain/user.js';
+import { toPublicUser } from '../domain/user.js';
+import {
+  NotFoundException,
+  UnauthorizedException,
+  ConflictException,
+} from '../http/exceptions.js';
+import type { TokenPair, PaginatedResult } from '../core/types.js';
+
+const pbkdf2Async = promisify(pbkdf2);
+
+const HASH_ITERATIONS = 100_000;
+const HASH_KEYLEN = 64;
+const HASH_DIGEST = 'sha512';
+const SALT_BYTES = 32;
+
+@Injectable()
+export class UserService {
+  private readonly jwt: JwtService;
+
+  constructor(
+    private readonly repo: UserRepository,
+    private readonly config: AppConfig
+  ) {
+    this.jwt = new JwtService(this.config.jwtSecret);
+  }
+
+  async register(dto: CreateUserDto): Promise<UserPublic> {
+    const exists = await this.repo.emailExists(dto.email.toLowerCase());
+    if (exists) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const passwordHash = await this._hashPassword(dto.password);
+    const user = await this.repo.create({
+      id: generateUuid(),
+      email: dto.email.toLowerCase(),
+      name: dto.name,
+      password_hash: passwordHash,
+      roles: JSON.stringify(['user']),
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    } as Partial<User>);
+
+    return toPublicUser(user);
+  }
+
+  async login(dto: LoginDto): Promise<TokenPair> {
+    const user = await this.repo.findByEmail(dto.email.toLowerCase());
+    if (!user) {
+      // Constant-time: still run hash check to avoid timing leak
+      await this._dummyHash();
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    const valid = await this._verifyPassword(dto.password, user.password_hash);
+    if (!valid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    let roles: string[] = ['user'];
+    try { roles = JSON.parse(user.roles) as string[]; } catch { /* default */ }
+
+    const accessToken = this.jwt.sign(
+      { sub: user.id, email: user.email, roles },
+      { expiresInSeconds: 3600 }
+    );
+    const refreshToken = this.jwt.sign(
+      { sub: user.id, type: 'refresh' },
+      { expiresInSeconds: 86400 * 7 }
+    );
+
+    return { accessToken, refreshToken, expiresIn: 3600 };
+  }
+
+  async findById(id: string): Promise<UserPublic> {
+    const user = await this.repo.findById(id);
+    if (!user) throw new NotFoundException('User not found');
+    return toPublicUser(user);
+  }
+
+  async findAll(page: number, limit: number): Promise<PaginatedResult<UserPublic>> {
+    const safePage = Math.max(1, page);
+    const safeLimit = Math.min(Math.max(1, limit), 100);
+    const offset = (safePage - 1) * safeLimit;
+
+    const [items, total] = await Promise.all([
+      this.repo.findAll(safeLimit, offset),
+      this.repo.count(),
+    ]);
+
+    return {
+      items: items.map(toPublicUser),
+      total,
+      page: safePage,
+      limit: safeLimit,
+      hasMore: offset + items.length < total,
+    };
+  }
+
+  async update(id: string, dto: UpdateUserDto): Promise<UserPublic> {
+    const existing = await this.repo.findById(id);
+    if (!existing) throw new NotFoundException('User not found');
+
+    if (dto.email) {
+      const emailOwner = await this.repo.findByEmail(dto.email.toLowerCase());
+      if (emailOwner && emailOwner.id !== id) {
+        throw new ConflictException('Email already taken');
+      }
+    }
+
+    const updated = await this.repo.update(id, {
+      ...(dto.name ? { name: dto.name } : {}),
+      ...(dto.email ? { email: dto.email.toLowerCase() } : {}),
+      updated_at: new Date().toISOString(),
+    } as Partial<User>);
+
+    if (!updated) throw new NotFoundException('User not found');
+    return toPublicUser(updated);
+  }
+
+  async remove(id: string): Promise<void> {
+    const deleted = await this.repo.delete(id);
+    if (!deleted) throw new NotFoundException('User not found');
+  }
+
+  verifyToken(token: string): { sub: string; email: string; roles: string[] } | null {
+    const payload = this.jwt.verify(token);
+    if (!payload?.sub) return null;
+    return {
+      sub: payload.sub,
+      email: String(payload.email ?? ''),
+      roles: Array.isArray(payload.roles) ? (payload.roles as string[]) : [],
+    };
+  }
+
+  private async _hashPassword(password: string): Promise<string> {
+    const salt = randomBytes(SALT_BYTES);
+    const hash = await pbkdf2Async(password, salt, HASH_ITERATIONS, HASH_KEYLEN, HASH_DIGEST);
+    return `${salt.toString('hex')}:${hash.toString('hex')}`;
+  }
+
+  private async _verifyPassword(password: string, stored: string): Promise<boolean> {
+    const [saltHex, hashHex] = stored.split(':');
+    if (!saltHex || !hashHex) return false;
+
+    const salt = Buffer.from(saltHex, 'hex');
+    const expected = Buffer.from(hashHex, 'hex');
+    const actual = await pbkdf2Async(password, salt, HASH_ITERATIONS, HASH_KEYLEN, HASH_DIGEST);
+
+    if (actual.length !== expected.length) return false;
+    return timingSafeEqual(actual, expected);
+  }
+
+  private async _dummyHash(): Promise<void> {
+    const salt = randomBytes(SALT_BYTES);
+    await pbkdf2Async('dummy', salt, HASH_ITERATIONS, HASH_KEYLEN, HASH_DIGEST);
+  }
+}
+
+function generateUuid(): string {
+  const bytes = randomBytes(16);
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
