@@ -1,0 +1,19 @@
+Unknown JSON field: "logsUrl"
+Available fields:
+  attempt
+  conclusion
+  createdAt
+  databaseId
+  displayTitle
+  event
+  headBranch
+  headSha
+  jobs
+  name
+  number
+  startedAt
+  status
+  updatedAt
+  url
+  workflowDatabaseId
+  workflowName
