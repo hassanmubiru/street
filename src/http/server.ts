@@ -130,20 +130,36 @@ export function streetApp(options: StreetAppOptions = {}): StreetApp {
       const chunks: Buffer[] = [];
       let totalBytes = 0;
 
+      const onData = (chunk: Buffer): void => {
+        totalBytes += chunk.length;
+        if (totalBytes > maxBytes) {
+          req.destroy(new Error('Body too large'));
+          rejectRef(new Error('Request body exceeds limit'));
+          return;
+        }
+        chunks.push(chunk);
+      };
+      const onEnd = (): void => resolveRef();
+      const onError = (err: Error): void => rejectRef(err);
+      const onAborted = (): void => rejectRef(new Error('Request aborted'));
+
+      let resolveRef: (value: void) => void;
+      let rejectRef: (err: Error) => void;
+
       await new Promise<void>((resolve, reject) => {
-        req.on('data', (chunk: Buffer) => {
-          totalBytes += chunk.length;
-          if (totalBytes > maxBytes) {
-            req.destroy(new Error('Body too large'));
-            reject(new Error('Request body exceeds limit'));
-            return;
-          }
-          chunks.push(chunk);
-        });
-        req.on('end', resolve);
-        req.on('error', reject);
-        req.on('aborted', () => reject(new Error('Request aborted')));
+        resolveRef = resolve;
+        rejectRef = reject;
+        req.on('data', onData);
+        req.on('end', onEnd);
+        req.on('error', onError);
+        req.on('aborted', onAborted);
       });
+
+      // Clean up event listeners after body is fully consumed
+      req.removeListener('data', onData);
+      req.removeListener('end', onEnd);
+      req.removeListener('error', onError);
+      req.removeListener('aborted', onAborted);
 
       if (chunks.length === 0) return;
       const raw = Buffer.concat(chunks).toString('utf8');
