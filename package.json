@@ -119,7 +119,7 @@
     "dev": "tsc && node dist/src/main.js",
     "lint": "tsc --noEmit",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
-    "prepare": "git config core.hooksPath .githooks",
+    "prepare": "if test -d .git; then git config core.hooksPath .githooks; fi",
     "prepublishOnly": "npm run clean && npm run build && npm run lint",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
