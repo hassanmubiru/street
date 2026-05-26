@@ -7,6 +7,47 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.1] — 2026-05-27
+
+### Fixed
+
+**CI security bugs**
+- `publish.yml`: replaced `secrets.NPM_TOKEN` in `if:` condition with an env-var workaround (GitHub Actions does not allow the `secrets` context in conditionals)
+- `publish.yml`: removed `|| true` build error masking — compile failures are now correctly caught before publishing
+- `ci-cd.yml`: added `permissions: contents: read` to restrict default write-all scope (Poisoned Pipeline Execution prevention)
+- `ci-cd.yml`: replaced hardcoded test credentials (`POSTGRES_PASSWORD`, `JWT_SECRET`, `SESSION_KEY`, `KEK`) with `${{ secrets.XXX }}` references
+
+### Changed
+
+**Workflow quality-of-life**
+- `ci-cd.yml`: added `concurrency` with `cancel-in-progress: true` to cancel stale duplicate CI runs
+- `ci-cd.yml`: scoped `KEK` secret from workflow-level env to only the `build-and-test` job that needs it
+- `ci-cd.yml`: deduplicated redundant `npx tsc --noEmit` + `npx tsc` into a single compilation step
+- `ci-cd.yml`: changed `if: always()` → `if: success() || failure()` to skip artifact upload on cancelled workflows
+- `ci-cd.yml`: completed the `docker-build` job — added `docker/login-action` for GHCR authentication and `docker push` for both commit-tagged and `latest` images
+- `memory-leak.yml`: added `concurrency` and branch-filtered triggers to `[main, develop]` to reduce wasted runner cycles
+- `publish.yml`: added `cache: 'npm'` to `setup-node` and `concurrency` to serialize publish runs
+- All three workflows: pinned actions (`checkout`, `setup-node`, `upload-artifact`) to immutable commit SHAs instead of mutable `@v4` tags (supply-chain hardening)
+
+### Added
+
+**Automated security linting**
+- `.github/workflows/security-lint.yml`: new workflow that runs [zizmor](https://github.com/zizmorcore/zizmor) on every push/PR to `main`/`develop`, scanning all workflow files for security vulnerabilities at `medium`+ severity
+
+**Dependency lifecycle automation**
+- `.github/dependabot.yml`: Dependabot config to automatically update SHA-pinned GitHub Actions and npm dependencies via weekly grouped PRs
+
+**Developer tooling**
+- `.vscode/settings.json`: associates the official GitHub Actions JSON schema with all `.github/workflows/*.yml` files — eliminates false-positive errors on `${{ secrets.XXX }}` and `if:` syntax in VS Code
+- `.vscode/extensions.json`: recommends the Red Hat YAML extension (`redhat.vscode-yaml`) to workspace contributors
+- `.githooks/pre-commit`: pre-commit hook that validates workflow YAML only when workflow files are staged
+- `scripts/validate-workflows.sh`: standalone YAML validation script using PyYAML
+- `"lint:workflows"` npm script: run `npm run lint:workflows` to validate workflow YAML manually
+- `"lint:security"` npm script: run `npm run lint:security` to run zizmor locally (if installed)
+- `"prepare"` npm script: auto-configures `core.hooksPath .githooks` on `npm install` / `npm ci`
+
+---
+
 ## [1.0.0] — 2024-01-15
 
 ### Added
