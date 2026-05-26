@@ -123,10 +123,10 @@ export class PgPool {
   }
 
   /** Execute a query with automatic connection management */
-  async query(sql: string): Promise<PgResult> {
+  async query(sql: string, params?: unknown[]): Promise<PgResult> {
     const conn = await this.acquire();
     try {
-      return await conn.query(sql);
+      return await conn.query(sql, params);
     } finally {
       this.release(conn);
     }

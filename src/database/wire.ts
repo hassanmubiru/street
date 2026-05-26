@@ -80,6 +80,131 @@ function buildTerminateMessage(): Buffer {
   return buf;
 }
 
+// ─── Extended Query Protocol: Parse / Bind / Execute / Sync ────────────────────
+
+function buildParseMessage(query: string): Buffer {
+  const queryBuf = Buffer.from(query + '\0', 'utf8');
+  // Empty statement name + query string + 2-byte zero param types count
+  const stmtNameLen = 1; // just null terminator for empty name
+  const buf = Buffer.allocUnsafe(1 + 4 + stmtNameLen + queryBuf.length + 2);
+  let offset = 0;
+  buf[offset] = 0x50; // 'P'
+  offset += 1;
+  // Length placeholder, will be filled at the end
+  const lenOffset = offset;
+  offset += 4;
+  // Empty statement name (just null terminator)
+  buf[offset] = 0;
+  offset += 1;
+  // Query string + null terminator
+  queryBuf.copy(buf, offset);
+  offset += queryBuf.length;
+  // Number of parameter types (0 = let server infer)
+  buf.writeUInt16BE(0, offset);
+  offset += 2;
+  // Fill length
+  buf.writeUInt32BE(offset - 1, lenOffset);
+  return buf.subarray(0, offset);
+}
+
+function buildBindMessage(params: unknown[]): Buffer {
+  const buffers: Buffer[] = [];
+  let totalLen = 1 + 4; // 'B' + length
+  // Portal name (empty)
+  totalLen += 1; // null terminator
+  // Statement name (empty)
+  totalLen += 1; // null terminator
+  // Parameter format codes: 2 bytes, 0 = all text
+  totalLen += 2;
+  // Number of parameters: 2 bytes
+  totalLen += 2;
+
+  const paramBuffers: Buffer[] = [];
+  for (const param of params) {
+    if (param === null || param === undefined) {
+      // NULL: 4-byte length = -1
+      totalLen += 4;
+      paramBuffers.push(Buffer.alloc(4));
+      paramBuffers[paramBuffers.length - 1].writeInt32BE(-1);
+    } else {
+      let val: string;
+      if (typeof param === 'boolean') {
+        val = param ? 't' : 'f';
+      } else if (typeof param === 'number') {
+        val = String(param);
+      } else if (param instanceof Buffer) {
+        // Binary parameter - send raw bytes with text format (might not work for all types)
+        val = param.toString('utf8');
+      } else {
+        val = String(param);
+      }
+      const valBuf = Buffer.from(val, 'utf8');
+      totalLen += 4 + valBuf.length; // length prefix + value bytes
+      paramBuffers.push(valBuf);
+    }
+  }
+
+  // Result format codes: 2 bytes, 0 = all text
+  totalLen += 2;
+
+  const buf = Buffer.allocUnsafe(totalLen);
+  let offset = 0;
+  buf[offset] = 0x42; // 'B'
+  offset += 1;
+  buf.writeUInt32BE(totalLen - 1, offset);
+  offset += 4;
+  // Empty portal name
+  buf[offset] = 0;
+  offset += 1;
+  // Empty statement name
+  buf[offset] = 0;
+  offset += 1;
+  // All params use text format (0)
+  buf.writeUInt16BE(0, offset);
+  offset += 2;
+  // Number of parameters
+  buf.writeUInt16BE(params.length, offset);
+  offset += 2;
+
+  let paramIdx = 0;
+  for (const param of params) {
+    if (param === null || param === undefined) {
+      const lenBuf = paramBuffers[paramIdx]!;
+      lenBuf.copy(buf, offset);
+      offset += 4;
+    } else {
+      const valBuf = paramBuffers[paramIdx]!;
+      buf.writeInt32BE(valBuf.length, offset);
+      offset += 4;
+      valBuf.copy(buf, offset);
+      offset += valBuf.length;
+    }
+    paramIdx++;
+  }
+
+  // Result format codes (0 = all text)
+  buf.writeUInt16BE(0, offset);
+  offset += 2;
+
+  return buf.subarray(0, offset);
+}
+
+function buildExecuteMessage(): Buffer {
+  const buf = Buffer.allocUnsafe(1 + 4 + 1 + 4);
+  buf[0] = 0x45; // 'E'
+  buf.writeUInt32BE(9, 1); // length
+  buf[5] = 0; // empty portal name (null terminator)
+  buf.writeUInt32BE(0, 6); // max rows (0 = unlimited)
+  return buf;
+}
+
+function buildSyncMessage(): Buffer {
+  const buf = Buffer.allocUnsafe(5);
+  buf[0] = 0x53; // 'S'
+  buf.writeUInt32BE(4, 1);
+  return buf;
+}
+
 function md5(input: string): string {
   return createHash('md5').update(input, 'binary').digest('hex');
 }
@@ -406,10 +531,15 @@ export class PgConnection {
     return new Error(`PostgreSQL: ${msg}${detail ? ' — ' + detail : ''}`);
   }
 
-  /** Execute a query, return all rows buffered */
-  query(sql: string, _params?: unknown[]): Promise<PgResult> {
+  /** Execute a query with optional parameters, return all rows buffered */
+  query(sql: string, params?: unknown[]): Promise<PgResult> {
     if (this.state !== 'ready') {
       return Promise.reject(new Error(`Cannot query: connection is in state "${this.state}"`));
+    }
+
+    // Use extended query protocol when params are provided
+    if (params !== undefined && params.length > 0) {
+      return this._queryParams(sql, params);
     }
 
     return new Promise((resolve, reject) => {
@@ -419,6 +549,25 @@ export class PgConnection {
       this.queryRows = [];
       this.streamTarget = null;
       this.socket?.write(buildQueryMessage(sql));
+    });
+  }
+
+  /** Execute a parameterized query using Parse/Bind/Execute/Sync protocol */
+  private _queryParams(sql: string, params: unknown[]): Promise<PgResult> {
+    return new Promise((resolve, reject) => {
+      this.state = 'query';
+      this.queryResolve = resolve;
+      this.queryReject = reject;
+      this.queryRows = [];
+      this.streamTarget = null;
+
+      const parseMsg = buildParseMessage(sql);
+      const bindMsg = buildBindMessage(params);
+      const execMsg = buildExecuteMessage();
+      const syncMsg = buildSyncMessage();
+
+      // Send all four messages in a single write for atomicity
+      this.socket?.write(Buffer.concat([parseMsg, bindMsg, execMsg, syncMsg]));
     });
   }
 

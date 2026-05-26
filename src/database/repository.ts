@@ -27,9 +27,9 @@ export abstract class StreetPostgresRepository<T extends object>
   protected abstract mapRow(row: Record<string, string | null>): T;
 
   async findById(id: string): Promise<T | null> {
-    const safeId = escapeString(id);
     const result = await this.pool.query(
-      `SELECT * FROM ${this.tableName} WHERE id = '${safeId}' LIMIT 1`
+      `SELECT * FROM ${this.tableName} WHERE id = $1 LIMIT 1`,
+      [id]
     );
     if (result.rows.length === 0) return null;
     return this.mapRow(result.rows[0] as Record<string, string | null>);
@@ -39,7 +39,8 @@ export abstract class StreetPostgresRepository<T extends object>
     const safeLimit = Math.min(Math.max(1, Math.floor(limit)), 1000);
     const safeOffset = Math.max(0, Math.floor(offset));
     const result = await this.pool.query(
-      `SELECT * FROM ${this.tableName} ORDER BY created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`
+      `SELECT * FROM ${this.tableName} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
+      [safeLimit, safeOffset]
     );
     return result.rows.map((r) => this.mapRow(r as Record<string, string | null>));
   }
@@ -50,9 +51,13 @@ export abstract class StreetPostgresRepository<T extends object>
   }
 
   async create(data: Partial<T>): Promise<T> {
-    const { columns, values } = buildInsert(data);
+    const keys = Object.keys(data).filter((k) => data[k as keyof T] !== undefined);
+    const columns = keys.map((k) => `"${k}"`).join(', ');
+    const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
+    const params = keys.map((k) => data[k as keyof T]);
     const result = await this.pool.query(
-      `INSERT INTO ${this.tableName} (${columns}) VALUES (${values}) RETURNING *`
+      `INSERT INTO ${this.tableName} (${columns}) VALUES (${placeholders}) RETURNING *`,
+      params
     );
     const row = result.rows[0];
     if (!row) throw new Error('Insert returned no rows');
@@ -61,19 +66,22 @@ export abstract class StreetPostgresRepository<T extends object>
 
   async update(id: string, data: Partial<T>): Promise<T | null> {
     if (Object.keys(data).length === 0) return this.findById(id);
-    const safeId = escapeString(id);
-    const setClauses = buildUpdate(data);
+    const entries = Object.entries(data).filter(([, v]) => v !== undefined);
+    const setClauses = entries.map(([k], i) => `"${k}" = $${i + 1}`).join(', ');
+    const params = entries.map(([, v]) => v);
+    params.push(id); // last parameter for WHERE id = $N
     const result = await this.pool.query(
-      `UPDATE ${this.tableName} SET ${setClauses} WHERE id = '${safeId}' RETURNING *`
+      `UPDATE ${this.tableName} SET ${setClauses} WHERE id = $${params.length} RETURNING *`,
+      params
     );
     if (result.rows.length === 0) return null;
     return this.mapRow(result.rows[0] as Record<string, string | null>);
   }
 
   async delete(id: string): Promise<boolean> {
-    const safeId = escapeString(id);
     const result = await this.pool.query(
-      `DELETE FROM ${this.tableName} WHERE id = '${safeId}'`
+      `DELETE FROM ${this.tableName} WHERE id = $1`,
+      [id]
     );
     return result.command.startsWith('DELETE') && result.rowCount > 0;
   }
