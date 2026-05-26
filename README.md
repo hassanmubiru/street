@@ -1,5 +1,7 @@
 # Street Framework
 
+[![CI](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml)
+
 See `docs/README.md` for full documentation. To run tests locally, use the provided helper script:
 
 ```bash
