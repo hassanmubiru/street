@@ -1,0 +1,227 @@
+publish	Set up job	﻿2026-05-25T00:24:31.9802865Z Current runner version: '2.334.0'
+publish	Set up job	2026-05-25T00:24:31.9830660Z ##[group]Runner Image Provisioner
+publish	Set up job	2026-05-25T00:24:31.9831801Z Hosted Compute Agent
+publish	Set up job	2026-05-25T00:24:31.9832328Z Version: 20260213.493
+publish	Set up job	2026-05-25T00:24:31.9833016Z Commit: 5c115507f6dd24b8de37d8bbe0bb4509d0cc0fa3
+publish	Set up job	2026-05-25T00:24:31.9833749Z Build Date: 2026-02-13T00:28:41Z
+publish	Set up job	2026-05-25T00:24:31.9834459Z Worker ID: {5362f50b-0a60-43fb-be29-35601be1b6f0}
+publish	Set up job	2026-05-25T00:24:31.9835112Z Azure Region: eastus
+publish	Set up job	2026-05-25T00:24:31.9835710Z ##[endgroup]
+publish	Set up job	2026-05-25T00:24:31.9837174Z ##[group]Operating System
+publish	Set up job	2026-05-25T00:24:31.9837756Z Ubuntu
+publish	Set up job	2026-05-25T00:24:31.9838328Z 24.04.4
+publish	Set up job	2026-05-25T00:24:31.9838798Z LTS
+publish	Set up job	2026-05-25T00:24:31.9839293Z ##[endgroup]
+publish	Set up job	2026-05-25T00:24:31.9839749Z ##[group]Runner Image
+publish	Set up job	2026-05-25T00:24:31.9840415Z Image: ubuntu-24.04
+publish	Set up job	2026-05-25T00:24:31.9841100Z Version: 20260518.149.1
+publish	Set up job	2026-05-25T00:24:31.9842116Z Included Software: https://github.com/actions/runner-images/blob/ubuntu24/20260518.149/images/ubuntu/Ubuntu2404-Readme.md
+publish	Set up job	2026-05-25T00:24:31.9843877Z Image Release: https://github.com/actions/runner-images/releases/tag/ubuntu24%2F20260518.149
+publish	Set up job	2026-05-25T00:24:31.9844830Z ##[endgroup]
+publish	Set up job	2026-05-25T00:24:31.9845880Z ##[group]GITHUB_TOKEN Permissions
+publish	Set up job	2026-05-25T00:24:31.9847688Z Contents: read
+publish	Set up job	2026-05-25T00:24:31.9848365Z Metadata: read
+publish	Set up job	2026-05-25T00:24:31.9848928Z ##[endgroup]
+publish	Set up job	2026-05-25T00:24:31.9851789Z Secret source: Actions
+publish	Set up job	2026-05-25T00:24:31.9853443Z Prepare workflow directory
+publish	Set up job	2026-05-25T00:24:32.0186242Z Prepare all required actions
+publish	Set up job	2026-05-25T00:24:32.0224376Z Getting action download info
+publish	Set up job	2026-05-25T00:24:32.3548101Z Download action repository 'actions/checkout@v4' (SHA:34e114876b0b11c390a56381ad16ebd13914f8d5)
+publish	Set up job	2026-05-25T00:24:32.4522533Z Download action repository 'actions/setup-node@v4' (SHA:49933ea5288caeca8642d1e84afbd3f7d6820020)
+publish	Set up job	2026-05-25T00:24:32.6497053Z Complete job name: publish
+publish	Run actions/checkout@v4	﻿2026-05-25T00:24:32.7248934Z ##[group]Run actions/checkout@v4
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7249818Z with:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7250262Z   repository: hassanmubiru/street
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7251280Z   token: ***
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7251724Z   ssh-strict: true
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7252157Z   ssh-user: git
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7252580Z   persist-credentials: true
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7253060Z   clean: true
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7253491Z   sparse-checkout-cone-mode: true
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7254010Z   fetch-depth: 1
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7254435Z   fetch-tags: false
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7254872Z   show-progress: true
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7255313Z   lfs: false
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7255717Z   submodules: false
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7256143Z   set-safe-directory: true
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.7256860Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8411708Z Syncing repository: hassanmubiru/street
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8413691Z ##[group]Getting Git version info
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8414394Z Working directory is '/home/runner/work/street/street'
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8415450Z [command]/usr/bin/git version
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8463660Z git version 2.54.0
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8488753Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8511666Z Temporarily overriding HOME='/home/runner/work/_temp/dd4ea39f-ab28-4b31-ab9f-2f557f799ced' before making global git config changes
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8514001Z Adding repository directory to the temporary git global config as a safe directory
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8517006Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/street/street
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8560370Z Deleting the contents of '/home/runner/work/street/street'
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8564318Z ##[group]Initializing the repository
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8568364Z [command]/usr/bin/git init /home/runner/work/street/street
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8639096Z hint: Using 'master' as the name for the initial branch. This default branch name
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8640508Z hint: will change to "main" in Git 3.0. To configure the initial branch name
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8642243Z hint: to use in all of your new repositories, which will suppress this warning,
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8643556Z hint: call:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8644162Z hint:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8645220Z hint: 	git config --global init.defaultBranch <name>
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8645848Z hint:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8646420Z hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8647344Z hint: 'development'. The just-created branch can be renamed via this command:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8648199Z hint:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8648827Z hint: 	git branch -m <name>
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8649452Z hint:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8650071Z hint: Disable this message with "git config set advice.defaultBranchName false"
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8651273Z Initialized empty Git repository in /home/runner/work/street/street/.git/
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8654592Z [command]/usr/bin/git remote add origin https://github.com/hassanmubiru/street
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8692023Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8692818Z ##[group]Disabling automatic garbage collection
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8696114Z [command]/usr/bin/git config --local gc.auto 0
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8726048Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8726809Z ##[group]Setting up auth
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8733244Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.8768533Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9083109Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9116805Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9350535Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9394624Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9646057Z [command]/usr/bin/git config --local http.https://github.com/.extraheader AUTHORIZATION: basic ***
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9683600Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9684408Z ##[group]Fetching the repository
+publish	Run actions/checkout@v4	2026-05-25T00:24:32.9694961Z [command]/usr/bin/git -c protocol.version=2 fetch --no-tags --prune --no-recurse-submodules --depth=1 origin +b4335515cc2a519942ab4303ef5008c5eb3342b1:refs/tags/v1.0.6
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3796685Z From https://github.com/hassanmubiru/street
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3799305Z  * [new ref]         b4335515cc2a519942ab4303ef5008c5eb3342b1 -> v1.0.6
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3832862Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3834034Z ##[group]Determining the checkout info
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3835368Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3841825Z [command]/usr/bin/git sparse-checkout disable
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3890349Z [command]/usr/bin/git config --local --unset-all extensions.worktreeConfig
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3921944Z ##[group]Checking out the ref
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.3926703Z [command]/usr/bin/git checkout --progress --force refs/tags/v1.0.6
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5022132Z Note: switching to 'refs/tags/v1.0.6'.
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5023286Z 
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5024207Z You are in 'detached HEAD' state. You can look around, make experimental
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5025965Z changes and commit them, and you can discard any commits you make in this
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5028267Z state without impacting any branches by switching back to a branch.
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5029597Z 
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5030401Z If you want to create a new branch to retain commits you create, you may
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5032629Z do so (now or later) by using -c with the switch command. Example:
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5033747Z 
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5034217Z   git switch -c <new-branch-name>
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5035020Z 
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5035503Z Or undo this operation with:
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5036232Z 
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5036722Z   git switch -
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5037316Z 
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5038330Z Turn off this advice by setting config variable advice.detachedHead to false
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5040315Z 
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5041441Z HEAD is now at b433551 fix(ci): remove invalid secrets check in workflow
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5045991Z ##[endgroup]
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5082031Z [command]/usr/bin/git log -1 --format=%H
+publish	Run actions/checkout@v4	2026-05-25T00:24:33.5107013Z b4335515cc2a519942ab4303ef5008c5eb3342b1
+publish	Setup Node	﻿2026-05-25T00:24:33.5451888Z ##[group]Run actions/setup-node@v4
+publish	Setup Node	2026-05-25T00:24:33.5453052Z with:
+publish	Setup Node	2026-05-25T00:24:33.5453851Z   node-version: 20
+publish	Setup Node	2026-05-25T00:24:33.5454873Z   registry-url: https://registry.npmjs.org
+publish	Setup Node	2026-05-25T00:24:33.5456130Z   always-auth: false
+publish	Setup Node	2026-05-25T00:24:33.5457058Z   check-latest: false
+publish	Setup Node	2026-05-25T00:24:33.5458273Z   token: ***
+publish	Setup Node	2026-05-25T00:24:33.5459072Z ##[endgroup]
+publish	Setup Node	2026-05-25T00:24:33.7348011Z Attempting to download 20...
+publish	Setup Node	2026-05-25T00:24:34.0681209Z Acquiring 20.20.2 - x64 from https://github.com/actions/node-versions/releases/download/20.20.2-23521894959/node-20.20.2-linux-x64.tar.gz
+publish	Setup Node	2026-05-25T00:24:34.4804897Z Extracting ...
+publish	Setup Node	2026-05-25T00:24:34.4911856Z [command]/usr/bin/tar xz --strip 1 --warning=no-unknown-keyword --overwrite -C /home/runner/work/_temp/a9001935-f0bd-40b0-afce-accc58c64901 -f /home/runner/work/_temp/572db2ef-f14d-4416-9574-87548cc4059e
+publish	Setup Node	2026-05-25T00:24:35.5804266Z Adding to the cache ...
+publish	Setup Node	2026-05-25T00:24:37.1200546Z ##[group]Environment details
+publish	Setup Node	2026-05-25T00:24:37.3471973Z node: v20.20.2
+publish	Setup Node	2026-05-25T00:24:37.3472731Z npm: 10.8.2
+publish	Setup Node	2026-05-25T00:24:37.3472985Z yarn: 1.22.22
+publish	Setup Node	2026-05-25T00:24:37.3473954Z ##[endgroup]
+publish	Install	﻿2026-05-25T00:24:37.3669941Z ##[group]Run npm ci
+publish	Install	2026-05-25T00:24:37.3670275Z [36;1mnpm ci[0m
+publish	Install	2026-05-25T00:24:37.3713607Z shell: /usr/bin/bash -e {0}
+publish	Install	2026-05-25T00:24:37.3713899Z env:
+publish	Install	2026-05-25T00:24:37.3714162Z   NPM_CONFIG_USERCONFIG: /home/runner/work/_temp/.npmrc
+publish	Install	2026-05-25T00:24:37.3714511Z   NODE_AUTH_TOKEN: XXXXX-XXXXX-XXXXX-XXXXX
+publish	Install	2026-05-25T00:24:37.3714804Z ##[endgroup]
+publish	Install	2026-05-25T00:24:38.1477043Z 
+publish	Install	2026-05-25T00:24:38.1483831Z added 6 packages, and audited 7 packages in 708ms
+publish	Install	2026-05-25T00:24:38.1485141Z 
+publish	Install	2026-05-25T00:24:38.1485375Z found 0 vulnerabilities
+publish	Build	﻿2026-05-25T00:24:38.1608760Z ##[group]Run npm run build || true
+publish	Build	2026-05-25T00:24:38.1609117Z [36;1mnpm run build || true[0m
+publish	Build	2026-05-25T00:24:38.1648089Z shell: /usr/bin/bash -e {0}
+publish	Build	2026-05-25T00:24:38.1648395Z env:
+publish	Build	2026-05-25T00:24:38.1730216Z   NPM_CONFIG_USERCONFIG: /home/runner/work/_temp/.npmrc
+publish	Build	2026-05-25T00:24:38.1730971Z   NODE_AUTH_TOKEN: XXXXX-XXXXX-XXXXX-XXXXX
+publish	Build	2026-05-25T00:24:38.1731372Z ##[endgroup]
+publish	Build	2026-05-25T00:24:38.2916855Z 
+publish	Build	2026-05-25T00:24:38.2917785Z > @streetjs/core@1.0.1 build
+publish	Build	2026-05-25T00:24:38.2918431Z > tsc -p tsconfig.lib.json
+publish	Build	2026-05-25T00:24:38.2918714Z 
+publish	Publish package	﻿2026-05-25T00:24:40.1353428Z ##[group]Run npm publish --access public
+publish	Publish package	2026-05-25T00:24:40.1353865Z [36;1mnpm publish --access public[0m
+publish	Publish package	2026-05-25T00:24:40.1390385Z shell: /usr/bin/bash -e {0}
+publish	Publish package	2026-05-25T00:24:40.1390631Z env:
+publish	Publish package	2026-05-25T00:24:40.1391093Z   NPM_CONFIG_USERCONFIG: /home/runner/work/_temp/.npmrc
+publish	Publish package	2026-05-25T00:24:40.1391398Z   NODE_AUTH_TOKEN: 
+publish	Publish package	2026-05-25T00:24:40.1391666Z ##[endgroup]
+publish	Publish package	2026-05-25T00:24:40.5145598Z 
+publish	Publish package	2026-05-25T00:24:40.5146613Z > @streetjs/core@1.0.1 prepublishOnly
+publish	Publish package	2026-05-25T00:24:40.5147360Z > npm run clean && npm run build && npm run lint
+publish	Publish package	2026-05-25T00:24:40.5148260Z 
+publish	Publish package	2026-05-25T00:24:40.6388057Z 
+publish	Publish package	2026-05-25T00:24:40.6388829Z > @streetjs/core@1.0.1 clean
+publish	Publish package	2026-05-25T00:24:40.6389686Z > node -e "require('fs').rmSync('dist',{recursive:true,force:true})"
+publish	Publish package	2026-05-25T00:24:40.6390230Z 
+publish	Publish package	2026-05-25T00:24:40.7933177Z 
+publish	Publish package	2026-05-25T00:24:40.7934008Z > @streetjs/core@1.0.1 build
+publish	Publish package	2026-05-25T00:24:40.7934592Z > tsc -p tsconfig.lib.json
+publish	Publish package	2026-05-25T00:24:40.7934872Z 
+publish	Publish package	2026-05-25T00:24:42.7972426Z 
+publish	Publish package	2026-05-25T00:24:42.7973200Z > @streetjs/core@1.0.1 lint
+publish	Publish package	2026-05-25T00:24:42.7973581Z > tsc --noEmit
+publish	Publish package	2026-05-25T00:24:42.7973714Z 
+publish	Publish package	2026-05-25T00:24:44.5522119Z npm warn publish npm auto-corrected some errors in your package.json when publishing.  Please run "npm pkg fix" to address these errors.
+publish	Publish package	2026-05-25T00:24:44.5523225Z npm warn publish errors corrected:
+publish	Publish package	2026-05-25T00:24:44.5526339Z npm warn publish "repository.url" was normalized to "git+https://github.com/hassanmubiru/street.git"
+publish	Publish package	2026-05-25T00:24:44.5552322Z npm notice
+publish	Publish package	2026-05-25T00:24:44.5553796Z npm notice 📦  @streetjs/core@1.0.1
+publish	Publish package	2026-05-25T00:24:44.5554289Z npm notice Tarball Contents
+publish	Publish package	2026-05-25T00:24:44.5556188Z npm notice 2.9kB CHANGELOG.md
+publish	Publish package	2026-05-25T00:24:44.5556592Z npm notice 1.1kB LICENSE
+publish	Publish package	2026-05-25T00:24:44.5556974Z npm notice 348B README.md
+publish	Publish package	2026-05-25T00:24:44.5557502Z npm notice 314B migrations/001_create_users.rollback.sql
+publish	Publish package	2026-05-25T00:24:44.5557960Z npm notice 1.2kB migrations/001_create_users.sql
+publish	Publish package	2026-05-25T00:24:44.5558720Z npm notice 306B migrations/002_create_sessions_webhooks.rollback.sql
+publish	Publish package	2026-05-25T00:24:44.5559535Z npm notice 1.0kB migrations/002_create_sessions_webhooks.sql
+publish	Publish package	2026-05-25T00:24:44.5560082Z npm notice 4.8kB package.json
+publish	Publish package	2026-05-25T00:24:44.5560512Z npm notice Tarball Details
+publish	Publish package	2026-05-25T00:24:44.5561058Z npm notice name: @streetjs/core
+publish	Publish package	2026-05-25T00:24:44.5561497Z npm notice version: 1.0.1
+publish	Publish package	2026-05-25T00:24:44.5561991Z npm notice filename: streetjs-core-1.0.1.tgz
+publish	Publish package	2026-05-25T00:24:44.5562503Z npm notice package size: 4.7 kB
+publish	Publish package	2026-05-25T00:24:44.5562920Z npm notice unpacked size: 11.9 kB
+publish	Publish package	2026-05-25T00:24:44.5563290Z npm notice shasum: 415346947df2a5ddb49a94fcf003cb5044522eeb
+publish	Publish package	2026-05-25T00:24:44.5563817Z npm notice integrity: sha512-PHqZYhaMdTIzg[...]m1DOnPDyw48VQ==
+publish	Publish package	2026-05-25T00:24:44.5564179Z npm notice total files: 8
+publish	Publish package	2026-05-25T00:24:44.5564403Z npm notice
+publish	Publish package	2026-05-25T00:24:44.5596065Z npm error code ENEEDAUTH
+publish	Publish package	2026-05-25T00:24:44.5596896Z npm error need auth This command requires you to be logged in to https://registry.npmjs.org/
+publish	Publish package	2026-05-25T00:24:44.5597959Z npm error need auth You need to authorize this machine using `npm adduser`
+publish	Publish package	2026-05-25T00:24:44.5607618Z npm error A complete log of this run can be found in: /home/runner/.npm/_logs/2026-05-25T00_24_40_209Z-debug-0.log
+publish	Publish package	2026-05-25T00:24:44.5672317Z ##[error]Process completed with exit code 1.
+publish	Post Run actions/checkout@v4	﻿2026-05-25T00:24:44.5782912Z Post job cleanup.
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.6792785Z [command]/usr/bin/git version
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.6830573Z git version 2.54.0
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.6872340Z Temporarily overriding HOME='/home/runner/work/_temp/f4912305-a0b8-4762-af94-7591e6db7b60' before making global git config changes
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.6873211Z Adding repository directory to the temporary git global config as a safe directory
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.6887458Z [command]/usr/bin/git config --global --add safe.directory /home/runner/work/street/street
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.6926439Z [command]/usr/bin/git config --local --name-only --get-regexp core\.sshCommand
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.6960238Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'core\.sshCommand' && git config --local --unset-all 'core.sshCommand' || :"
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.7203537Z [command]/usr/bin/git config --local --name-only --get-regexp http\.https\:\/\/github\.com\/\.extraheader
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.7230095Z http.https://github.com/.extraheader
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.7244099Z [command]/usr/bin/git config --local --unset-all http.https://github.com/.extraheader
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.7276999Z [command]/usr/bin/git submodule foreach --recursive sh -c "git config --local --name-only --get-regexp 'http\.https\:\/\/github\.com\/\.extraheader' && git config --local --unset-all 'http.https://github.com/.extraheader' || :"
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.7526849Z [command]/usr/bin/git config --local --name-only --get-regexp ^includeIf\.gitdir:
+publish	Post Run actions/checkout@v4	2026-05-25T00:24:44.7562316Z [command]/usr/bin/git submodule foreach --recursive git config --local --show-origin --name-only --get-regexp remote.origin.url
+publish	Complete job	﻿2026-05-25T00:24:44.7916774Z Cleaning up orphan processes
+publish	Complete job	2026-05-25T00:24:44.8206510Z ##[warning]Node.js 20 actions are deprecated. The following actions are running on Node.js 20 and may not work as expected: actions/checkout@v4, actions/setup-node@v4. Actions will be forced to run with Node.js 24 by default starting June 2nd, 2026. Node.js 20 will be removed from the runner on September 16th, 2026. Please check if updated versions of these actions are available that support Node.js 24. To opt into Node.js 24 now, set the FORCE_JAVASCRIPT_ACTIONS_TO_NODE24=true environment variable on the runner or in your workflow file. Once Node.js 24 becomes the default, you can temporarily opt out by setting ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION=true. For more information see: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/

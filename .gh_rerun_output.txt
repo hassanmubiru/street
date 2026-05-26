@@ -1,0 +1,9 @@
+`<run-id>` or `--job` required when not running interactively
+
+Usage:  gh run rerun [<run-id>] [flags]
+
+Flags:
+  -d, --debug        Rerun with debug logging
+      --failed       Rerun only failed jobs, including dependencies
+  -j, --job string   Rerun a specific job ID from a run, including dependencies
+  
