@@ -186,6 +186,15 @@ export function buildExecuteMessage() {
     buf.writeUInt32BE(0, 6); // max rows (0 = unlimited)
     return buf;
 }
+/** @internal Exported for testing. Builds a PostgreSQL Describe ('D') message for an unnamed prepared statement. */
+export function buildDescribeMessage() {
+    const buf = Buffer.allocUnsafe(1 + 4 + 1 + 1);
+    buf[0] = 0x44; // 'D'
+    buf.writeUInt32BE(6, 1); // length (self + context + null name)
+    buf[5] = 0x53; // 'S' — describe prepared statement
+    buf[6] = 0; // empty statement name (null terminator)
+    return buf;
+}
 /** @internal Exported for testing. Builds a PostgreSQL Sync ('S') message. */
 export function buildSyncMessage() {
     const buf = Buffer.allocUnsafe(5);
@@ -497,7 +506,7 @@ export class PgConnection {
             this.socket?.write(buildQueryMessage(sql));
         });
     }
-    /** Execute a parameterized query using Parse/Bind/Execute/Sync protocol */
+    /** Execute a parameterized query using Parse/Describe/Bind/Execute/Sync protocol */
     _queryParams(sql, params) {
         return new Promise((resolve, reject) => {
             this.state = 'query';
@@ -506,11 +515,14 @@ export class PgConnection {
             this.queryRows = [];
             this.streamTarget = null;
             const parseMsg = buildParseMessage(sql);
+            const describeMsg = buildDescribeMessage();
             const bindMsg = buildBindMessage(params);
             const execMsg = buildExecuteMessage();
             const syncMsg = buildSyncMessage();
-            // Send all four messages in a single write for atomicity
-            this.socket?.write(Buffer.concat([parseMsg, bindMsg, execMsg, syncMsg]));
+            // Send Parse/Describe first so the server sends RowDescription,
+            // then Bind/Execute/Sync to execute with actual parameters.
+            // We send Describe BEFORE Bind to get column metadata before row data.
+            this.socket?.write(Buffer.concat([parseMsg, describeMsg, bindMsg, execMsg, syncMsg]));
         });
     }
     /** Execute a query, return a Readable stream of PgRow objects */

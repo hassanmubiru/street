@@ -5,6 +5,8 @@ export declare function buildParseMessage(query: string): Buffer;
 export declare function buildBindMessage(params: unknown[]): Buffer;
 /** @internal Exported for testing. Builds a PostgreSQL Execute ('E') message. */
 export declare function buildExecuteMessage(): Buffer;
+/** @internal Exported for testing. Builds a PostgreSQL Describe ('D') message for an unnamed prepared statement. */
+export declare function buildDescribeMessage(): Buffer;
 /** @internal Exported for testing. Builds a PostgreSQL Sync ('S') message. */
 export declare function buildSyncMessage(): Buffer;
 export interface PgRow {
@@ -55,7 +57,7 @@ export declare class PgConnection {
     private _parseError;
     /** Execute a query with optional parameters, return all rows buffered */
     query(sql: string, params?: unknown[]): Promise<PgResult>;
-    /** Execute a parameterized query using Parse/Bind/Execute/Sync protocol */
+    /** Execute a parameterized query using Parse/Describe/Bind/Execute/Sync protocol */
     private _queryParams;
     /** Execute a query, return a Readable stream of PgRow objects */
     queryStream(sql: string): StreetPostgresWireStream;
