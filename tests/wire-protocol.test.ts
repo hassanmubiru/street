@@ -25,6 +25,7 @@ import {
   xorBuffers,
   PgConnection,
 } from '../src/database/wire.js';
+import { pbkdf2Sync, createHmac } from 'node:crypto';
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
