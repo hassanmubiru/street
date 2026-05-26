@@ -137,8 +137,8 @@ describe('Server — shutdown chaos', () => {
         const port = server.address().port;
         // Start a slow request, then immediately close
         const requestPromise = new Promise((resolve) => {
-            const http = require('node:http');
-            const req = http.request({ hostname: '127.0.0.1', port, path: '/', method: 'GET' }, (res) => {
+            const { request: httpRequestFn } = await import('node:http');
+            const req = httpRequestFn({ hostname: '127.0.0.1', port, path: '/', method: 'GET' }, (res) => {
                 res.on('data', () => { });
                 res.on('end', resolve);
             });
@@ -162,9 +162,9 @@ describe('Resource exhaustion — simulation', () => {
     it('handles extremely large number of LRU cache instances', () => {
         // Create and destroy many cache instances to test timer cleanup
         const caches = [];
+        const { LruCache: LruCacheCls } = await import('../../src/cache/lru.js');
         for (let i = 0; i < 200; i++) {
-            const { LruCache } = require('../../src/cache/lru.js');
-            const cache = new LruCache({ maxEntries: 10, ttlMs: 1000 });
+            const cache = new LruCacheCls({ maxEntries: 10, ttlMs: 1000 });
             caches.push(cache);
         }
         for (const c of caches)

@@ -217,7 +217,8 @@ describe('XSS — depth and size bound verification', () => {
     });
     it('truncates strings exceeding MAX_STRING_LEN', () => {
         const huge = 'A'.repeat(2_000_000);
-        const result = require('../../src/security/xss.js').sanitizeString(huge);
+        const { sanitizeString: sanitize } = await import('../../src/security/xss.js');
+        const result = sanitize(huge);
         assert.ok(result.length <= 1_000_000);
     });
     it('sanitizes primitives safely', () => {

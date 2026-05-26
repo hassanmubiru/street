@@ -90,10 +90,7 @@ describe('JWT — fuzz & boundary testing', () => {
         assert.equal(jwt.verify(token), null);
     });
     it('rejects token with extremely long payload (>10MB simulated)', () => {
-        // Create a token with a very large payload that would blow up JSON.parse
-        const hugePayload = '{"data":"' + 'A'.repeat(100000) + '"}';
         const token = jwt.sign({ sub: 'test', data: 'x'.repeat(50000) });
-        // Attempt to decode should not crash
         const decoded = jwt.decode(token);
         assert.ok(decoded !== null);
     });

@@ -32,21 +32,6 @@ function fuzzBytes(minLen = 0, maxLen = MAX_FUZZ_STRING) {
 function fuzzString(minLen = 0, maxLen = MAX_FUZZ_STRING) {
     return fuzzBytes(minLen, maxLen).toString('latin1');
 }
-/** Valid Unicode string with some special chars */
-function fuzzUnicode() {
-    const blocks = [
-        'Hello World',
-        '\u0000\u0001\u0002', // Control chars
-        '\u0080\u00FF\u0100\u07FF', // Extended Latin
-        '\u0800\uFFFF', // More Unicode
-        '\u{10000}\u{10FFFF}', // Supplementary (if Node supports)
-        '🚀🔥💯こんにちは世界', // Emoji + CJK
-        'a\u0300b\u0301c\u0302', // Combining marks
-        '\u202E\u202D\u200E\u200F', // Bidi marks
-        '\u00A0\u00AD\u200B\u200C\u200D\uFEFF', // Special whitespace
-    ];
-    return blocks.join('');
-}
 /** Fuzzed JSON-like object */
 function fuzzObject(depth = 0) {
     if (depth > 5)
@@ -292,8 +277,8 @@ describe('Multipart Parser — fuzz testing', () => {
             assert.equal(req.listenerCount('error'), 0);
         }
     });
-    it('handles missing boundary in content-type', () => {
-        const { MultipartParser } = require('../../src/multipart/parser.js');
+    it('handles missing boundary in content-type', async () => {
+        const { MultipartParser } = await import('../../src/multipart/parser.js');
         // Should not crash with various boundary values
         const boundaries = ['', '----', '--', 'a', '\x00', '🔥'];
         for (const b of boundaries) {
@@ -324,8 +309,8 @@ describe('Crypto — parameter fuzz testing', () => {
         // Non-hex characters
         assert.throws(() => new SessionManager('zz'.repeat(32)), /64-char hex/);
     });
-    it('encryptSecret/decryptSecret handle edge cases', () => {
-        const { encryptSecret, decryptSecret } = require('../../src/security/vault.js');
+    it('encryptSecret/decryptSecret handle edge cases', async () => {
+        const { encryptSecret, decryptSecret } = await import('../../src/security/vault.js');
         const kek = 'test-kek-for-fuzz-testing-here!';
         // Empty plaintext
         const enc1 = encryptSecret('', kek);
