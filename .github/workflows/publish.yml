@@ -26,7 +26,11 @@ jobs:
       - name: Build
         run: |
           npm run build || true
-          
+      - name: Configure npm auth
+        if: secrets.NPM_TOKEN != ''
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" > ~/.npmrc
+
       - name: Publish package
         run: npm publish --access public
         env:
