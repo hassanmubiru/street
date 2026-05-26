@@ -8,7 +8,7 @@
 // The _queryParams integration test wires a mock socket into PgConnection
 // to verify the full write-and-response cycle without a real database.
 
-import { describe, it, before, after, mock } from 'node:test';
+import { describe, it, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 
@@ -360,7 +360,6 @@ describe('_queryParams integration (via PgConnection.query)', () => {
     assert.equal(written[sIdx + 1 + 4], 0, 'Last byte of Sync length is correct');
 
     // Parse message should contain the query
-    const parseLen = written.readUInt32BE(pIdx + 1);
     const queryText = written.toString('utf8', 6, written.indexOf(0, 6));
     assert.equal(queryText, 'SELECT $1::text AS name');
 
