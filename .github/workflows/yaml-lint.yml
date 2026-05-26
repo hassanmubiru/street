@@ -31,55 +31,31 @@ jobs:
           python-version: '3.x'
 
       - name: Validate all YAML files
-        run: |
-          set +e
-          errors=0
-          while IFS= read -r -d '' file; do
-            python3 -c "
-import yaml, sys
-try:
-    yaml.safe_load(open('$file'))
-except yaml.YAMLError as e:
-    print(f'::error title=YAML Syntax Error,file={file}::{e}')
-    sys.exit(1)
-else:
-    print(f'  ✓ {file}')
-" || errors=$((errors + 1))
-          done < <(find . -type f \( -name '*.yml' -o -name '*.yaml' \) ! -path './node_modules/*' ! -path './.git/*' -print0)
-          if [ $errors -gt 0 ]; then
-            echo "❌ $errors YAML file(s) failed validation"
-            exit 1
-          else
-            echo "✅ All YAML files valid"
-          fi
+        run: python3 -c "
+import os, sys
+import yaml
 
-      - name: Validate workflows with GitHub schema
-        run: |
-          pip install yamale -q 2>/dev/null
-          python3 -c "
-import json, sys, os
-# Simple check: try to parse each workflow file and verify
-# it has the required top-level keys
-workflows = [f for f in os.listdir('.github/workflows') 
-             if f.endswith(('.yml', '.yaml'))]
 errors = 0
-for wf in workflows:
-    path = f'.github/workflows/{wf}'
-    import yaml
-    try:
-        data = yaml.safe_load(open(path))
-        if not isinstance(data, dict):
-            print(f'::warning title=Invalid Workflow,file={path}::Root is not a mapping')
+for root, dirs, files in os.walk('.'):
+    dirs[:] = [d for d in dirs if d not in ('node_modules', '.git')]
+    for f in files:
+        if not (f.endswith('.yml') or f.endswith('.yaml')):
+            continue
+        path = os.path.join(root, f)
+        try:
+            data = yaml.safe_load(open(path))
+        except yaml.YAMLError as e:
+            print(f'::error title=YAML Syntax Error,file={path}::{e}')
             errors += 1
             continue
-        if 'name' not in data:
-            print(f'::warning title=Missing name,file={path}::Workflow missing \"name\" key')
-        if 'on' not in data and '\"on\"' not in open(path).read():
-            print(f'::warning title=Missing trigger,file={path}::Workflow missing \"on\" trigger')
-        print(f'  ✓ {path}')
-    except Exception as e:
-        print(f'::error title=Workflow Parse Error,file={path}::{e}')
-        errors += 1
+        # Also verify top-level structure for workflow files
+        if '.github/workflows/' in path:
+            if not isinstance(data, dict):
+                print(f'::error title=Invalid Workflow,file={path}::Root must be a mapping')
+                errors += 1
+            elif 'name' not in data:
+                print(f'::warning title=Missing name,file={path}::Workflow missing \"name\" key')
+        print(f'  OK: {path}')
 if errors:
     sys.exit(1)
 "
