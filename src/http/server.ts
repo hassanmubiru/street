@@ -220,8 +220,13 @@ export function streetApp(options: StreetAppOptions = {}): StreetApp {
 
     listen(port = options.port ?? 3000, host = options.host ?? '0.0.0.0'): Promise<void> {
       return new Promise((resolve, reject) => {
-        server.on('error', reject);
+        const onError = (err: Error): void => {
+          server.removeListener('error', onError);
+          reject(err);
+        };
+        server.on('error', onError);
         server.listen(port, host, () => {
+          server.removeListener('error', onError);
           console.log(`[street] Listening on http://${host}:${port}`);
           resolve();
         });
