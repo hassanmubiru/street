@@ -111,7 +111,7 @@ jobs:
           PG_HOST: ""  # Skip PG-dependent tests
 
       - name: Run unified system test runner
-        run: node --test tests/system/runner.ts --ci --json --skip-pg
+        run: node dist/tests/system/runner.js --ci --json --skip-pg
 
       - name: Upload system test results
         if: always()
