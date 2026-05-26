@@ -227,12 +227,8 @@ function md5(input: string): string {
 
 // ─── SASL / SCRAM-SHA-256 ──────────────────────────────────────────────────────
 
-/**
- * Build a SASLInitialResponse ('p') message for the chosen mechanism.
- * Per PostgreSQL wire protocol: mechanism (null-terminated) + client-first-message length (Int32BE) + client-first-message.
- * The client-first-message must include the gs2-header (e.g., "n,,n=user,r=nonce").
- */
-function buildSASLInitialResponse(mechanism: string, clientFirstMessage: string): Buffer {
+/** @internal Exported for testing. Builds a SASLInitialResponse ('p') message. */
+export function buildSASLInitialResponse(mechanism: string, clientFirstMessage: string): Buffer {
   const mechBuf = Buffer.from(mechanism + '\0', 'utf8');
   const firstBuf = Buffer.from(clientFirstMessage, 'utf8');
   const bodyLen = mechBuf.length + 4 + firstBuf.length;
@@ -245,12 +241,8 @@ function buildSASLInitialResponse(mechanism: string, clientFirstMessage: string)
   return buf;
 }
 
-/**
- * Build a SASLResponse ('p') message containing the client-final-message.
- * Per PostgreSQL wire protocol: the message body is the raw SASL payload bytes
- * (unlike SASLInitialResponse which has an Int32 length prefix before the data).
- */
-function buildSASLResponse(clientFinalMessage: string): Buffer {
+/** @internal Exported for testing. Builds a SASLResponse ('p') message with raw client-final-message bytes. */
+export function buildSASLResponse(clientFinalMessage: string): Buffer {
   const msgBuf = Buffer.from(clientFinalMessage, 'utf8');
   const buf = Buffer.allocUnsafe(1 + 4 + msgBuf.length);
   buf[0] = 0x70; // 'p'
@@ -259,10 +251,8 @@ function buildSASLResponse(clientFinalMessage: string): Buffer {
   return buf;
 }
 
-/**
- * Parse a SASL mechanism list from buffer (null-terminated strings, ends with empty string).
- */
-function parseSASLMechanisms(data: Buffer): string[] {
+/** @internal Exported for testing. Parse a SASL mechanism list from buffer (null-terminated strings). */
+export function parseSASLMechanisms(data: Buffer): string[] {
   const mechanisms: string[] = [];
   let offset = 0;
   while (offset < data.length) {
@@ -274,10 +264,8 @@ function parseSASLMechanisms(data: Buffer): string[] {
   return mechanisms;
 }
 
-/**
- * Parse SCRAM key=value parameters from a comma-separated message string.
- */
-function parseScramParams(message: string): Record<string, string> {
+/** @internal Exported for testing. Parse SCRAM key=value parameters from a comma-separated message string. */
+export function parseScramParams(message: string): Record<string, string> {
   const params: Record<string, string> = {};
   const parts = message.split(',');
   for (const part of parts) {
@@ -304,10 +292,8 @@ function scramHi(password: string, salt: Buffer, iterations: number): Buffer {
   return pbkdf2Sync(password, salt, iterations, 32, 'sha256');
 }
 
-/**
- * XOR two buffers together (bytewise).
- */
-function xorBuffers(a: Buffer, b: Buffer): Buffer {
+/** @internal Exported for testing. XOR two buffers together (bytewise). */
+export function xorBuffers(a: Buffer, b: Buffer): Buffer {
   const len = Math.min(a.length, b.length);
   const out = Buffer.allocUnsafe(len);
   for (let i = 0; i < len; i++) {
