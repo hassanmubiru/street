@@ -16,7 +16,6 @@ import { createServer } from 'node:http';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { randomBytes } from 'node:crypto';
 import { PgConnection } from '../src/database/wire.js';
 import { ClusterCoordinator } from '../src/cluster/coordinator.js';
 
@@ -113,7 +112,7 @@ describe('parseBody — event listener cleanup', () => {
 // cleared. PgConnection.connect is mocked to avoid requiring a real database.
 
 describe('PgPool — waiter rejection on close', () => {
-  let mockConnect: ReturnType<typeof mock.method>;
+  let mockConnect: any;
 
   beforeEach(() => {
     // Build a lightweight mock connection that behaves enough for the pool
