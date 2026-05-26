@@ -365,7 +365,7 @@ describe('Migration System — (requires PG, skipped if unavailable)', () => {
   let runner: StreetMigrationRunner;
   let migrationsDir: string;
   const PG_HOST = process.env['PG_HOST'];
-  const testEnabled = PG_HOST !== undefined;
+  const testEnabled = PG_HOST !== undefined && PG_HOST !== '';
 
   before(async function () {
     if (!testEnabled) {
