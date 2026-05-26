@@ -39,6 +39,7 @@ curl http://localhost:3000/api/hello
 [![Publish](https://github.com/hassanmubiru/street/actions/workflows/publish.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![npm version](https://img.shields.io/npm/v/@streetjs/core)](https://www.npmjs.com/package/@streetjs/core)
+[![npm downloads](https://img.shields.io/npm/dm/@streetjs/core)](https://www.npmjs.com/package/@streetjs/core)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.0-blue)](https://www.typescriptlang.org)
 [![package size](https://img.shields.io/bundlephobia/min/@streetjs/core)](https://bundlephobia.com/package/@streetjs/core)
