@@ -34,7 +34,7 @@ let StreetMigrationRunner = class StreetMigrationRunner {
             console.log(`[migrations] Applying: ${file}`);
             await this.pool.transaction(async (conn) => {
                 await conn.query(sql);
-                await conn.query(`INSERT INTO ${MIGRATIONS_TABLE} (name, applied_at) VALUES ('${file.replace(/'/g, "''")}', NOW())`);
+                await conn.query(`INSERT INTO ${MIGRATIONS_TABLE} (name, applied_at) VALUES ($1, NOW())`, [file]);
             });
             console.log(`[migrations] Applied: ${file}`);
         }
@@ -57,7 +57,7 @@ let StreetMigrationRunner = class StreetMigrationRunner {
             console.log(`[migrations] Rolling back: ${name}`);
             await this.pool.transaction(async (conn) => {
                 await conn.query(sql);
-                await conn.query(`DELETE FROM ${MIGRATIONS_TABLE} WHERE name = '${name.replace(/'/g, "''")}'`);
+                await conn.query(`DELETE FROM ${MIGRATIONS_TABLE} WHERE name = $1`, [name]);
             });
             console.log(`[migrations] Rolled back: ${name}`);
         }

@@ -21,7 +21,7 @@ export declare class PgPool {
     /** Release connection back to pool */
     release(conn: PgConnection): void;
     /** Execute a query with automatic connection management */
-    query(sql: string): Promise<PgResult>;
+    query(sql: string, params?: unknown[]): Promise<PgResult>;
     /** Execute in a transaction */
     transaction<T>(fn: (conn: PgConnection) => Promise<T>): Promise<T>;
     private _sweepIdle;

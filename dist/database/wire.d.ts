@@ -45,8 +45,10 @@ export declare class PgConnection {
     private _parseRowDescription;
     private _parseDataRow;
     private _parseError;
-    /** Execute a query, return all rows buffered */
-    query(sql: string, _params?: unknown[]): Promise<PgResult>;
+    /** Execute a query with optional parameters, return all rows buffered */
+    query(sql: string, params?: unknown[]): Promise<PgResult>;
+    /** Execute a parameterized query using Parse/Bind/Execute/Sync protocol */
+    private _queryParams;
     /** Execute a query, return a Readable stream of PgRow objects */
     queryStream(sql: string): StreetPostgresWireStream;
     /** Close the connection gracefully */
