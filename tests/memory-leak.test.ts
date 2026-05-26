@@ -132,7 +132,7 @@ describe('PgPool — waiter rejection on close', () => {
   });
 
   afterEach(() => {
-    mockConnect.restore();
+    mockConnect.mock.restore();
   });
 
   it('rejects pending acquire waiters when pool is closed', async () => {
