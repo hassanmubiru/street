@@ -21,6 +21,10 @@ export declare class PgPool {
     acquire(): Promise<PgConnection>;
     /** Release connection back to pool */
     release(conn: PgConnection): void;
+    /** Remove a pooled connection from the connections array */
+    private _removeConnection;
+    /** Create a replacement connection if under max and not closed */
+    private _maybeCreateReplacement;
     /** Execute a streaming query — automatically manages acquire/release */
     stream(sql: string): Promise<StreetPostgresWireStream>;
     /** Execute a query with automatic connection management */

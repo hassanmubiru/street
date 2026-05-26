@@ -49,8 +49,26 @@ let PgPool = class PgPool {
     async acquire() {
         if (this.closed)
             throw new Error('Pool is closed');
-        // Find idle healthy connection
+        // Find idle healthy connection, cleaning up dead ones encountered along the way
         for (const p of this.connections) {
+            if (p.conn.isClosed) {
+                // Dead connection — remove it from the pool and create a replacement
+                this._removeConnection(p);
+                // Create replacement if under max
+                if (this.connections.length + this.pendingCreations < this.opts.maxConnections) {
+                    this.pendingCreations++;
+                    try {
+                        const replacement = await this._createConnection();
+                        replacement.inUse = true;
+                        return replacement.conn;
+                    }
+                    finally {
+                        this.pendingCreations--;
+                    }
+                }
+                // Fall through to wait queue if we can't create a replacement
+                break;
+            }
             if (!p.inUse && p.conn.isReady) {
                 p.inUse = true;
                 p.lastUsed = Date.now();
@@ -90,6 +108,12 @@ let PgPool = class PgPool {
         const pooled = this.connections.find((p) => p.conn === conn);
         if (!pooled)
             return;
+        // If connection died while in use, remove it and create replacement if needed
+        if (pooled.conn.isClosed) {
+            this._removeConnection(pooled);
+            this._maybeCreateReplacement();
+            return;
+        }
         pooled.inUse = false;
         pooled.lastUsed = Date.now();
         // Service waiting callers — only if connection is healthy
@@ -101,6 +125,33 @@ let PgPool = class PgPool {
                 waiter.resolve(pooled.conn);
             }
         }
+    }
+    /** Remove a pooled connection from the connections array */
+    _removeConnection(pooled) {
+        const idx = this.connections.indexOf(pooled);
+        if (idx !== -1)
+            this.connections.splice(idx, 1);
+    }
+    /** Create a replacement connection if under max and not closed */
+    _maybeCreateReplacement() {
+        if (this.closed)
+            return;
+        if (this.connections.length + this.pendingCreations >= this.opts.maxConnections)
+            return;
+        this.pendingCreations++;
+        this._createConnection().then((pooled) => {
+            // Serve a waiter with the new connection if one is waiting
+            const waiter = this.waitQueue.shift();
+            if (waiter) {
+                pooled.inUse = true;
+                clearTimeout(waiter.timer);
+                waiter.resolve(pooled.conn);
+            }
+        }).catch(() => {
+            // Replacement failed — nothing to do
+        }).finally(() => {
+            this.pendingCreations--;
+        });
     }
     /** Execute a streaming query — automatically manages acquire/release */
     async stream(sql) {

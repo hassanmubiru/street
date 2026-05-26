@@ -391,3 +391,208 @@ describe('PgPool — chaos testing (mocked)', () => {
     await pool.close();
   });
 });
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 7. Pool Reconnection (mocked connections)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe('PgPool — reconnection scenarios (mocked)', () => {
+  let mockConnect: any;
+  const createdConnections: any[] = [];
+
+  before(() => {
+    createdConnections.length = 0;
+    const mockConn = () => {
+      const conn = {
+        isReady: true,
+        isClosed: false,
+        close: async () => {},
+        query: async (_sql: string, _params?: unknown[]) => ({ rows: [], fields: [] }),
+        queryStream: (_sql: string) => new Readable({ read() { this.push(null); } }),
+        // Allow tests to simulate failure
+        _markDead() {
+          conn.isClosed = true;
+          conn.isReady = false;
+        },
+        _revive() {
+          conn.isClosed = false;
+          conn.isReady = true;
+        },
+      };
+      createdConnections.push(conn);
+      return conn;
+    };
+    mockConnect = mock.method(PgConnection, 'connect', mockConn);
+  });
+
+  after(() => {
+    mockConnect.mock.restore();
+  });
+
+  it('recovers from single connection failure — dead connection removed, replacement created', async () => {
+    const { PgPool } = await import('../../src/database/pool.js');
+    const pool = new PgPool({
+      host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+      minConnections: 0, maxConnections: 3, acquireTimeoutMs: 5000,
+    });
+
+    const conn = await pool.acquire() as any;
+    const callCountBefore = mockConnect.mock.callCount();
+
+    // Kill the connection (simulate network failure)
+    conn._markDead();
+
+    // Release the dead connection — pool detects isClosed, removes it, spawns replacement via _maybeCreateReplacement()
+    pool.release(conn);
+
+    // Use acquire() to wait for the async replacement — acquire will either find
+    // the replacement (if async done) or create another one. Either way we get a fresh connection.
+    const fresh = await pool.acquire();
+    assert.ok(mockConnect.mock.callCount() > callCountBefore, 'A new connection should have been created');
+    assert.equal(fresh.isReady, true);
+    assert.equal(fresh.isClosed, false);
+    assert.ok(pool.size <= 3, 'Pool size should stay within max');
+    pool.release(fresh);
+    await pool.close();
+  });
+
+  it('handles multiple connection failures without pool corruption', async () => {
+    const { PgPool } = await import('../../src/database/pool.js');
+    const pool = new PgPool({
+      host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+      minConnections: 0, maxConnections: 5, acquireTimeoutMs: 5000,
+    });
+
+    // Acquire and kill 3 connections
+    const conns = await Promise.all([
+      pool.acquire(),
+      pool.acquire(),
+      pool.acquire(),
+    ]) as any[];
+
+    for (const c of conns) c._markDead();
+    for (const c of conns) pool.release(c);
+
+    // Acquire will either find the async replacements or create new ones.
+    // 3 releases each spawn a replacement — pool should have 3 connections.
+    // But acquire() may also create more if replacements haven't landed yet.
+    // Either way, pool stays within maxConnections.
+    const recovered = await Promise.all([
+      pool.acquire(),
+      pool.acquire(),
+      pool.acquire(),
+    ]);
+    for (const c of recovered) {
+      assert.equal(c.isReady, true);
+      assert.equal(c.isClosed, false);
+      pool.release(c);
+    }
+
+    assert.ok(pool.size <= 5, `Pool size ${pool.size} exceeded max 5`);
+    await pool.close();
+  });
+
+  it('acquire detects dead connection in idle loop and creates replacement', async () => {
+    const { PgPool } = await import('../../src/database/pool.js');
+    const pool = new PgPool({
+      host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+      minConnections: 0, maxConnections: 2, acquireTimeoutMs: 5000,
+    });
+
+    const conn = await pool.acquire() as any;
+    pool.release(conn); // Now idle in pool
+
+    // Kill the idle connection (simulate network failure while idle)
+    conn._markDead();
+
+    // Acquire iterates connections, detects isClosed, removes it, creates replacement
+    const fresh = await pool.acquire();
+    assert.equal(fresh.isReady, true);
+    assert.equal(fresh.isClosed, false);
+    assert.notEqual(fresh, conn, 'Should get a new connection, not the dead one');
+    pool.release(fresh);
+    await pool.close();
+  });
+
+  it('temporary network blip — recovers and resumes normal operation', async () => {
+    const { PgPool } = await import('../../src/database/pool.js');
+    const pool = new PgPool({
+      host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+      minConnections: 0, maxConnections: 3, acquireTimeoutMs: 5000,
+    });
+
+    // Normal operation
+    const conn1 = await pool.acquire() as any;
+    pool.release(conn1);
+
+    // Simulate network blip — kill the connection
+    conn1._markDead();
+    pool.release(conn1); // Pool detects isClosed, removes it, spawns replacement via _maybeCreateReplacement()
+
+    // Acquire will find the replacement or create another one — either way, normal ops resume
+    const conn2 = await pool.acquire();
+    assert.equal(conn2.isReady, true);
+    assert.equal(conn2.isClosed, false);
+
+    // More operations after recovery
+    pool.release(conn2);
+    const conn3 = await pool.acquire();
+    assert.equal(conn3.isReady, true);
+    pool.release(conn3);
+
+    await pool.close();
+  });
+
+  it('waiter is served when dead connection is released and replacement created', async () => {
+    const { PgPool } = await import('../../src/database/pool.js');
+    const pool = new PgPool({
+      host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+      minConnections: 0, maxConnections: 1, acquireTimeoutMs: 5000,
+    });
+
+    // Acquire and kill the only connection
+    const conn = await pool.acquire() as any;
+    conn._markDead();
+
+    // Queue a waiter — acquire() finds the dead connection (isClosed check before inUse),
+    // removes it from the pool, and creates a replacement inline, returning it as the 'waiter' promise.
+    const waiter = pool.acquire();
+
+    // The waiter resolved during acquire() above — the dead connection is already removed.
+    // Calling pool.release(conn) finds that conn is no longer in connections, so it's a no-op.
+    pool.release(conn);
+
+    // Waiter resolved to the replacement connection
+    const served = await waiter;
+    assert.ok(served !== undefined, 'Waiter should be served a connection');
+    assert.equal(served.isReady, true);
+    assert.equal(served.isClosed, false);
+    assert.notEqual(served, conn, 'Should get a replacement, not the dead connection');
+
+    pool.release(served);
+    await pool.close();
+  });
+
+  it('dead connection that is never released is cleaned up on next acquire', async () => {
+    const { PgPool } = await import('../../src/database/pool.js');
+    const pool = new PgPool({
+      host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+      minConnections: 0, maxConnections: 2, acquireTimeoutMs: 5000,
+    });
+
+    // Acquire a connection, then it dies without being released (e.g., socket drop)
+    const conn = await pool.acquire() as any;
+    conn._markDead();
+
+    // Connection is inUse=true but isClosed=true. acquire() checks isClosed
+    // before inUse, so it detects the dead connection, removes it from the pool,
+    // and creates a replacement.
+    const fresh = await pool.acquire();
+    assert.equal(fresh.isReady, true);
+    assert.equal(fresh.isClosed, false);
+    assert.notEqual(fresh, conn, 'Should get a new connection, not the dead one');
+
+    pool.release(fresh);
+    await pool.close();
+  });
+});

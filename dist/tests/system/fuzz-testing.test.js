@@ -3,7 +3,7 @@
 // protocol-level fuzzing, encoding attacks, boundary exploration.
 // Zero mocks — tests run real implementations against adversarial inputs.
 // Uses only node:test, node:assert, node:crypto, node:buffer.
-import { describe, it, before, after } from 'node:test';
+import { describe, it, before, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { Readable } from 'node:stream';
@@ -17,6 +17,7 @@ import { sanitizeDeep, sanitizeString } from '../../src/security/xss.js';
 import { LruCache } from '../../src/cache/lru.js';
 import { StreetSocket } from '../../src/websocket/server.js';
 import { SseConnection } from '../../src/websocket/sse.js';
+import { PgConnection } from '../../src/database/wire.js';
 // ═══════════════════════════════════════════════════════════════════════════════
 // Configuration
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -699,6 +700,166 @@ describe('SSE Connection — fuzz testing', () => {
         // Emit close on response — triggers cleanup via res.once('close')
         res.emit('close');
         assert.equal(sse.closed, true);
+    });
+});
+// ═══════════════════════════════════════════════════════════════════════════════
+// 9. Pool Configuration Fuzz Testing
+// ═══════════════════════════════════════════════════════════════════════════════
+describe('PgPool — configuration fuzz testing (mocked)', () => {
+    let mockConnect;
+    before(() => {
+        const mockConn = () => ({
+            isReady: true,
+            isClosed: false,
+            close: async () => { },
+            query: async (_sql, _params) => ({ rows: [], fields: [] }),
+            queryStream: (_sql) => new Readable({ read() { this.push(null); } }),
+        });
+        mockConnect = mock.method(PgConnection, 'connect', mockConn);
+    });
+    after(() => {
+        mockConnect.mock.restore();
+    });
+    it(`handles ${FUZZ_COUNT} random valid configs — acquire/release cycles`, async () => {
+        const { PgPool } = await import('../../src/database/pool.js');
+        for (let i = 0; i < FUZZ_COUNT; i++) {
+            const minConnections = Math.floor(Math.random() * 6); // 0–5
+            const maxConnections = minConnections + Math.floor(Math.random() * 16); // min–min+15
+            const idleTimeoutMs = Math.floor(Math.random() * 60000) + 1000; // 1s–61s
+            const acquireTimeoutMs = Math.floor(Math.random() * 10000) + 100; // 100ms–10.1s
+            const pool = new PgPool({
+                host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+                minConnections,
+                maxConnections,
+                idleTimeoutMs,
+                acquireTimeoutMs,
+            });
+            // Acquire some connections and immediately release them
+            const count = Math.min(5, maxConnections);
+            for (let j = 0; j < count; j++) {
+                const conn = await pool.acquire();
+                pool.release(conn);
+            }
+            assert.ok(pool.size <= maxConnections, `Size ${pool.size} > max ${maxConnections}`);
+            assert.equal(pool.idle, pool.size, 'All connections should be idle');
+            await pool.close();
+        }
+    });
+    it('handles 12 boundary configs — edge cases', async () => {
+        const { PgPool } = await import('../../src/database/pool.js');
+        const configs = [
+            // Single connection pool (min=0, max=1)
+            { minConnections: 0, maxConnections: 1, idleTimeoutMs: 0, acquireTimeoutMs: 0 },
+            { minConnections: 0, maxConnections: 1, idleTimeoutMs: 0, acquireTimeoutMs: 50 },
+            { minConnections: 0, maxConnections: 1, idleTimeoutMs: 1000, acquireTimeoutMs: 5000 },
+            // Fixed-size pool (min === max)
+            { minConnections: 5, maxConnections: 5, idleTimeoutMs: 5000, acquireTimeoutMs: 1000 },
+            { minConnections: 10, maxConnections: 10, idleTimeoutMs: 1000, acquireTimeoutMs: 100 },
+            // Large limits
+            { minConnections: 0, maxConnections: 50, idleTimeoutMs: 100_000, acquireTimeoutMs: 30_000 },
+            { minConnections: 0, maxConnections: 100, idleTimeoutMs: 5000, acquireTimeoutMs: 2000 },
+            // Zero idle timeout (immediate sweep on next interval)
+            { minConnections: 0, maxConnections: 3, idleTimeoutMs: 0, acquireTimeoutMs: 0 },
+            // Min pool warmup + zero idle
+            { minConnections: 3, maxConnections: 5, idleTimeoutMs: 0, acquireTimeoutMs: 1000 },
+            // Extreme idle timeout (no sweep)
+            { minConnections: 2, maxConnections: 5, idleTimeoutMs: 2_147_483_647, acquireTimeoutMs: 5000 },
+            // Minimal acquire timeout
+            { minConnections: 0, maxConnections: 3, idleTimeoutMs: 5000, acquireTimeoutMs: 1 },
+            // Zero max connections (waiter rejection path)
+            { minConnections: 0, maxConnections: 0, idleTimeoutMs: 1000, acquireTimeoutMs: 100 },
+        ];
+        for (const cfg of configs) {
+            const pool = new PgPool({
+                host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+                ...cfg,
+            });
+            if (cfg.maxConnections === 0) {
+                // No connections can be created — acquire queues, rejected on close
+                const acquirePromise = pool.acquire().catch((e) => `rejected: ${e.message}`);
+                await pool.close();
+                const result = await acquirePromise;
+                assert.ok(typeof result === 'string' && result.startsWith('rejected:'));
+                continue;
+            }
+            // Acquire and release
+            const conn = await pool.acquire();
+            pool.release(conn);
+            assert.equal(pool.idle, pool.size, 'All connections idle after release');
+            await pool.close();
+        }
+    });
+    it(`handles ${500} random configs with wait queue pressure (varying acquireTimeoutMs)`, async () => {
+        const { PgPool } = await import('../../src/database/pool.js');
+        for (let i = 0; i < 500; i++) {
+            const acquireTimeoutMs = Math.floor(Math.random() * 5000) + 100; // 100ms–5.1s
+            const pool = new PgPool({
+                host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+                minConnections: 0,
+                maxConnections: 1,
+                idleTimeoutMs: 1000,
+                acquireTimeoutMs,
+            });
+            // Acquire the single connection
+            const conn = await pool.acquire();
+            // Queue a waiter
+            const waiter = pool.acquire();
+            // Release immediately — waiter should get it before timeout fires
+            pool.release(conn);
+            const served = await waiter;
+            assert.ok(served !== undefined);
+            assert.equal(served.isReady, true);
+            pool.release(served);
+            await pool.close();
+        }
+    });
+    it('rejects invalid config combinations gracefully', async () => {
+        const { PgPool } = await import('../../src/database/pool.js');
+        // min > max — pool should not crash, maxConnections limits creation
+        let pool = new PgPool({
+            host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+            minConnections: 10, maxConnections: 1, idleTimeoutMs: 1000, acquireTimeoutMs: 100,
+        });
+        // Acquire should work (up to maxConnections=1)
+        const conn = await pool.acquire();
+        pool.release(conn);
+        await pool.close();
+        // Negative values — should not crash
+        // setTimeout with negative value is clamped to ~1ms, so acquire timeout fires quickly
+        const negPool = new PgPool({
+            host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+            minConnections: -1,
+            maxConnections: -5,
+            idleTimeoutMs: -1,
+            acquireTimeoutMs: -1,
+        });
+        // max=-5 means connections.length + pendingCreations < -5 is always false
+        // acquire queues a waiter, timeout fires quickly (~1ms)
+        const acquirePromise = negPool.acquire().catch((e) => `rejected: ${e.message}`);
+        await new Promise((r) => setTimeout(r, 200));
+        const result = await acquirePromise;
+        assert.ok(typeof result === 'string' && result.startsWith('rejected:'));
+        await negPool.close();
+    });
+    it('handles connectTimeoutMs with extreme values', async () => {
+        const { PgPool } = await import('../../src/database/pool.js');
+        const extras = [
+            {},
+            { connectTimeoutMs: 0 },
+            { connectTimeoutMs: 1 },
+            { connectTimeoutMs: 2_147_483_647 },
+            { connectTimeoutMs: 30000 },
+        ];
+        for (const extra of extras) {
+            const pool = new PgPool({
+                host: 'localhost', port: 5432, user: 'u', password: 'p', database: 'd',
+                minConnections: 0, maxConnections: 2, idleTimeoutMs: 5000, acquireTimeoutMs: 1000,
+                ...extra,
+            });
+            const conn = await pool.acquire();
+            pool.release(conn);
+            await pool.close();
+        }
     });
 });
 //# sourceMappingURL=fuzz-testing.test.js.map
