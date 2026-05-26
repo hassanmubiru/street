@@ -8,6 +8,7 @@ import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import { Readable } from 'node:stream';
+import { EventEmitter } from 'node:events';
 import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -15,6 +16,8 @@ import { JwtService } from '../../src/security/jwt.js';
 import { SessionManager } from '../../src/security/session.js';
 import { sanitizeDeep, sanitizeString } from '../../src/security/xss.js';
 import { LruCache } from '../../src/cache/lru.js';
+import { StreetSocket, type WsEvent } from '../../src/websocket/server.js';
+import { SseConnection } from '../../src/websocket/sse.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Configuration
@@ -419,5 +422,392 @@ describe('LRU Cache — fuzz testing', () => {
     );
 
     cache.destroy();
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 7. WebSocket Protocol Fuzz Testing
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Create a mock WebSocket-like emitter for StreetSocket testing */
+function mockWs(): EventEmitter {
+  const ws = new EventEmitter();
+  (ws as any).readyState = 1; // WebSocket.OPEN
+  (ws as any).send = () => {};
+  (ws as any).close = (code?: number, reason?: string) => {
+    (ws as any).readyState = 3; // CLOSED
+    ws.emit('close', code ?? 1000, reason ?? '');
+  };
+  (ws as any).terminate = () => {};
+  (ws as any).isAlive = true;
+  return ws;
+}
+
+/** Generate a fuzzed WsEvent-like message */
+function fuzzWsEvent(): string {
+  const r = Math.random();
+  if (r < 0.3) return JSON.stringify({ type: fuzzString(0, 200), payload: fuzzObject(), ts: Date.now() });
+  if (r < 0.5) return JSON.stringify({ type: fuzzString(0, 200), payload: fuzzString(0, 5000) });
+  if (r < 0.7) return JSON.stringify({ type: fuzzString(0, 200) });
+  if (r < 0.85) return fuzzString(0, 10000);
+  // Raw binary as string (latin-1 territory)
+  return fuzzBytes(0, 5000).toString('utf8');
+}
+
+describe('WebSocket StreetSocket — fuzz testing', () => {
+  it(`handles ${FUZZ_COUNT} fuzzed messages without throwing`, () => {
+    for (let i = 0; i < FUZZ_COUNT; i++) {
+      const ws = mockWs();
+      const socket = new StreetSocket(ws as any);
+      const raw = fuzzWsEvent();
+      assert.doesNotThrow(() => {
+        ws.emit('message', Buffer.from(raw));
+      });
+    }
+  });
+
+  it(`handles ${FUZZ_COUNT} fuzzed message buffer variants (string / Buffer / raw bytes)`, () => {
+    for (let i = 0; i < FUZZ_COUNT; i++) {
+      const ws = mockWs();
+      const socket = new StreetSocket(ws as any);
+      const variant = Math.random();
+      assert.doesNotThrow(() => {
+        if (variant < 0.33) {
+          ws.emit('message', fuzzString(0, 5000)); // string
+        } else if (variant < 0.66) {
+          ws.emit('message', fuzzBytes(0, 5000)); // Buffer
+        } else {
+          ws.emit('message', fuzzBytes(0, 5000).buffer); // ArrayBuffer
+        }
+      });
+    }
+  });
+
+  it(`handles ${FUZZ_COUNT} fuzzed listener event names and handlers`, () => {
+    const ws = mockWs();
+    const socket = new StreetSocket(ws as any);
+
+    for (let i = 0; i < FUZZ_COUNT; i++) {
+      const eventName = fuzzString(0, 100);
+      const handler = () => fuzzObject();
+      assert.doesNotThrow(() => socket.on(eventName, handler));
+      assert.doesNotThrow(() => socket.off(eventName, handler));
+    }
+  });
+
+  it(`handles ${FUZZ_COUNT} fuzzed emit payloads`, () => {
+    const ws = mockWs();
+    const socket = new StreetSocket(ws as any);
+    let lastSent: string | undefined;
+    (ws as any).send = (data: string) => { lastSent = data; };
+
+    for (let i = 0; i < FUZZ_COUNT; i++) {
+      const type = fuzzString(0, 100);
+      const payload = fuzzObject();
+      assert.doesNotThrow(() => {
+        socket.emit(type, payload);
+        // Emitted message should always be valid JSON
+        if (lastSent) {
+          const parsed = JSON.parse(lastSent) as WsEvent;
+          assert.ok(typeof parsed.type === 'string');
+          assert.ok(typeof parsed.ts === 'number');
+        }
+      });
+    }
+  });
+
+  it('enforces MAX_LISTENERS (64) per event', () => {
+    const ws = mockWs();
+    const socket = new StreetSocket(ws as any);
+
+    // Register 64 listeners should be fine
+    for (let i = 0; i < 64; i++) {
+      socket.on('test', () => {});
+    }
+
+    // The 65th should throw
+    assert.throws(() => socket.on('test', () => {}), /Too many listeners/);
+
+    // A different event should still work
+    assert.doesNotThrow(() => socket.on('other', () => {}));
+  });
+
+  it(`handles ${500} fuzzed close codes and reasons`, () => {
+    for (let i = 0; i < 500; i++) {
+      const ws = mockWs();
+      const socket = new StreetSocket(ws as any);
+      const code = Math.floor(Math.random() * 10000);
+      const reason = fuzzString(0, 200);
+
+      assert.doesNotThrow(() => {
+        socket.close(code, reason);
+      });
+
+      // After close, emit should be a no-op
+      assert.doesNotThrow(() => socket.emit('any', fuzzObject()));
+    }
+  });
+
+  it('wildcard handler receives all messages', () => {
+    const ws = mockWs();
+    const socket = new StreetSocket(ws as any);
+
+    const wildcardMessages: unknown[] = [];
+    socket.on('*', (msg) => wildcardMessages.push(msg));
+
+    // Emit various messages
+    socket.emit('event1', { a: 1 });
+    socket.emit('event2', 'hello');
+    socket.emit('event3', null);
+
+    // Wildcard should have received 3 messages (full WsEvent objects)
+    assert.equal(wildcardMessages.length, 3);
+    const first = wildcardMessages[0] as WsEvent;
+    assert.equal(first.type, 'event1');
+
+    socket.off('*', (msg) => wildcardMessages.push(msg));
+    socket.emit('event4', {});
+    // After off(), wildcard should not receive more
+    assert.equal(wildcardMessages.length, 3);
+  });
+
+  it('closed flag is set on close and error', () => {
+    const ws = mockWs();
+    const socket = new StreetSocket(ws as any);
+    assert.equal(socket.closed, false);
+
+    ws.emit('close');
+    assert.equal(socket.closed, true);
+
+    // Creating a new socket, test error path
+    const ws2 = mockWs();
+    const socket2 = new StreetSocket(ws2 as any);
+    assert.equal(socket2.closed, false);
+    ws2.emit('error', new Error('test'));
+    assert.equal(socket2.closed, true);
+  });
+
+  it('readyState reflects underlying WebSocket state', () => {
+    const ws = mockWs();
+    const socket = new StreetSocket(ws as any);
+    assert.equal(socket.readyState, 1);
+
+    (ws as any).readyState = 3;
+    assert.equal(socket.readyState, 3);
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 8. SSE Protocol Fuzz Testing
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/** Create a mock ServerResponse for SseConnection testing */
+function mockSseResponse(): ReturnType<typeof EventEmitter> & {
+  writeHead: (code: number, headers: Record<string, string>) => void;
+  write: (chunk: string) => boolean;
+  end: () => void;
+  writableEnded: boolean;
+  socket: { once: (event: string, handler: () => void) => void } | null;
+} {
+  const res = new EventEmitter() as any;
+  res.writeHead = () => {};
+  res.writableEnded = false;
+  res.write = (chunk: string) => {
+    if (res.writableEnded) return false;
+    return true;
+  };
+  res.end = () => {
+    res.writableEnded = true;
+    res.emit('close');
+  };
+  res.socket = { once: () => {} };
+  return res;
+}
+
+describe('SSE Connection — fuzz testing', () => {
+  it(`handles ${FUZZ_COUNT} fuzzed event data without throwing`, () => {
+    for (let i = 0; i < FUZZ_COUNT; i++) {
+      const res = mockSseResponse();
+      const sse = new SseConnection(res as any, 5000);
+
+      const event = {
+        event: fuzzString(0, 200),
+        data: fuzzObject(),
+        id: fuzzString(0, 100),
+        retry: Math.random() > 0.5 ? Math.floor(Math.random() * 100000) : undefined,
+      };
+
+      assert.doesNotThrow(() => sse.send(event));
+      sse.close();
+    }
+  });
+
+  it(`handles ${500} fuzzed multi-line data variants`, () => {
+    for (let i = 0; i < 500; i++) {
+      const res = mockSseResponse();
+      const sse = new SseConnection(res as any, 5000);
+
+      // Generate data with various newline patterns
+      const lines = Math.floor(Math.random() * 10);
+      const parts: string[] = [];
+      for (let j = 0; j < lines; j++) {
+        parts.push(fuzzString(0, 200));
+      }
+      const multiLineData = parts.join('\n');
+
+      assert.doesNotThrow(() => sse.send({ data: multiLineData }));
+
+      // Multi-line data with trailing newline
+      assert.doesNotThrow(() => sse.send({ data: multiLineData + '\n' }));
+      sse.close();
+    }
+  });
+
+  it(`handles ${500} fuzzed field boundary conditions`, () => {
+    for (let i = 0; i < 500; i++) {
+      const res = mockSseResponse();
+      const sse = new SseConnection(res as any, 5000);
+
+      const event = {
+        event: fuzzString(0, 1000),
+        data: fuzzString(0, MAX_FUZZ_STRING),
+        id: fuzzString(0, 500),
+        retry: Math.random() > 0.5 ? Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) : undefined,
+      };
+
+      assert.doesNotThrow(() => sse.send(event));
+      sse.close();
+    }
+  });
+
+  it('handles missing fields gracefully', () => {
+    const res = mockSseResponse();
+    const sse = new SseConnection(res as any, 5000);
+
+    // Only data, no event or id
+    assert.doesNotThrow(() => sse.send({ data: 'hello' }));
+
+    // Only event name, no data
+    assert.doesNotThrow(() => sse.send({ event: 'update' } as any));
+
+    // Empty event
+    assert.doesNotThrow(() => sse.send({ event: '', data: '' }));
+
+    // Only retry, no other fields
+    assert.doesNotThrow(() => sse.send({ retry: 5000 } as any));
+
+    sse.close();
+  });
+
+  it('handles null/undefined data gracefully', () => {
+    const res = mockSseResponse();
+    const sse = new SseConnection(res as any, 5000);
+
+    assert.doesNotThrow(() => sse.send({ data: null }));
+    assert.doesNotThrow(() => sse.send({ data: undefined }));
+    assert.doesNotThrow(() => sse.send({ data: 0 }));
+    assert.doesNotThrow(() => sse.send({ data: false }));
+    assert.doesNotThrow(() => sse.send({ data: '' }));
+
+    sse.close();
+  });
+
+  it('handles comments with various text', () => {
+    const res = mockSseResponse();
+    const sse = new SseConnection(res as any, 5000);
+
+    assert.doesNotThrow(() => sse.comment('keepalive'));
+    assert.doesNotThrow(() => sse.comment(''));
+    assert.doesNotThrow(() => sse.comment(fuzzString(0, 1000)));
+
+    sse.close();
+  });
+
+  it('send returns false after close', () => {
+    const res = mockSseResponse();
+    const sse = new SseConnection(res as any, 5000);
+
+    assert.equal(sse.closed, false);
+    sse.close();
+    assert.equal(sse.closed, true);
+
+    // send() should return false after close
+    assert.equal(sse.send({ data: 'test' }), false);
+    // comment() should return false after close
+    assert.equal(sse.comment('test'), false);
+  });
+
+  it('multiple close calls are safe', () => {
+    const res = mockSseResponse();
+    const sse = new SseConnection(res as any, 5000);
+
+    assert.doesNotThrow(() => sse.close());
+    assert.doesNotThrow(() => sse.close());
+    assert.doesNotThrow(() => sse.close());
+  });
+
+  it('send with JSON data produces valid SSE format', () => {
+    const res = mockSseResponse();
+    const written: string[] = [];
+    res.write = (chunk: string) => {
+      written.push(chunk);
+      return true;
+    };
+    const sse = new SseConnection(res as any, 5000);
+
+    const obj = { key: 'value', num: 42, arr: [1, 2, 3] };
+    sse.send({ event: 'data', data: obj });
+
+    const output = written.join('');
+    assert.ok(output.includes('event: data'));
+    assert.ok(output.includes('data: {"key":"value"'));
+    assert.ok(output.includes('data: [1,2,3]')); // single line array check
+    assert.ok(output.endsWith('\n\n'));
+
+    sse.close();
+  });
+
+  it('handles custom id strings', () => {
+    const res = mockSseResponse();
+    const written: string[] = [];
+    res.write = (chunk: string) => { written.push(chunk); return true; };
+    const sse = new SseConnection(res as any, 5000);
+
+    sse.send({ data: 'msg1', id: 'custom-id-42' });
+    assert.ok(written.join('').includes('id: custom-id-42'));
+
+    // Without custom id, it should use auto-incrementing id
+    sse.send({ data: 'msg2' });
+    const output = written.join('');
+    assert.ok(output.includes('id: 1'));
+    assert.ok(output.includes('id: custom-id-42'));
+
+    sse.close();
+  });
+
+  it('handles writableEnded response gracefully', () => {
+    const res = mockSseResponse();
+    res.writableEnded = true;
+    const sse = new SseConnection(res as any, 5000);
+
+    assert.equal(sse.send({ data: 'test' }), false);
+    assert.equal(sse.comment('test'), false);
+    sse.close();
+  });
+
+  it('handles socket end event for early cleanup', () => {
+    let endHandler: (() => void) | null = null;
+    const res = mockSseResponse();
+    res.socket = {
+      once: (event: string, handler: () => void) => {
+        if (event === 'end') endHandler = handler;
+      },
+    };
+    const sse = new SseConnection(res as any, 5000);
+    assert.equal(sse.closed, false);
+
+    // Simulate socket end
+    if (endHandler) endHandler();
+    assert.equal(sse.closed, true);
   });
 });
