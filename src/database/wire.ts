@@ -321,6 +321,8 @@ function xorBuffers(a: Buffer, b: Buffer): Buffer {
  */
 interface ScramState {
   clientFirstMessageBare: string;
+  /** The client-generated nonce (before server concatenation) used for prefix validation in Round 2. */
+  clientNonce: string;
   serverFirstMessage: string;
   saltedPassword: Buffer;
   authMessage: string;
@@ -618,6 +620,7 @@ export class PgConnection {
 
         this.scramState = {
           clientFirstMessageBare,
+          clientNonce: cNonce,
           serverFirstMessage: '',
           saltedPassword: Buffer.alloc(0),
           authMessage: '',
@@ -649,6 +652,16 @@ export class PgConnection {
         if (!nonce || !saltB64 || !iterationsStr) {
           if (this.authReject) {
             this.authReject(new Error('Malformed SCRAM server-first-message'));
+            this.authReject = null;
+          }
+          return;
+        }
+
+        // RFC 5802 §7: Client MUST verify that the server's combined nonce starts
+        // with the client's original nonce to prevent nonce substitution attacks.
+        if (!nonce.startsWith(this.scramState.clientNonce)) {
+          if (this.authReject) {
+            this.authReject(new Error('SCRAM nonce mismatch — server nonce does not start with client nonce'));
             this.authReject = null;
           }
           return;

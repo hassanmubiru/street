@@ -541,6 +541,7 @@ export class PgConnection {
                 const clientFirstMessage = gs2Header + clientFirstMessageBare;
                 this.scramState = {
                     clientFirstMessageBare,
+                    clientNonce: cNonce,
                     serverFirstMessage: '',
                     saltedPassword: Buffer.alloc(0),
                     authMessage: '',
@@ -567,6 +568,15 @@ export class PgConnection {
                 if (!nonce || !saltB64 || !iterationsStr) {
                     if (this.authReject) {
                         this.authReject(new Error('Malformed SCRAM server-first-message'));
+                        this.authReject = null;
+                    }
+                    return;
+                }
+                // RFC 5802 §7: Client MUST verify that the server's combined nonce starts
+                // with the client's original nonce to prevent nonce substitution attacks.
+                if (!nonce.startsWith(this.scramState.clientNonce)) {
+                    if (this.authReject) {
+                        this.authReject(new Error('SCRAM nonce mismatch — server nonce does not start with client nonce'));
                         this.authReject = null;
                     }
                     return;
