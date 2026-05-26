@@ -285,8 +285,9 @@ export function parseScramParams(message: string): Record<string, string> {
 /**
  * Validate that a string does not contain characters prohibited by RFC 4013 §3 (SASLprep).
  * Checks the most common prohibited categories after NFKC normalization.
+ * @internal Exported for testing.
  */
-function validateSASLprep(s: string): boolean {
+export function validateSASLprep(s: string): boolean {
   let i = 0;
   while (i < s.length) {
     const cp = s.codePointAt(i)!;
