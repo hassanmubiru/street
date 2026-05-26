@@ -1,6 +1,10 @@
 # Street Framework
 
 [![CI](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml)
+[![Memory Leak Tests](https://github.com/hassanmubiru/street/actions/workflows/memory-leak.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/memory-leak.yml)
+[![Security Lint](https://github.com/hassanmubiru/street/actions/workflows/security-lint.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/security-lint.yml)
+[![Publish](https://github.com/hassanmubiru/street/actions/workflows/publish.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/publish.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 See `docs/README.md` for full documentation. To run tests locally, use the provided helper script:
 
