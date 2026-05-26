@@ -32,7 +32,7 @@ function simulateParseBodyLifecycle(
   req: Readable,
   maxBytes = 1024 * 1024
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise<void>((resolve, reject) => {
     const chunks: Buffer[] = [];
     let totalBytes = 0;
 
@@ -45,7 +45,7 @@ function simulateParseBodyLifecycle(
       }
       chunks.push(chunk);
     };
-    const onEnd = (): void => resolve();
+    const onEnd = (): void => resolve(undefined);
     const onError = (err: Error): void => reject(err);
     const onAborted = (): void => reject(new Error('Request aborted'));
 
@@ -247,7 +247,7 @@ describe('PgPool — acquire/release stress test', () => {
       });
 
       // Fill the single connection
-      const conn = await pool.acquire();
+      await pool.acquire();
       // This will queue
       const pendingAcquire = pool.acquire();
       // Close should reject it
