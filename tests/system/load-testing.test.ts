@@ -138,8 +138,9 @@ describe('HTTP Server — concurrent load testing', () => {
         const res = await httpPost(port, '/echo', body);
         assert.equal(res.status, 200);
         const parsed = JSON.parse(res.body) as Record<string, unknown>;
-        assert.equal(typeof parsed.echoed, 'string', 'echoed should be a string');
-        assert.ok(parsed.echoed.length > 100, `echoed too short: ${parsed.echoed.length}`);
+        const echoed = parsed.echoed as string | undefined;
+        assert.equal(typeof echoed, 'string', 'echoed should be a string');
+        assert.ok((echoed as string).length > 100, `echoed too short: ${(echoed as string).length}`);
         return res;
       })
     );
