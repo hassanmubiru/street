@@ -51,43 +51,63 @@ export class MultipartParser {
         let totalBytes = 0;
         let done = false;
 
-        const cleanup = (): void => {
-          if (!done) {
-            done = true;
-            resolve();
+        // Named listeners so we can remove them after completion
+        const onError = (err: Error): void => {
+          if (done) return;
+          done = true;
+          removeListeners();
+          reject(err);
+        };
+
+        const onEnd = (): void => {
+          if (done) return;
+          done = true;
+          removeListeners();
+          resolve();
+        };
+
+        const onData = async (chunk: Buffer): Promise<void> => {
+          try {
+            if (done) return;
+            totalBytes += chunk.length;
+            if (totalBytes > this.maxBytes) {
+              done = true;
+              removeListeners();
+              req.destroy(new Error('Multipart upload exceeds size limit'));
+              reject(new Error('Upload too large'));
+              return;
+            }
+
+            buffer = Buffer.concat([buffer, chunk]);
+
+            // Process complete parts
+            let processed = true;
+            while (processed && !done) {
+              processed = false;
+              const result = await this._tryParsePart(buffer, fields, files, createdFiles);
+              if (result.consumed > 0) {
+                buffer = buffer.subarray(result.consumed);
+                processed = true;
+              }
+            }
+          } catch (err) {
+            if (!done) {
+              done = true;
+              removeListeners();
+              reject(err instanceof Error ? err : new Error('Parse error'));
+            }
           }
         };
 
-        req.on('error', (err) => {
-          done = true;
-          reject(err);
-        });
+        const removeListeners = (): void => {
+          req.removeListener('data', onData);
+          req.removeListener('end', onEnd);
+          req.removeListener('error', onError);
+        };
 
-        req.on('end', cleanup);
-
-        req.on('data', async (chunk: Buffer) => {
-          if (done) return;
-          totalBytes += chunk.length;
-          if (totalBytes > this.maxBytes) {
-            done = true;
-            req.destroy(new Error('Multipart upload exceeds size limit'));
-            reject(new Error('Upload too large'));
-            return;
-          }
-
-          buffer = Buffer.concat([buffer, chunk]);
-
-          // Process complete parts
-          let processed = true;
-          while (processed && !done) {
-            processed = false;
-            const result = await this._tryParsePart(buffer, fields, files, createdFiles);
-            if (result.consumed > 0) {
-              buffer = buffer.subarray(result.consumed);
-              processed = true;
-            }
-          }
-        });
+        req.on('data', onData);
+        req.on('end', onEnd);
+        req.on('error', onError);
       });
     } catch (err) {
       // Cleanup partially written files on failure
