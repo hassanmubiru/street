@@ -17,6 +17,12 @@ export declare function buildSASLResponse(clientFinalMessage: string): Buffer;
 export declare function parseSASLMechanisms(data: Buffer): string[];
 /** @internal Exported for testing. Parse SCRAM key=value parameters from a comma-separated message string. */
 export declare function parseScramParams(message: string): Record<string, string>;
+/**
+ * Validate that a string does not contain characters prohibited by RFC 4013 §3 (SASLprep).
+ * Checks the most common prohibited categories after NFKC normalization.
+ * @internal Exported for testing.
+ */
+export declare function validateSASLprep(s: string): boolean;
 /** @internal Exported for testing. XOR two buffers together (bytewise). */
 export declare function xorBuffers(a: Buffer, b: Buffer): Buffer;
 export interface PgRow {

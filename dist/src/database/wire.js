@@ -264,8 +264,9 @@ export function parseScramParams(message) {
 /**
  * Validate that a string does not contain characters prohibited by RFC 4013 §3 (SASLprep).
  * Checks the most common prohibited categories after NFKC normalization.
+ * @internal Exported for testing.
  */
-function validateSASLprep(s) {
+export function validateSASLprep(s) {
     let i = 0;
     while (i < s.length) {
         const cp = s.codePointAt(i);
