@@ -17,7 +17,7 @@ env:
   NODE_VERSION: '20'
   POSTGRES_DB: street_test
   POSTGRES_USER: street
-  POSTGRES_PASSWORD: street_secret
+  POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
   POSTGRES_HOST: localhost
   POSTGRES_PORT: 5432
 
