@@ -16,7 +16,7 @@ import { mkdtempSync, rmSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { PgConnection } from '../../src/database/wire.js';
-import { randomBytes, pbkdf2Sync, createHmac } from 'node:crypto';
+import { pbkdf2Sync, createHmac } from 'node:crypto';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. LRU Cache — Memory Bound Verification
@@ -767,9 +767,9 @@ describe('SCRAM Wire Protocol — memory safety', () => {
     const perConn = heapDelta / count;
 
     // 100 full auth handshakes should not cause runaway heap growth.
-    // Each handshake allocates ~2-3 Buffers (nonce, proof, salt, etc.) + a few temp objects.
-    // Allow generous overhead: 10KB per connection × 100 = ~1MB max delta.
-    const maxExpected = 1_000_000;
+    // Each handshake includes a PBKDF2-SHA256 call (4096 iterations) which
+    // internally allocates ~25KB on average. Allow 5MB max for headroom.
+    const maxExpected = 5_000_000;
     assert.ok(heapDelta <= maxExpected,
       `Heap grew ${(heapDelta / 1024).toFixed(0)}KB across ${count} auth cycles ` +
       `(${(perConn / 1024).toFixed(1)}KB/conn) — exceeded ${(maxExpected / 1024).toFixed(0)}KB`);
