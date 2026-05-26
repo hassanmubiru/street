@@ -5,6 +5,8 @@
 [![Security Lint](https://github.com/hassanmubiru/street/actions/workflows/security-lint.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/security-lint.yml)
 [![Publish](https://github.com/hassanmubiru/street/actions/workflows/publish.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/@streetjs/core)](https://www.npmjs.com/package/@streetjs/core)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
 
 ## Documentation
 
