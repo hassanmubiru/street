@@ -336,7 +336,7 @@ describe('_queryParams integration (via PgConnection.query)', () => {
     return { conn, socket };
   }
 
-  it('writes Parse+Bind+Execute+Sync concatenated when params are provided', async () => {
+  it('writes Parse+Describe+Bind+Execute+Sync concatenated when params are provided', async () => {
     const { conn, socket } = createMockedConnection();
 
     const queryPromise = conn.query('SELECT $1::text AS name', ['Alice']);
@@ -345,15 +345,23 @@ describe('_queryParams integration (via PgConnection.query)', () => {
     assert.equal(socket.write.mock.calls.length, 1);
     const written = socket.write.mock.calls[0].arguments[0] as Buffer;
 
-    // Verify the concatenated buffer starts with 'P', then 'B', then 'E', then 'S'
+    // Verify the concatenated buffer starts with 'P', then 'D', then 'B', then 'E', then 'S'
     // using length-based positioning (NOT byte-search, since query text may contain
     // bytes matching message type bytes like 0x45 'E')
     assert.equal(written[0], 0x50, 'First message type is Parse (P)');
 
     // Parse message: type(1) + length(UInt32BE at offset 1)
     const parseLen = written.readUInt32BE(1);
-    const bindStart = 1 + parseLen;
-    assert.equal(written[bindStart], 0x42, 'Bind (B) follows Parse');
+    const describeStart = 1 + parseLen;
+    assert.equal(written[describeStart], 0x44, 'Describe (D) follows Parse');
+
+    // Describe message: type(1) + length(4), body = 'S' + '\0' = 7 bytes total
+    const describeLen = written.readUInt32BE(describeStart + 1);
+    assert.equal(describeLen, 6, 'Describe message length is 6');
+    assert.equal(written[describeStart + 1 + 4], 0x53, 'Describe context is Statement (S)');
+    assert.equal(written[describeStart + 1 + 4 + 1], 0, 'Describe name is null');
+    const bindStart = describeStart + 1 + describeLen;
+    assert.equal(written[bindStart], 0x42, 'Bind (B) follows Describe');
 
     // Bind message
     const bindLen = written.readUInt32BE(bindStart + 1);
@@ -383,11 +391,20 @@ describe('_queryParams integration (via PgConnection.query)', () => {
     assert.equal(aliceVal, 'Alice');
 
     // Respond with mock server messages to complete the query
+    // Extended protocol response order: ParseComplete → ParameterDescription → RowDescription → BindComplete → CommandComplete → ReadyForQuery
+    // ParameterDescription body: numParams(Int16BE) + paramType OIDs (Int32BE × n) — 2 bytes for 0 params
+    const paramDescBody = Buffer.alloc(2);
+    paramDescBody.writeUInt16BE(0, 0); // 0 parameters described
+    // RowDescription body: fieldCount(Int16BE) — 2 bytes with 0 fields (no column metadata needed)
+    const rowDescBody = Buffer.alloc(2);
+    rowDescBody.writeUInt16BE(0, 0); // 0 columns
     const response = serverResponse([
-      { type: 0x31, body: parseComplete() },    // ParseComplete
-      { type: 0x32, body: bindComplete() },      // BindComplete
+      { type: 0x31, body: parseComplete() },         // ParseComplete (from Parse)
+      { type: 0x74, body: paramDescBody },           // ParameterDescription (from Describe)
+      { type: 0x54, body: rowDescBody },             // RowDescription (from Describe)
+      { type: 0x32, body: bindComplete() },          // BindComplete
       { type: 0x43, body: commandComplete('SELECT 1') }, // CommandComplete
-      { type: 0x5a, body: readyForQuery(0x49) }, // ReadyForQuery (I=idle)
+      { type: 0x5a, body: readyForQuery(0x49) },    // ReadyForQuery (I=idle)
     ]);
     socket.emit('data', response);
 
