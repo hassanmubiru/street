@@ -39,22 +39,6 @@ function fuzzString(minLen = 0, maxLen = MAX_FUZZ_STRING): string {
   return fuzzBytes(minLen, maxLen).toString('latin1');
 }
 
-/** Valid Unicode string with some special chars */
-function fuzzUnicode(): string {
-  const blocks = [
-    'Hello World',
-    '\u0000\u0001\u0002',           // Control chars
-    '\u0080\u00FF\u0100\u07FF',     // Extended Latin
-    '\u0800\uFFFF',                 // More Unicode
-    '\u{10000}\u{10FFFF}',          // Supplementary (if Node supports)
-    '🚀🔥💯こんにちは世界',          // Emoji + CJK
-    'a\u0300b\u0301c\u0302',       // Combining marks
-    '\u202E\u202D\u200E\u200F',     // Bidi marks
-    '\u00A0\u00AD\u200B\u200C\u200D\uFEFF', // Special whitespace
-  ];
-  return blocks.join('');
-}
-
 /** Fuzzed JSON-like object */
 function fuzzObject(depth = 0): unknown {
   if (depth > 5) return fuzzString(0, 100);
