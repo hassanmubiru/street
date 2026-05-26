@@ -27,27 +27,26 @@ export class UserRepository extends StreetPostgresRepository<User> {
   }
 
   async findByEmail(email: string): Promise<User | null> {
-    const safe = email.replace(/'/g, "''");
     const result = await this.pool.query(
-      `SELECT * FROM users WHERE email = '${safe}' LIMIT 1`
+      `SELECT * FROM users WHERE email = $1 LIMIT 1`,
+      [email]
     );
     if (result.rows.length === 0) return null;
     return this.mapRow(result.rows[0] as Record<string, string | null>);
   }
 
   async emailExists(email: string): Promise<boolean> {
-    const safe = email.replace(/'/g, "''");
     const result = await this.pool.query(
-      `SELECT 1 FROM users WHERE email = '${safe}' LIMIT 1`
+      `SELECT 1 FROM users WHERE email = $1 LIMIT 1`,
+      [email]
     );
     return result.rows.length > 0;
   }
 
   async updatePassword(id: string, passwordHash: string): Promise<void> {
-    const safeId = id.replace(/'/g, "''");
-    const safeHash = passwordHash.replace(/'/g, "''");
     await this.pool.query(
-      `UPDATE users SET password_hash = '${safeHash}', updated_at = NOW() WHERE id = '${safeId}'`
+      `UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2`,
+      [passwordHash, id]
     );
   }
 }
