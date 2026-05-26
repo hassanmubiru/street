@@ -108,7 +108,6 @@ function buildParseMessage(query: string): Buffer {
 }
 
 function buildBindMessage(params: unknown[]): Buffer {
-  const buffers: Buffer[] = [];
   let totalLen = 1 + 4; // 'B' + length
   // Portal name (empty)
   totalLen += 1; // null terminator
