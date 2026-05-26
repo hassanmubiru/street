@@ -118,6 +118,7 @@
     "migrate": "node dist/src/main.js migrate",
     "dev": "tsc && node dist/src/main.js",
     "lint": "tsc --noEmit",
+    "lint:workflows": "bash scripts/validate-workflows.sh",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "prepare": "if test -d .git; then git config core.hooksPath .githooks; fi",
     "prepublishOnly": "npm run clean && npm run build && npm run lint",
