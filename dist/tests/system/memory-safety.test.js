@@ -273,7 +273,10 @@ describe('Multipart Parser — memory bound verification', () => {
             `x`.repeat(200),
             `\r\n--${boundary}--\r\n`,
         ].join('');
-        await assert.rejects(() => parser.parse(req).then(() => { req.push(Buffer.from(body)); req.push(null); }), /Upload too large/);
+        const parsePromise = parser.parse(req);
+        req.push(Buffer.from(body));
+        req.push(null);
+        await assert.rejects(() => parsePromise, /Upload too large/);
     });
     it('limits per-field size to MAX_FIELD_SIZE', async () => {
         const boundary = '----TestBoundary';

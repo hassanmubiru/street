@@ -142,6 +142,7 @@ describe('Server — shutdown chaos', () => {
                 res.on('data', () => { });
                 res.on('end', resolve);
             });
+            req.on('error', () => { resolve(); });
             req.end();
         });
         await new Promise((r) => setTimeout(r, 10));
