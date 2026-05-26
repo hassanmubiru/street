@@ -5,7 +5,6 @@
 
 import { run } from 'node:test';
 import { tap } from 'node:test/reporters';
-import { Readable } from 'node:stream';
 import { argv, exit } from 'node:process';
 import { writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';

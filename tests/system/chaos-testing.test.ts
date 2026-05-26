@@ -6,10 +6,8 @@
 import { describe, it, before, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer, type Server } from 'node:http';
-import { createConnection, type Socket } from 'node:net';
+import { createConnection } from 'node:net';
 import { Readable } from 'node:stream';
-import { EventEmitter } from 'node:events';
-import { randomBytes } from 'node:crypto';
 import { PgConnection } from '../../src/database/wire.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -164,8 +162,8 @@ describe('Server — shutdown chaos', () => {
 
     // Start a slow request, then immediately close
     const requestPromise = new Promise<void>((resolve) => {
-      const http = require('node:http');
-      const req = http.request(
+      const { request: httpRequestFn } = await import('node:http');
+      const req = httpRequestFn(
         { hostname: '127.0.0.1', port, path: '/', method: 'GET' },
         (res: any) => {
           res.on('data', () => {});
@@ -195,9 +193,9 @@ describe('Resource exhaustion — simulation', () => {
   it('handles extremely large number of LRU cache instances', () => {
     // Create and destroy many cache instances to test timer cleanup
     const caches: any[] = [];
+    const { LruCache: LruCacheCls } = await import('../../src/cache/lru.js');
     for (let i = 0; i < 200; i++) {
-      const { LruCache } = require('../../src/cache/lru.js');
-      const cache = new LruCache({ maxEntries: 10, ttlMs: 1000 });
+      const cache = new LruCacheCls({ maxEntries: 10, ttlMs: 1000 });
       caches.push(cache);
     }
     for (const c of caches) c.destroy();

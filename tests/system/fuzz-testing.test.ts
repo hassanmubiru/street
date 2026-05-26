@@ -324,8 +324,8 @@ describe('Multipart Parser — fuzz testing', () => {
     }
   });
 
-  it('handles missing boundary in content-type', () => {
-    const { MultipartParser } = require('../../src/multipart/parser.js');
+  it('handles missing boundary in content-type', async () => {
+    const { MultipartParser } = await import('../../src/multipart/parser.js');
     // Should not crash with various boundary values
     const boundaries = ['', '----', '--', 'a', '\x00', '🔥'];
     for (const b of boundaries) {
@@ -364,8 +364,8 @@ describe('Crypto — parameter fuzz testing', () => {
     assert.throws(() => new SessionManager('zz'.repeat(32)), /64-char hex/);
   });
 
-  it('encryptSecret/decryptSecret handle edge cases', () => {
-    const { encryptSecret, decryptSecret } = require('../../src/security/vault.js');
+  it('encryptSecret/decryptSecret handle edge cases', async () => {
+    const { encryptSecret, decryptSecret } = await import('../../src/security/vault.js');
     const kek = 'test-kek-for-fuzz-testing-here!';
 
     // Empty plaintext

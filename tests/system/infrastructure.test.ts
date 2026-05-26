@@ -14,13 +14,9 @@ import { TelemetryTracker, telemetryMiddleware } from '../../src/telemetry/track
 import { WebhookDispatcher, type WebhookTarget } from '../../src/webhook/dispatcher.js';
 import { SseConnection } from '../../src/websocket/sse.js';
 import { generateOpenApi } from '../../src/http/openapi.js';
-import { parseArgv, CliKernel } from '../../src/cli/kernel.js';
+import { parseArgv } from '../../src/cli/kernel.js';
 import { StreetMigrationRunner } from '../../src/database/migrations.js';
 import { PgPool } from '../../src/database/pool.js';
-import { PgConnection } from '../../src/database/wire.js';
-import { LruCache } from '../../src/cache/lru.js';
-import { cluster } from 'node:cluster' with { 'resolution-mode': 'import' };
-import { Readable } from 'node:stream';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // 1. CLI Argument Parser Validation

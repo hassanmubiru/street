@@ -8,7 +8,6 @@ import { describe, it, before, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { Readable } from 'node:stream';
-import { randomBytes } from 'node:crypto';
 import { LruCache } from '../../src/cache/lru.js';
 import { RateLimiter } from '../../src/security/ratelimit.js';
 import { sanitizeDeep } from '../../src/security/xss.js';
@@ -262,7 +261,8 @@ describe('XSS — depth and size bound verification', () => {
 
   it('truncates strings exceeding MAX_STRING_LEN', () => {
     const huge = 'A'.repeat(2_000_000);
-    const result = require('../../src/security/xss.js').sanitizeString(huge);
+    const { sanitizeString: sanitize } = await import('../../src/security/xss.js');
+    const result = sanitize(huge);
     assert.ok(result.length <= 1_000_000);
   });
 

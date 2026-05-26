@@ -7,7 +7,6 @@ import { describe, it, before, after, mock } from 'node:test';
 import assert from 'node:assert/strict';
 import { request as httpRequest, createServer, type Server } from 'node:http';
 import { Readable } from 'node:stream';
-import { randomBytes } from 'node:crypto';
 import { PgConnection } from '../../src/database/wire.js';
 
 // ═══════════════════════════════════════════════════════════════════════════════

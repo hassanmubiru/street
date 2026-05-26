@@ -3,14 +3,14 @@
 // Zero mocks — tests use REAL implementations against crafted inputs.
 // Uses only node:test, node:assert, node:crypto.
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { JwtService } from '../../src/security/jwt.js';
 import { SessionManager } from '../../src/security/session.js';
 import { sanitizeString, sanitizeDeep, escapeHtml } from '../../src/security/xss.js';
 import { encryptSecret, decryptSecret, constantTimeEqual } from '../../src/security/vault.js';
-import { RateLimiter, RateLimitException } from '../../src/security/ratelimit.js';
+import { RateLimiter } from '../../src/security/ratelimit.js';
 import { authMiddleware, requireRoles, securityHeaders, corsMiddleware } from '../../src/http/auth.middleware.js';
 import type { StreetContext } from '../../src/core/context.js';
 import { createContext } from '../../src/core/context.js';
@@ -108,10 +108,7 @@ describe('JWT — fuzz & boundary testing', () => {
   });
 
   it('rejects token with extremely long payload (>10MB simulated)', () => {
-    // Create a token with a very large payload that would blow up JSON.parse
-    const hugePayload = '{"data":"' + 'A'.repeat(100000) + '"}';
     const token = jwt.sign({ sub: 'test', data: 'x'.repeat(50000) });
-    // Attempt to decode should not crash
     const decoded = jwt.decode(token);
     assert.ok(decoded !== null);
   });
