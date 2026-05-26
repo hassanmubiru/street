@@ -290,7 +290,6 @@ describe('_queryParams integration (via PgConnection.query)', () => {
         assert.ok(sIdx > eIdx, 'Sync (S) follows Execute');
         assert.equal(written[sIdx + 1 + 4], 0, 'Last byte of Sync length is correct');
         // Parse message should contain the query
-        const parseLen = written.readUInt32BE(pIdx + 1);
         const queryText = written.toString('utf8', 6, written.indexOf(0, 6));
         assert.equal(queryText, 'SELECT $1::text AS name');
         // Bind message should contain the parameter 'Alice'
