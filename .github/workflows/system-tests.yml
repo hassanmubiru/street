@@ -9,6 +9,21 @@ name: System Tests
   push:
     branches:
       - '**'
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Run a specific suite (leave blank for all)'
+        required: false
+        type: choice
+        options:
+          - all
+          - security
+          - memory-safety
+          - load-testing
+          - fuzz-testing
+          - chaos-testing
+          - infrastructure
+        default: all
 
 concurrency:
   group: system-tests-${{ github.ref }}
