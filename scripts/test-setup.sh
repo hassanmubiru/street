@@ -21,13 +21,13 @@ run_compose up -d postgres
 
 echo "Waiting for Postgres health..."
 # Wait until container reports healthy
-until docker exec street_test_db pg_isready -U street >/dev/null 2>&1; do
+until docker exec street_db pg_isready -U street >/dev/null 2>&1; do
   sleep 1
 done
 
 echo "Postgres ready. Running tests..."
 # Run tests pointing to local compose DB
-PG_HOST=127.0.0.1 PG_PORT=55432 PG_USER=street PG_PASSWORD=street_secret PG_DATABASE=street_test npm run test:run
+PG_HOST=127.0.0.1 PG_PORT=5432 PG_USER=street PG_PASSWORD=street_secret PG_DATABASE=street_test npm run test:run
 
 EXIT_CODE=$?
 

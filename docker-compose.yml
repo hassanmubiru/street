@@ -1,16 +1,14 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:13
-    container_name: street_test_db
+    image: postgres:16-alpine
+    container_name: street_db
     restart: unless-stopped
     environment:
       POSTGRES_USER: street
       POSTGRES_PASSWORD: street_secret
       POSTGRES_DB: street_test
     ports:
-      - "55432:5432"
+      - "5432:5432"
     volumes:
       - ./docker-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
@@ -18,3 +16,33 @@ services:
       interval: 5s
       timeout: 5s
       retries: 30
+
+  street-app:
+    build:
+      context: .
+    container_name: street_app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      HOST: "0.0.0.0"
+      PG_HOST: postgres
+      PG_PORT: "5432"
+      PG_DATABASE: street_test
+      PG_USER: street
+      PG_PASSWORD: street_secret
+      JWT_SECRET: change-me-in-production-at-least-32-chars
+      SESSION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+      KEK: change-me-in-production-kek-value!
+      UPLOADS_DIR: /app/uploads
+      MIGRATIONS_DIR: /app/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  uploads:
