@@ -13,7 +13,7 @@ export { PgConnection, StreetPostgresWireStream } from './database/wire.js';
 export type { PgRow, PgResult, PgConnectOptions } from './database/wire.js';
 export { PgPool } from './database/pool.js';
 export type { PoolOptions } from './database/pool.js';
-export { StreetPostgresRepository, LedgerTransactionService, } from './database/repository.js';
+export { StreetPostgresRepository } from './database/repository.js';
 export type { IRepository } from './database/repository.js';
 export { StreetMigrationRunner } from './database/migrations.js';
 export { JwtService } from './security/jwt.js';
@@ -24,7 +24,7 @@ export { encryptSecret, decryptSecret, loadConfig, constantTimeEqual } from './s
 export { RateLimiter, RateLimitException } from './security/ratelimit.js';
 export type { RateLimiterOptions } from './security/ratelimit.js';
 export { sanitizeString, sanitizeDeep, escapeHtml, xssMiddleware } from './security/xss.js';
-export { MultipartParser, BoundedTransform } from './multipart/parser.js';
+export { MultipartParser } from './multipart/parser.js';
 export type { ParsedFile, MultipartResult } from './multipart/parser.js';
 export { StreetWebSocketServer, StreetSocket } from './websocket/server.js';
 export type { WsHandler, WsEvent, WsServerOptions } from './websocket/server.js';
