@@ -34,6 +34,7 @@ permissions:
 
 env:
   NODE_VERSION: '20'
+  SUITE: ${{ inputs.suite || 'all' }}
 
 jobs:
   system-tests:
@@ -60,33 +61,33 @@ jobs:
         run: npx tsc
 
       - name: Run security tests
-        if: inputs.suite == 'all' || inputs.suite == 'security'
+        if: env.SUITE == 'all' || env.SUITE == 'security'
         run: node --test dist/tests/system/security.test.js
 
       - name: Run memory-safety tests
-        if: inputs.suite == 'all' || inputs.suite == 'memory-safety'
+        if: env.SUITE == 'all' || env.SUITE == 'memory-safety'
         run: node --test dist/tests/system/memory-safety.test.js
 
       - name: Run load-testing tests
-        if: inputs.suite == 'all' || inputs.suite == 'load-testing'
+        if: env.SUITE == 'all' || env.SUITE == 'load-testing'
         run: node --test dist/tests/system/load-testing.test.js
 
       - name: Run fuzz-testing tests
-        if: inputs.suite == 'all' || inputs.suite == 'fuzz-testing'
+        if: env.SUITE == 'all' || env.SUITE == 'fuzz-testing'
         run: node --test dist/tests/system/fuzz-testing.test.js
 
       - name: Run chaos-testing tests
-        if: inputs.suite == 'all' || inputs.suite == 'chaos-testing'
+        if: env.SUITE == 'all' || env.SUITE == 'chaos-testing'
         run: node --test dist/tests/system/chaos-testing.test.js
 
       - name: Run infrastructure tests (no PG)
-        if: inputs.suite == 'all' || inputs.suite == 'infrastructure'
+        if: env.SUITE == 'all' || env.SUITE == 'infrastructure'
         run: node --test dist/tests/system/infrastructure.test.js
         env:
           PG_HOST: ""  # Skip PG-dependent tests
 
       - name: Run unified system test runner
-        if: inputs.suite == 'all'
+        if: env.SUITE == 'all'
         run: node dist/tests/system/runner.js --ci --json --skip-pg
 
       - name: Upload system test results
