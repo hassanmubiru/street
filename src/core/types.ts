@@ -13,14 +13,6 @@ export type DeepReadonly<T> = T extends (infer U)[]
   ? { readonly [P in keyof T]: DeepReadonly<T[P]> }
   : T;
 
-/** Extracts non-function keys from a type */
-export type DataKeys<T> = {
-  [K in keyof T]: T[K] extends Function ? never : K;
-}[keyof T];
-
-/** Partial data shape (no methods) */
-export type DataShape<T> = Pick<T, DataKeys<T>>;
-
 /** Validated result discriminated union */
 export type ValidationResult<T> =
   | { ok: true; value: T }

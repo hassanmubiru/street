@@ -256,6 +256,3 @@ export class BoundedTransform extends Transform {
     cb(null, chunk);
   }
 }
-
-// Re-export pipeline for use in streaming contexts
-export { pipeline as streamPipeline };
