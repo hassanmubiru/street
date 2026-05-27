@@ -363,10 +363,7 @@ export interface PgResult {
 // ─── Streaming result (backpressure-aware) ─────────────────────────────────────
 
 export class StreetPostgresWireStream extends Readable {
-  private readonly rows: PgRow[] = [];
   private _done = false;
-  
-  private readonly MAX_BUFFERED = 256; // bounded row queue
 
   constructor() {
     super({ objectMode: true, highWaterMark: 64 });
@@ -375,7 +372,6 @@ export class StreetPostgresWireStream extends Readable {
   /** Called internally when a DataRow is parsed */
   pushRow(row: PgRow): boolean {
     if (this._done) return false;
-    if (this.rows.length >= this.MAX_BUFFERED) return false; // signal backpressure
     return this.push(row);
   }
 
@@ -897,7 +893,7 @@ export class PgConnection {
     this.queryRows = [];
 
     // Resume socket when consumer reads from stream
-    stream.on('drain', () => {
+    stream.on('resume', () => {
       this.socket?.resume();
     });
 

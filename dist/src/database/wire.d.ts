@@ -34,9 +34,7 @@ export interface PgResult {
     rowCount: number;
 }
 export declare class StreetPostgresWireStream extends Readable {
-    private readonly rows;
     private _done;
-    private readonly MAX_BUFFERED;
     constructor();
     /** Called internally when a DataRow is parsed */
     pushRow(row: PgRow): boolean;

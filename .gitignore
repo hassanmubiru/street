@@ -9,3 +9,16 @@ node_modules/
 
 # System test output
 tests/system/system-test-results.json
+
+# GitHub CLI scratch files
+.gh_*
+
+# Jekyll build logs
+.jekyll_build_output*
+
+# NPM publish/view logs
+.npm_*
+
+# General log files
+log.txt
+*.log

@@ -1,4 +1,0 @@
-Unable to find image 'jekyll/jekyll:4.3' locally
-docker: Error response from daemon: manifest for jekyll/jekyll:4.3 not found: manifest unknown: manifest unknown
-
-Run 'docker run --help' for more information
