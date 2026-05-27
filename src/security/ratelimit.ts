@@ -122,10 +122,8 @@ function defaultKeyFn(ctx: StreetContext): string {
 }
 
 export class RateLimitException extends StreetException {
-  constructor(message: string, retryAfterSeconds: number) {
+  constructor(message: string) {
     super(429, message);
     this.name = 'RateLimitException';
-    // Add retry-after header info in details
-    void retryAfterSeconds;
   }
 }

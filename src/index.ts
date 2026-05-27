@@ -14,8 +14,8 @@ export type {
   StreetContext, AuthenticatedUser, CookieOptions,
 } from './core/context.js';
 export type {
-  Constructor, Awaitable, DeepReadonly, ValidationResult,
-  TokenPair, PaginationParams, PaginatedResult, HealthStatus,
+  Constructor, Awaitable,
+  TokenPair, PaginatedResult,
   RouteMetadata, ControllerMetadata, MiddlewareFn,
   ValidationSchema, FieldRule, OpenApiOperation,
   IpcMessage, TelemetrySample,
