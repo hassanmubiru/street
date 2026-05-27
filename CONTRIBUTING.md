@@ -77,6 +77,90 @@ PG_HOST=localhost PG_USER=street PG_PASSWORD=street PG_DATABASE=street_dev \
 
 ---
 
+## Test suite reference
+
+street has three layers of testing. All run with `node:test` and `node:assert/strict` — no test framework dependencies.
+
+### Integration tests
+
+**File:** `tests/integration.test.ts` \
+**Requires:** PostgreSQL (see [Development setup](#development-setup)) \
+**Coverage:** IoC container, HTTP server, router, PostgreSQL wire protocol, PgPool, repository, migrations, schema \
+**Run:**
+
+```bash
+PG_HOST=localhost PG_USER=street PG_PASSWORD=street PG_DATABASE=street_dev \
+  JWT_SECRET="test-secret-at-least-32-chars-here!!" \
+  SESSION_KEY=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))") \
+  node --test dist/tests/integration.test.js
+```
+
+### Wire protocol & memory stress tests
+
+These test the PostgreSQL wire protocol and connection stress-handling using **mocked sockets** — no database required.
+
+| File | What it tests | Command |
+|---|---|---|
+| `tests/wire-protocol.test.ts` | Wire protocol parsing, param encoding, extended query flow | `node --test dist/tests/wire-protocol.test.js` |
+| `tests/wire-stream.test.ts` | Socket streaming, chunked reads, `queryStream()` lifecycle | `node --test dist/tests/wire-stream.test.js` |
+| `tests/memory-leak.test.ts` | Pool acquire/release cycles, connection leak detection | `node --test dist/tests/memory-leak.test.js` |
+| `tests/stress.test.ts` | Concurrent pool operations, graceful shutdown, O(n) bounds | `node --test dist/tests/stress.test.js` |
+
+### System tests (six suites)
+
+Six standalone test suites covering security, performance, and fault tolerance. Can be run individually or via the unified runner.
+
+**Unified runner** (recommended for CI):
+
+```bash
+# All suites
+node dist/tests/system/runner.js
+
+# CI mode with JSON output, skip PostgreSQL-dependent suites
+node dist/tests/system/runner.js --ci --json --skip-pg
+
+# Single suite by name
+node dist/tests/system/runner.js security
+node dist/tests/system/runner.js fuzz-testing
+```
+
+| Suite | File | Covers | Needs PG? |
+|---|---|---|---|
+| `security` | `tests/system/security.test.ts` | JWT sign/verify/expiry, session encrypt/decrypt/CSRF, vault encrypt/decrypt, XSS sanitize (HTML/JS/unicode/null-bytes), rate-limiter (rolling-window/concurrent), auth middleware (roles/permissions), CORS, constant-time comparison | no |
+| `memory-safety` | `tests/system/memory-safety.test.ts` | LRU bounds, eviction order, clear/delete, concurrent access, heap caps, pool max-connections, fixed-size buffers, stream high-water-mark, max listeners | no |
+| `load-testing` | `tests/system/load-testing.test.ts` | Concurrent HTTP (500×1.5k requests), router throughput (1k dispatches), pool concurrent queries (20 clients), sustained SSE heartbeat load, batch memory | no |
+| `fuzz-testing` | `tests/system/fuzz-testing.test.ts` | SSE random payloads/empty/close/unicode/binary, WebSocket random/huge/malformed/multiframe, multipart boundary fuzzing, field overflow, chunk boundary | no |
+| `chaos-testing` | `tests/system/chaos-testing.test.ts` | Fault injection (connect/dns/timeout), shutdown (graceful/forced), resource exhaustion (FDs/memory), worker crash, heart-attack recovery | no |
+| `infrastructure` | `tests/system/infrastructure.test.ts` | Container resolution (nested/circular/override), CLI commands (migrate/user), WebhookDispatch, TelemetryTracker, OpenAPI generation, cluster coordinator lifecycle | **yes** |
+
+### Running everything in one go
+
+```bash
+npm run build  # compile once
+
+# Integration (requires PG)
+npm test
+
+# System (unified runner)
+npm run test:system
+
+# System suites individually
+npm run test:security
+npm run test:fuzz
+npm run test:chaos
+npm run test:memory
+npm run test:load
+npm run test:infra   # requires PG
+
+# Wire protocol & stress (no PG needed)
+node --test dist/tests/wire-protocol.test.js \
+          dist/tests/wire-stream.test.js \
+          dist/tests/memory-leak.test.js \
+          dist/tests/stress.test.js
+```
+
+---
+
 ## Pull request checklist
 
 - [ ] `npx tsc --noEmit` passes with zero errors
