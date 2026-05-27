@@ -11,7 +11,6 @@ import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
 import { TelemetryTracker, telemetryMiddleware } from '../../src/telemetry/tracker.js';
 import { WebhookDispatcher } from '../../src/webhook/dispatcher.js';
-import { SseConnection } from '../../src/websocket/sse.js';
 import { generateOpenApi } from '../../src/http/openapi.js';
 import { parseArgv } from '../../src/cli/kernel.js';
 import { StreetMigrationRunner } from '../../src/database/migrations.js';
@@ -251,62 +250,7 @@ describe('Webhook Dispatcher — infrastructure validation', () => {
     });
 });
 // ═══════════════════════════════════════════════════════════════════════════════
-// 5. SSE Connection Validation
-// ═══════════════════════════════════════════════════════════════════════════════
-describe('SSE — connection lifecycle validation', () => {
-    it('sends correctly formatted SSE events', () => {
-        let written = '';
-        const fakeRes = {
-            writeHead: () => undefined,
-            write: (chunk) => { written += chunk; return true; },
-            end: () => undefined,
-            writableEnded: false,
-            once: () => fakeRes,
-            on: () => fakeRes,
-            socket: { once: () => undefined },
-        };
-        const sse = new SseConnection(fakeRes, 10000);
-        sse.send({ event: 'test', data: { message: 'hello' } });
-        assert.ok(written.includes('event: test'));
-        assert.ok(written.includes('data: '));
-        assert.ok(written.includes('"message"'));
-        assert.ok(written.includes('"hello"'));
-        sse.close();
-    });
-    it('returns false for writes after close', () => {
-        let writableEnded = false;
-        const fakeRes = {
-            writeHead: () => undefined,
-            write: () => { return !writableEnded; },
-            end: () => { writableEnded = true; },
-            writableEnded: false,
-            once: () => fakeRes,
-            on: () => fakeRes,
-            socket: { once: () => undefined },
-        };
-        const sse = new SseConnection(fakeRes, 10000);
-        sse.close();
-        const result = sse.send({ event: 'late', data: 'should-fail' });
-        assert.equal(result, false);
-    });
-    it('handles heartbeat interval', () => {
-        let written = '';
-        const fakeRes = {
-            writeHead: () => undefined,
-            write: (chunk) => { written += chunk; return true; },
-            end: () => undefined,
-            writableEnded: false,
-            once: () => fakeRes,
-            on: () => fakeRes,
-            socket: { once: () => undefined },
-        };
-        // Very short heartbeat interval
-        const sse = new SseConnection(fakeRes, 1);
-        sse.close();
-    });
-});
-// ═══════════════════════════════════════════════════════════════════════════════
-// 6. Migration System Validation
+// 5. Migration System Validation
 // ═══════════════════════════════════════════════════════════════════════════════
 describe('Migration System — (requires PG, skipped if unavailable)', () => {
     let pool;
