@@ -41,10 +41,7 @@ export class RateLimiter {
       const allowed = this._check(key);
 
       if (!allowed) {
-        throw new RateLimitException(
-          this.opts.message,
-          Math.ceil(this.opts.windowMs / 1000)
-        );
+        throw new RateLimitException(this.opts.message);
       }
 
       ctx.setHeader('X-RateLimit-Limit', String(this.opts.maxRequests));
