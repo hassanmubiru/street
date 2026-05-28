@@ -24,7 +24,7 @@ jobs:
   test-and-publish:
     name: Test & Publish
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Checkout source
@@ -57,8 +57,18 @@ jobs:
       - name: Run lint
         run: npm run lint
 
-      - name: Run system tests (no PostgreSQL required)
-        run: node --test dist/tests/system/security.test.js dist/tests/system/memory-safety.test.js dist/tests/system/infrastructure.test.js
+      - name: Run security tests
+        run: node --test --test-concurrency=1 dist/tests/system/security.test.js
+        env:
+          PG_HOST: ""
+
+      - name: Run memory-safety tests
+        run: node --test --test-concurrency=1 dist/tests/system/memory-safety.test.js
+        env:
+          PG_HOST: ""
+
+      - name: Run infrastructure tests
+        run: node --test --test-concurrency=1 dist/tests/system/infrastructure.test.js
         env:
           PG_HOST: ""
 

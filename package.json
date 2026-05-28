@@ -1,6 +1,6 @@
 {
   "name": "@streetjs/core",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Production-grade, memory-safe TypeScript backend framework built on Node.js core modules",
   "type": "module",
   "main": "./dist/index.js",

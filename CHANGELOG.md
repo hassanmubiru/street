@@ -7,6 +7,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.3] — 2026-05-28
+
+### Fixed
+
+**CI publish workflow robustness**
+- Split combined "Run system tests" step into separate per-suite steps (security, memory-safety, infrastructure) with `--test-concurrency=1` — helps identify which test suite fails and prevents a timeout in one suite from blocking the others
+- Increased workflow `timeout-minutes` from 15 → 20 to accommodate the sequential test execution
+
+### Changed
+
+**CI infrastructure**
+- `.github/workflows/publish.yml`: each test suite now runs in its own `node --test` step with isolated output and error reporting
+
+---
+
 ## [1.0.2] — 2026-05-28
 
 ### Fixed
