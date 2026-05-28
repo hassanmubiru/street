@@ -7,6 +7,83 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.2] — 2026-05-28
+
+### Fixed
+
+**Critical: empty package fix**
+- `package.json`: corrected `"files"` pattern from `dist/src/**/*.js` → `dist/**/*.js` — the published v1.0.1 tarball contained only metadata/migrations with zero compiled JS files. Anyone installing `@streetjs/core@1.0.1` got a broken package.
+- `package.json`: updated all 20+ `"exports"` subpath mappings to remove the spurious `src/` segment (e.g., `"./dist/src/http/server.js"` → `"./dist/http/server.js"`)
+
+### Added
+
+**Database — SASL/SCRAM-SHA-256 authentication (wire protocol)**
+- Full multi-round SCRAM-SHA-256 handshake (`SASL` → `SASLContinue` → `SASLFinal`) in the native PostgreSQL wire protocol client
+- Client-first-message generation with `gs2-header` and secure random client nonce (`randomBytes`)
+- Server-first-message parsing: nonce verification (RFC 5802 §7 — MITM protection), salt + iteration validation
+- Password normalization via SASLprep (NFKC) with RFC 4013 §3 character prohibition checks
+- `pbkdf2Sync`-based `Hi()` function for SaltedPassword derivation
+- ClientKey / StoredKey / ClientProof / ClientSignature computation using `createHmac('sha256')`
+- Server signature verification with `timingSafeEqual` — timing side-channel protection
+- `xorBuffers()`, `validateSASLprep()`, `parseScramParams()`, `parseSASLMechanisms()` utility functions (exported for testing)
+- Exported `buildSASLInitialResponse()`, `buildSASLResponse()` message builders
+- New `AuthType` constants: `SASL (10)`, `SASLContinue (11)`, `SASLFinal (12)`
+
+**Security — SQL injection prevention**
+- `user.repository.ts`: replaced manual string escaping (`.replace(/'/g, "''")`) with parameterized queries using `$1` / `$2` placeholders across all queries (`findByEmail`, `emailExists`, `updatePassword`)
+
+**Testing infrastructure**
+- New comprehensive system tests: fuzz-testing, load-testing, chaos-testing, security-testing, memory-safety, infrastructure, wire protocol, wire stream, stress tests
+- `tests/system/runner.ts`: shared system test runner
+- `CONTRIBUTING.md`: added "Test suite reference" section documenting test layers
+
+**Infrastructure**
+- `docker-compose.yml`: added for local development with PostgreSQL
+- `.github/workflows/`: new workflows for system-tests, yaml-lint, security-lint, memory-leak
+- `.github/dependabot.yml`: automated dependency updates for GitHub Actions and npm
+- `.githooks/pre-commit`: pre-commit hook for workflow YAML validation
+- `scripts/validate-workflows.sh`: standalone YAML validation script
+- `scripts/test-setup.sh`: test environment setup
+- `Dockerfile`: cleaned up — removed tests copy, uploads dir created at runtime by `MultipartParser`
+- `street-build.sh`: build script
+
+### Changed
+
+**Connection pool**
+- Dead connection detection and automatic replacement in `acquire()`
+- `pendingCreations` counter prevents race conditions when replenishing connections
+- Wait queue stores `WaitEntry` objects with reject handlers and inactivity timers
+
+**HTTP server**
+- Request body consumption: named handler functions with explicit `req.removeListener()` cleanup to prevent memory leaks
+- Server startup: `error` listener properly removed after successful bind
+- `normalizePath()`: handles `undefined` inputs safely, correct root path (`'/'`) handling
+
+**Router**
+- `errorHandler`: internal error messages no longer leaked to clients — `message` field hardcoded to `'Internal Server Error'`
+- `compilePath`: removed unnecessary escape character from regex
+
+**Multipart parser**
+- Event listeners refactored to named functions (`onError`, `onEnd`) with explicit removal after completion
+- Removed unused `pipeline` import from `node:stream/promises`
+
+**Cluster coordinator**
+- Memory leak fix: `_started` boolean guard prevents multiple `start()` invocations and duplicate listener registration
+- Explicit `_onExit` / `_onMessage` handler references instead of anonymous closures
+
+**Dockerfile**
+- Removed `COPY tests ./tests` and `RUN mkdir -p uploads` (uploads created at runtime)
+
+### Removed
+
+**Unused types**
+- `DeepReadonly<T>`, `DataKeys<T>`, `DataShape<T>` — deep immutability helpers (not used in runtime code)
+- `ValidationResult<T>` — discriminated union (replaced by implicit patterns)
+- `PaginationParams` — unused; pagination uses inline interfaces
+- `HealthStatus` — unused; health endpoint returns ad-hoc shapes
+
+---
+
 ## [1.0.1] — 2026-05-27
 
 ### Fixed
