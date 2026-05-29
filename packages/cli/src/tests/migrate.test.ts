@@ -65,7 +65,7 @@ void describe('MigrateCommand', () => {
     await withTempDir(async (tmpDir) => {
       process.exitCode = 0;
       const ctx = makeContext(tmpDir, ['create_users_table']);
-      const { output, restore } = captureConsole();
+      const { restore } = captureConsole();
       const cmd = new MigrateCommand();
       await cmd.executeCreate(ctx);
       restore();
