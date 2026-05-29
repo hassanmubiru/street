@@ -1,6 +1,6 @@
 name: street CI/CD
 
-# Merged CI workflow — core & CLI packages, unit & integration tests.
+# Merged CI workflow — core & CLI packages, unit & integration, and memory leak tests.
 # Jobs run in parallel on separate runners for fast feedback.
 # Postgres is available for the core and CLI migration integration jobs.
 
@@ -18,11 +18,11 @@ permissions:
   contents: read
 
 env:
-  POSTGRES_DB: street_test
-  POSTGRES_USER: street
-  POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
-  POSTGRES_HOST: localhost
-  POSTGRES_PORT: 5432
+  PG_HOST: localhost
+  PG_PORT: 5432
+  PG_USER: street
+  PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+  PG_DATABASE: street_test
 
 jobs:
   # ── Core package: build + integration tests with Postgres ──────────────
@@ -42,9 +42,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: street_test
-          POSTGRES_USER: street
-          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ env.PG_DATABASE }}
+          POSTGRES_USER: ${{ env.PG_USER }}
+          POSTGRES_PASSWORD: ${{ env.PG_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -97,11 +97,11 @@ jobs:
 
       - name: Run integration tests with coverage
         env:
-          PG_HOST: localhost
-          PG_PORT: 5432
-          PG_DATABASE: street_test
-          PG_USER: street
-          PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          PG_HOST: ${{ env.PG_HOST }}
+          PG_PORT: ${{ env.PG_PORT }}
+          PG_DATABASE: ${{ env.PG_DATABASE }}
+          PG_USER: ${{ env.PG_USER }}
+          PG_PASSWORD: ${{ env.PG_PASSWORD }}
           KEK: ${{ secrets.KEK }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SESSION_KEY: ${{ secrets.SESSION_KEY }}
@@ -175,9 +175,9 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
+          POSTGRES_DB: ${{ env.PG_DATABASE }}
+          POSTGRES_USER: ${{ env.PG_USER }}
+          POSTGRES_PASSWORD: ${{ env.PG_PASSWORD }}
         ports:
           - 5432:5432
         options: >-
@@ -187,11 +187,11 @@ jobs:
           --health-retries 5
 
     env:
-      PG_HOST: localhost
-      PG_PORT: ${{ env.POSTGRES_PORT }}
-      PG_USER: ${{ env.POSTGRES_USER }}
-      PG_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-      PG_DATABASE: ${{ env.POSTGRES_DB }}
+      PG_HOST: ${{ env.PG_HOST }}
+      PG_PORT: ${{ env.PG_PORT }}
+      PG_USER: ${{ env.PG_USER }}
+      PG_PASSWORD: ${{ env.PG_PASSWORD }}
+      PG_DATABASE: ${{ env.PG_DATABASE }}
 
     steps:
       - name: Checkout source
@@ -223,6 +223,36 @@ jobs:
         with:
           name: cli-migration-coverage-${{ matrix.node }}-${{ github.sha }}
           path: packages/cli/coverage/
+
+  # ── Memory leak & wire protocol tests (no external dependencies) ──────
+  memory-leak:
+    name: Memory Leak Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript compilation (with tests)
+        run: npm run build:app -w packages/core
+
+      - name: Run memory leak and wire protocol tests
+        run: node --test packages/core/dist/tests/memory-leak.test.js packages/core/dist/tests/wire-protocol.test.js
 
   # ── Docker build (depends on core tests passing) ───────────────────────
   docker-build:
