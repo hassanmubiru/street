@@ -74,7 +74,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -109,7 +109,7 @@ jobs:
           PYEOF
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
@@ -130,7 +130,7 @@ jobs:
 
       - name: Upload coverage report
         if: success() || failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: core-coverage-${{ matrix.node }}-${{ github.sha }}
           path: packages/core/coverage/
@@ -148,12 +148,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
@@ -175,7 +175,7 @@ jobs:
 
       - name: Upload coverage report
         if: success() || failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cli-coverage-${{ matrix.node }}-${{ github.sha }}
           path: packages/cli/coverage/
@@ -208,12 +208,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
@@ -232,7 +232,7 @@ jobs:
 
       - name: Upload migration coverage report
         if: success() || failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cli-migration-coverage-${{ matrix.node }}-${{ github.sha }}
           path: packages/cli/coverage/
@@ -250,12 +250,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
@@ -282,12 +282,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Setup Node.js ${{ matrix.node }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
@@ -330,7 +330,7 @@ jobs:
 
       - name: Upload system test results
         if: success() || failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: system-test-results-${{ matrix.node }}-${{ github.sha }}
           path: packages/core/tests/system/system-test-results.json
@@ -343,7 +343,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -384,12 +384,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.3.0
+        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -420,12 +420,12 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
       - name: Setup Node.js 20
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: '20'
           cache: 'npm'
