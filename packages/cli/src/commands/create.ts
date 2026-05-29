@@ -71,7 +71,7 @@ export class CreateCommand {
     await mkdir(join(targetDir, 'src', 'middleware'), { recursive: true });
     await mkdir(join(targetDir, 'src', 'gateways'), { recursive: true });
     await mkdir(join(targetDir, 'migrations'), { recursive: true });
-    await mkdir(join(targetDir, 'src', 'tests'), { recursive: true });
+    await mkdir(join(targetDir, 'tests'), { recursive: true });
     await mkdir(join(targetDir, 'uploads'), { recursive: true });
     await mkdir(join(targetDir, 'docker-init'), { recursive: true });
 
@@ -184,10 +184,13 @@ export class CreateCommand {
 
     // tests/integration.test.ts
     await writeFile(
-      join(targetDir, 'src/tests/integration.test.ts'),
+      join(targetDir, 'tests/integration.test.ts'),
       this.renderTestFile(),
       'utf8'
     );
+
+    // migrations/.gitkeep
+    await writeFile(join(targetDir, 'migrations', '.gitkeep'), '', 'utf8');
 
     // uploads/.gitkeep
     await writeFile(join(targetDir, 'uploads', '.gitkeep'), '', 'utf8');

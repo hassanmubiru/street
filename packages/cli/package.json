@@ -9,9 +9,18 @@
     "street": "./bin/street.js"
   },
   "files": [
-    "dist/**/*.js",
-    "dist/**/*.d.ts",
-    "dist/**/*.d.ts.map",
+    "dist/argv.js",
+    "dist/argv.js.map",
+    "dist/argv.d.ts",
+    "dist/argv.d.ts.map",
+    "dist/index.js",
+    "dist/index.js.map",
+    "dist/index.d.ts",
+    "dist/index.d.ts.map",
+    "dist/commands/**/*.js",
+    "dist/commands/**/*.js.map",
+    "dist/commands/**/*.d.ts",
+    "dist/commands/**/*.d.ts.map",
     "bin/street.js",
     "templates/**/*"
   ],
