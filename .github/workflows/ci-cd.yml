@@ -1,13 +1,15 @@
 name: street CI/CD
 
-# Merged CI workflow — core & CLI packages, unit & integration, memory leak, and system tests.
-# Jobs run in parallel on separate runners for fast feedback.
+# Merged CI/CD workflow — core & CLI packages, unit & integration, memory leak, system tests,
+# security lint, and npm publish. All jobs run in parallel on separate runners for fast feedback.
 # Postgres is available for the core and CLI migration integration jobs.
 # Use workflow_dispatch with a suite input to run a specific system test suite.
+# Tag pushes (v*.*.*) trigger the publish job after core tests pass.
 
 "on":
   push:
     branches: [main, develop]
+    tags: ['v*.*.*']
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -120,11 +122,6 @@ jobs:
 
       - name: Run integration tests with coverage
         env:
-          PG_HOST: ${{ env.PG_HOST }}
-          PG_PORT: ${{ env.PG_PORT }}
-          PG_DATABASE: ${{ env.PG_DATABASE }}
-          PG_USER: ${{ env.PG_USER }}
-          PG_PASSWORD: ${{ env.PG_PASSWORD }}
           KEK: ${{ secrets.KEK }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           SESSION_KEY: ${{ secrets.SESSION_KEY }}
@@ -209,13 +206,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
-    env:
-      PG_HOST: ${{ env.PG_HOST }}
-      PG_PORT: ${{ env.PG_PORT }}
-      PG_USER: ${{ env.PG_USER }}
-      PG_PASSWORD: ${{ env.PG_PASSWORD }}
-      PG_DATABASE: ${{ env.PG_DATABASE }}
-
     steps:
       - name: Checkout source
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -257,9 +247,6 @@ jobs:
       fail-fast: false
       matrix:
         node: ['20', '22']
-
-    permissions:
-      contents: read
 
     steps:
       - name: Checkout source
@@ -414,3 +401,73 @@ jobs:
           docker build -t $IMAGE:${{ github.sha }} -t $IMAGE:latest .
           docker push $IMAGE:${{ github.sha }}
           docker push $IMAGE:latest
+
+  # ── npm publish (triggered by semver tags) ─────────────────────────────
+  test-and-publish:
+    name: Test & Publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: build-and-test
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    concurrency:
+      group: publish-${{ github.ref }}
+      cancel-in-progress: true
+
+    permissions:
+      contents: read
+      id-token: write   # required for npm provenance
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '20'
+          cache: 'npm'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify version matches tag
+        run: |
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          PKG_VERSION=$(node -p "require('./packages/core/package.json').version")
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::Tag version ($TAG_VERSION) does not match packages/core/package.json version ($PKG_VERSION)"
+            exit 1
+          fi
+
+      - name: TypeScript compilation (full project with tests)
+        run: npm run build:app -w packages/core
+
+      - name: Run lint
+        run: npm run lint -w packages/core
+
+      - name: Run security tests
+        run: node --test --test-concurrency=1 packages/core/dist/tests/system/security.test.js
+        env:
+          PG_HOST: ""
+
+      - name: Run memory-safety tests
+        run: node --test --test-concurrency=1 packages/core/dist/tests/system/memory-safety.test.js
+        env:
+          PG_HOST: ""
+
+      - name: Run infrastructure tests
+        run: node --test --test-concurrency=1 packages/core/dist/tests/system/infrastructure.test.js
+        env:
+          PG_HOST: ""
+
+      - name: Verify library build (matches prepublishOnly)
+        run: npm run build -w packages/core
+
+      - name: Publish to npm
+        run: npm publish -w packages/core --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

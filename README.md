@@ -41,7 +41,7 @@ curl http://localhost:3000/api/hello
 [![System Tests](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg?job=system-tests)](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml)
 [![YAML Lint](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg?job=build-and-test)](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml)
 [![Security Lint](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg?job=security-lint)](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml)
-[![Publish](https://github.com/hassanmubiru/street/actions/workflows/publish.yml/badge.svg)](https://github.com/hassanmubiru/street/actions/workflows/publish.yml)
+[![Publish](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg?job=test-and-publish)](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GitHub stars](https://img.shields.io/github/stars/hassanmubiru/street)](https://github.com/hassanmubiru/street)
 [![npm version](https://img.shields.io/npm/v/@streetjs/core)](https://www.npmjs.com/package/@streetjs/core)

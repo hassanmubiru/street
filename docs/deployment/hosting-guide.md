@@ -116,7 +116,7 @@ node -e "import('@streetjs/core').then(m => console.log(Object.keys(m)))"
 
 ### Step 6: Automated releases via git tags
 
-Every push of a `v*.*.*` tag triggers the `npm-publish.yml` workflow:
+Every push of a `v*.*.*` tag triggers the `test-and-publish` job in the consolidated `ci-cd.yml` workflow:
 
 ```bash
 # Bump version (e.g., patch: 1.0.0 → 1.0.1)
@@ -127,23 +127,25 @@ git add package.json CHANGELOG.md
 git commit -m "chore: release v1.0.1"
 git tag v1.0.1
 
-# Push — this triggers the npm-publish workflow
+# Push — this triggers the test-and-publish job
 git push origin main --tags
 ```
 
-The workflow will:
-1. Run the full test suite against PostgreSQL
-2. Build the library with `tsconfig.lib.json`
-3. Run `npm publish --provenance` (npm provenance links the package to the exact commit)
-4. Create a GitHub Release with the changelog section for that version
+The job will:
+1. Wait for the core `build-and-test` job to pass
+2. Verify the package version matches the git tag
+3. Build the library with `tsconfig.lib.json`
+4. Run lint, security, memory-safety, and infrastructure tests
+5. Run `npm publish --provenance` (npm provenance links the package to the exact commit)
 
 ---
 
 ### Step 7: Verify automated publish
 
-1. Go to **Actions** tab in GitHub → select the `Publish to npm` workflow run
-2. Watch each step complete
-3. Check https://www.npmjs.com/package/@streetjs/core for the new version
+1. Go to the **Actions** tab in GitHub → select the `CI/CD` workflow run
+2. Find the `test-and-publish` job (only runs on tag pushes)
+3. Watch each step complete
+4. Check https://www.npmjs.com/package/@streetjs/core for the new version
 
 ---
 
@@ -256,11 +258,11 @@ git commit -m "docs: add Jekyll site with just-the-docs theme"
 git push origin main
 ```
 
-The `docs.yml` workflow triggers automatically. To watch it:
+GitHub Pages deployment is handled automatically by GitHub when pushing to the default branch with changes in the `docs/` directory. To deploy:
 
-1. Go to **Actions** → **Deploy Documentation**
-2. Click the running workflow
-3. After it completes, your site is live at: `https://YOUR-USERNAME.github.io/street`
+1. Go to **Actions** → **CI/CD**
+2. Wait for the workflow to complete
+3. Your site will be live at: `https://YOUR-USERNAME.github.io/street`
 
 ---
 
@@ -315,28 +317,7 @@ Content goes here.
 
 ### Updating docs with every release
 
-Extend the `npm-publish.yml` workflow to trigger a docs rebuild after a successful publish:
-
-```yaml
-# Add to npm-publish.yml after the publish-npm job:
-  update-docs:
-    name: Refresh docs site
-    needs: publish-npm
-    runs-on: ubuntu-latest
-    permissions:
-      actions: write
-    steps:
-      - name: Trigger docs deploy
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.actions.createWorkflowDispatch({
-              owner:   context.repo.owner,
-              repo:    context.repo.repo,
-              workflow_id: 'docs.yml',
-              ref:     'main',
-            });
-```
+Since the CI/CD workflow is consolidated into a single `ci-cd.yml` file, a simple `git push` automatically triggers the full pipeline including the `test-and-publish` job on tag pushes. Documentation updates pushed to `main` will deploy automatically.
 
 ### Badges in README
 
