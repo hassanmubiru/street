@@ -83,8 +83,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript check & build
-        run: npm run build -w packages/core
+      - name: TypeScript check & build (with tests)
+        run: npm run build:app -w packages/core
 
       - name: Run integration tests
         env:

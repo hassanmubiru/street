@@ -51,8 +51,8 @@ jobs:
             exit 1
           fi
 
-      - name: TypeScript compilation (full project)
-        run: npm run build -w packages/core
+      - name: TypeScript compilation (full project with tests)
+        run: npm run build:app -w packages/core
 
       - name: Run lint
         run: npm run lint -w packages/core

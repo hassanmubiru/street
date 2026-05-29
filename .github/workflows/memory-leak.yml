@@ -36,8 +36,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: TypeScript compilation
-        run: npm run build -w packages/core
+      - name: TypeScript compilation (with tests)
+        run: npm run build:app -w packages/core
 
       - name: Run memory leak and wire protocol tests
         run: node --test packages/core/dist/tests/memory-leak.test.js packages/core/dist/tests/wire-protocol.test.js
