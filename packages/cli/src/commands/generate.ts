@@ -49,7 +49,7 @@ export class GenerateCommand {
         break;
     }
 
-    console.log(`[street] Generated ${type}: src/${type}s/${fileName}.${type}.ts`);
+    console.log(`[street] Generated ${type}: src/${this.toPlural(type)}/${fileName}.${type}.ts`);
   }
 
   private async generateController(

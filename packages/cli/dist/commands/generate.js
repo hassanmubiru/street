@@ -37,7 +37,7 @@ export class GenerateCommand {
                 await this.generateRepository(cwd, className, fileName, pluralName);
                 break;
         }
-        console.log(`[street] Generated ${type}: src/${type}s/${fileName}.${type}.ts`);
+        console.log(`[street] Generated ${type}: src/${this.toPlural(type)}/${fileName}.${type}.ts`);
     }
     async generateController(cwd, className, fileName, pluralName) {
         const dir = resolve(cwd, 'src', 'controllers');
