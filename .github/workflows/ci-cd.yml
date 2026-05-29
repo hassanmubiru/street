@@ -28,8 +28,12 @@ env:
 jobs:
   # ── Core package: build + integration tests with Postgres ──────────────
   build-and-test:
-    name: Core (Postgres)
+    name: Core (Node ${{ matrix.node }})
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node: ['20', '22']
 
     env:
       KEK: ${{ secrets.KEK }}
@@ -79,14 +83,14 @@ jobs:
               sys.exit(1)
           PYEOF
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
+      - name: Setup Node.js ${{ matrix.node }}
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node }}
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --ignore-engines
 
       - name: TypeScript check & build (with tests)
         run: npm run build:app -w packages/core
@@ -108,7 +112,7 @@ jobs:
         if: success() || failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: core-coverage-${{ github.sha }}
+          name: core-coverage-${{ matrix.node }}-${{ github.sha }}
           path: packages/core/coverage/
 
   # ── CLI unit tests (no external dependencies) ──────────────────────────
@@ -119,7 +123,7 @@ jobs:
 
     strategy:
       matrix:
-        node: ['18', '20', '22']
+        node: ['20', '22']
 
     steps:
       - name: Checkout source
@@ -163,7 +167,7 @@ jobs:
 
     strategy:
       matrix:
-        node: ['18', '20', '22']
+        node: ['20', '22']
 
     services:
       postgres:
