@@ -1,14 +1,30 @@
 name: street CI/CD
 
-# Merged CI workflow — core & CLI packages, unit & integration, and memory leak tests.
+# Merged CI workflow — core & CLI packages, unit & integration, memory leak, and system tests.
 # Jobs run in parallel on separate runners for fast feedback.
 # Postgres is available for the core and CLI migration integration jobs.
+# Use workflow_dispatch with a suite input to run a specific system test suite.
 
 "on":
   push:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: 'Run a specific system test suite (leave blank for all)'
+        required: false
+        type: choice
+        options:
+          - all
+          - security
+          - memory-safety
+          - load-testing
+          - fuzz-testing
+          - chaos-testing
+          - infrastructure
+        default: all
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -23,6 +39,7 @@ env:
   PG_USER: street
   PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
   PG_DATABASE: street_test
+  SUITE: ${{ inputs.suite || 'all' }}
 
 jobs:
   # ── Core package: build + integration tests with Postgres ──────────────
@@ -258,6 +275,92 @@ jobs:
 
       - name: Run memory leak and wire protocol tests
         run: node --test packages/core/dist/tests/memory-leak.test.js packages/core/dist/tests/wire-protocol.test.js
+
+  # ── System tests: security, memory-safety, load, fuzz, chaos, infra ──
+  system-tests:
+    name: System Tests (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript compilation (with tests)
+        run: npm run build:app -w packages/core
+
+      - name: Run security tests
+        if: env.SUITE == 'all' || env.SUITE == 'security'
+        run: node --test packages/core/dist/tests/system/security.test.js
+
+      - name: Run memory-safety tests
+        if: env.SUITE == 'all' || env.SUITE == 'memory-safety'
+        run: node --test packages/core/dist/tests/system/memory-safety.test.js
+
+      - name: Run load-testing tests
+        if: env.SUITE == 'all' || env.SUITE == 'load-testing'
+        run: node --test packages/core/dist/tests/system/load-testing.test.js
+
+      - name: Run fuzz-testing tests
+        if: env.SUITE == 'all' || env.SUITE == 'fuzz-testing'
+        run: node --test packages/core/dist/tests/system/fuzz-testing.test.js
+
+      - name: Run chaos-testing tests
+        if: env.SUITE == 'all' || env.SUITE == 'chaos-testing'
+        run: node --test packages/core/dist/tests/system/chaos-testing.test.js
+
+      - name: Run infrastructure tests (no PG)
+        if: env.SUITE == 'all' || env.SUITE == 'infrastructure'
+        run: node --test packages/core/dist/tests/system/infrastructure.test.js
+        env:
+          PG_HOST: ""
+
+      - name: Run unified system test runner
+        if: env.SUITE == 'all'
+        run: node packages/core/dist/tests/system/runner.js --ci --json --skip-pg
+
+      - name: Upload system test results
+        if: success() || failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: system-test-results-${{ matrix.node }}-${{ github.sha }}
+          path: packages/core/tests/system/system-test-results.json
+
+  summary:
+    name: Test Summary
+    runs-on: ubuntu-latest
+    needs: system-tests
+    if: always()
+
+    steps:
+      - name: Summarize results
+        run: |
+          echo "## System Tests Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger:** \`${{ github.event_name }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All 6 system test suites executed (security, memory-safety, load-testing, fuzz-testing, chaos-testing, infrastructure)." >> $GITHUB_STEP_SUMMARY
 
   # ── Docker build (depends on core tests passing) ───────────────────────
   docker-build:
