@@ -19,6 +19,11 @@ export function argvParser(argv) {
     let i = 0;
     while (i < args.length) {
         const arg = args[i];
+        // `--` signals end of options — everything after is positional
+        if (arg === '--') {
+            positional.push(...args.slice(i + 1));
+            break;
+        }
         if (arg.startsWith('--')) {
             const key = arg.slice(2);
             const eqIdx = key.indexOf('=');
@@ -27,7 +32,9 @@ export function argvParser(argv) {
             }
             else {
                 const next = args[i + 1];
-                if (next !== undefined && !next.startsWith('-')) {
+                // Only consume next token as flag value if we already have a command
+                // (prevents consuming the command token as a flag value)
+                if (next !== undefined && !next.startsWith('-') && command !== null) {
                     flags[key] = next;
                     i++;
                 }
@@ -39,7 +46,7 @@ export function argvParser(argv) {
         else if (arg.startsWith('-') && arg.length === 2) {
             const key = arg.slice(1);
             const next = args[i + 1];
-            if (next !== undefined && !next.startsWith('-')) {
+            if (next !== undefined && !next.startsWith('-') && command !== null) {
                 flags[key] = next;
                 i++;
             }

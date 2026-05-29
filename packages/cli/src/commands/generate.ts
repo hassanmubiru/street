@@ -56,7 +56,7 @@ export class GenerateCommand {
     cwd: string,
     className: string,
     fileName: string,
-    _pluralName: string
+    pluralName: string
   ): Promise<void> {
     const dir = resolve(cwd, 'src', 'controllers');
     await mkdir(dir, { recursive: true });
@@ -69,7 +69,7 @@ import type { StreetContext } from '@streetjs/core';
 import { ${className}Service } from '../services/${fileName}.service.js';
 import { container } from '@streetjs/core';
 
-@Controller('/api/${fileName}s')
+@Controller('/api/${pluralName}')
 export class ${className}Controller {
   private readonly service = container.resolve(${className}Service);
 

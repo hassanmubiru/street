@@ -84,11 +84,16 @@ void describe('argvParser', () => {
         assert.equal(result.command, null);
         assert.equal(result.flags['help'], true);
     });
-    void it('treats -- as a flag, not a command', () => {
+    void it('treats -- as end-of-options separator', () => {
         const result = argvParser(['node', 'street', '--', 'create']);
         assert.equal(result.command, null);
-        assert.equal(result.flags[''], true);
+        assert.deepEqual(result.flags, {});
         assert.deepEqual(result.positional, ['create']);
+    });
+    void it('preserves everything after -- as positional, even flag-like tokens', () => {
+        const result = argvParser(['node', 'street', 'cmd', '--', '--flag', 'value']);
+        assert.equal(result.command, 'cmd');
+        assert.deepEqual(result.positional, ['--flag', 'value']);
     });
     void it('parses numeric flag values as strings', () => {
         const result = argvParser(['node', 'street', 'build', '--parallel', '4']);

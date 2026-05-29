@@ -39,7 +39,7 @@ export class GenerateCommand {
         }
         console.log(`[street] Generated ${type}: src/${type}s/${fileName}.${type}.ts`);
     }
-    async generateController(cwd, className, fileName, _pluralName) {
+    async generateController(cwd, className, fileName, pluralName) {
         const dir = resolve(cwd, 'src', 'controllers');
         await mkdir(dir, { recursive: true });
         const content = `// src/controllers/${fileName}.controller.ts
@@ -50,7 +50,7 @@ import type { StreetContext } from '@streetjs/core';
 import { ${className}Service } from '../services/${fileName}.service.js';
 import { container } from '@streetjs/core';
 
-@Controller('/api/${fileName}s')
+@Controller('/api/${pluralName}')
 export class ${className}Controller {
   private readonly service = container.resolve(${className}Service);
 

@@ -3,7 +3,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'node:fs';
+import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { CreateCommand } from '../commands/create.js';
@@ -323,7 +323,6 @@ void describe('CreateCommand', () => {
 
 /** Recursively count files in a directory */
 function countFilesRecursive(dir: string): number {
-  const { readdirSync, statSync } = require('node:fs') as typeof import('node:fs');
   let count = 0;
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
