@@ -18,7 +18,7 @@
   "scripts": {
     "build": "tsc",
     "test": "node --test dist/tests/*.test.js",
-    "coverage": "node --experimental-test-coverage --test dist/tests/argv.test.js dist/tests/create.test.js dist/tests/generate.test.js dist/tests/migrate.test.js",
+    "coverage": "c8 --reporter=text --reporter=lcov --reporter=html --include='dist/**/*.js' --exclude='dist/tests/**' --exclude-node-modules --all=false node --test dist/tests/argv.test.js dist/tests/create.test.js dist/tests/generate.test.js dist/tests/migrate.test.js",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "prepublishOnly": "npm run clean && npm run build"
   },
@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
+    "c8": "^11.0.0",
     "typescript": "^5.4.5"
   },
   "peerDependencies": {
