@@ -1,7 +1,7 @@
 // packages/cli/src/tests/migrate.test.ts
 // Unit tests for the `street migrate:create` and `street migrate:run` commands.
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

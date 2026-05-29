@@ -1,7 +1,7 @@
 // packages/cli/src/tests/create.test.ts
 // Unit tests for the `street create` scaffolding command.
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, existsSync, readFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';

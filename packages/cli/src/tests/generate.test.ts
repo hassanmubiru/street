@@ -1,7 +1,7 @@
 // packages/cli/src/tests/generate.test.ts
 // Unit tests for the `street generate` command — helper methods and scaffolding.
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';

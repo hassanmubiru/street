@@ -1,7 +1,7 @@
 // packages/cli/src/tests/index.test.ts
 // Unit tests for the CLI dispatcher.
 
-import { describe, it, before, after } from 'node:test';
+import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { runCli } from '../index.js';
 
