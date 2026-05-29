@@ -39,7 +39,12 @@ function withExitCode(fn: () => Promise<void>): Promise<void> {
   });
 }
 
-const VERSION_OUTPUT = 'street v1.0.0';
+const VERSION_OUTPUT = `street v${JSON.parse(
+  (await import('node:fs')).readFileSync(
+    new URL('../../package.json', import.meta.url),
+    'utf8'
+  )
+).version}`;
 
 void describe('runCli', () => {
   void it('prints version on --version flag', async () => {
