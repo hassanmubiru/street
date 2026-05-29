@@ -20,6 +20,9 @@ node_modules/
 # NPM publish/view logs
 .npm_*
 
+# Coverage output
+coverage/
+
 # General log files
 log.txt
 *.log
