@@ -18,11 +18,18 @@
   "scripts": {
     "build": "tsc",
     "test": "node --test dist/tests/*.test.js",
+    "coverage": "c8 node --test dist/tests/*.test.js",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
     "prepublishOnly": "npm run clean && npm run build"
   },
   "dependencies": {
     "@streetjs/core": "^1.0.3"
+  },
+  "c8": {
+    "include": ["src/**/*.ts"],
+    "exclude": ["src/tests/**"],
+    "reporter": ["text", "lcov", "html"],
+    "all": true
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
