@@ -11,7 +11,7 @@ import { TestCommand } from './commands/test.js';
 import { GenerateCommand } from './commands/generate.js';
 import { MigrateCommand } from './commands/migrate.js';
 
-const VERSION = '1.0.0';
+const VERSION = '1.0.1';
 const APP_NAME = 'street';
 
 export interface CliContext {
