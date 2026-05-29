@@ -64,9 +64,272 @@ curl http://localhost:3000/api/hello
 | **Deployment** | [Docker](docs/deployment/docker.md) · [Hosting guide](docs/deployment/hosting-guide.md) |
 | **Examples** | [User API](docs/examples/user-api.md) · [Streaming query](docs/examples/streaming-query.md) |
 
+## Monorepo Structure
+
+This repository is an npm workspaces monorepo containing two packages:
+
+| Package | npm | Description |
+|---|---|---|
+| `packages/core` | [`@streetjs/core`](https://www.npmjs.com/package/@streetjs/core) | Framework library — HTTP server, router, DI container, database driver, security, WebSocket, SSE, clustering, telemetry, caching, multipart uploads |
+| `packages/cli` | [`@streetjs/cli`](https://www.npmjs.com/package/@streetjs/cli) | CLI tool — project scaffolding, code generation, dev server, build pipeline, migration management |
+
+### Root-level scripts
+
+| Command | Description |
+|---|---|
+| `npm run build` | Build both packages (core first, then CLI) |
+| `npm run build:core` | Build only `packages/core` |
+| `npm run build:cli` | Build only `packages/cli` |
+| `npm test` | Run core integration tests (requires PostgreSQL) |
+| `npm run test:cli` | Run CLI unit tests (no database needed) |
+| `npm run coverage:cli` | Run CLI tests with code coverage reporting |
+| `npm run lint` | TypeScript type-check on core package |
+| `npm run clean` | Clean build output from both packages |
+| `npm run lint:workflows` | Validate GitHub Actions YAML syntax |
+| `npm run lint:security` | Run zizmor security audit on workflows |
+
+### packages/core
+
+The framework library — the runtime your Street application depends on. Built entirely on Node.js core modules with only two dependencies (`reflect-metadata` and `ws`).
+
+```bash
+npm install @streetjs/core
+```
+
+Key modules:
+
+| Module | File | Purpose |
+|---|---|---|
+| **HTTP server** | `src/http/server.ts` | Request/response lifecycle, body parsing, streaming |
+| **Router** | `src/router/router.ts` | Path matching, parameters, middleware chain |
+| **DI container** | `src/core/container.ts` | Dependency injection with `@Injectable()` decorator |
+| **Database** | `src/database/` | PostgreSQL wire protocol, connection pool, repository pattern, migrations |
+| **Security** | `src/security/` | JWT, session management, AES-256-GCM vault, rate limiter, XSS sanitization |
+| **Realtime** | `src/websocket/` | WebSocket server, SSE streaming |
+| **Cluster** | `src/cluster/coordinator.ts` | Multi-core process management |
+| **Telemetry** | `src/telemetry/tracker.ts` | Request metrics, memory monitoring |
+| **Cache** | `src/cache/lru.ts` | Bounded LRU cache with TTL |
+| **Multipart** | `src/multipart/parser.ts` | Streaming file upload parser |
+| **Webhook** | `src/webhook/dispatcher.ts` | Outbound webhook delivery |
+
+### packages/cli
+
+The CLI tool for scaffolding, running, and managing Street projects. Installed globally or used via `npx`.
+
+```bash
+# Install globally
+npm install -g @streetjs/cli
+
+# Or use without installing
+npx @streetjs/cli <command>
+```
+
+All commands are documented in the [CLI Commands](#cli-commands) section below.
+
+---
+
+## CLI Commands
+
+### `street create <project-name>`
+
+Scaffolds a complete Street project with a production-ready structure.
+
+```bash
+street create my-api
+cd my-api
+npm install
+street dev
+```
+
+**Options:**
+
+| Flag | Description |
+|---|---|
+| `--install`, `-i` | Auto-install dependencies after scaffolding |
+
+**Generated structure:**
+
+```
+my-api/
+├── src/
+│   ├── main.ts              # Application entry point
+│   ├── controllers/         # HTTP request handlers
+│   │   ├── example.controller.ts
+│   │   └── health.controller.ts
+│   ├── services/            # Business logic layer
+│   │   └── example.service.ts
+│   ├── repositories/        # Data access layer
+│   │   └── example.repository.ts
+│   ├── middleware/          # Custom middleware
+│   │   └── auth.ts
+│   ├── gateways/            # WebSocket handlers
+│   │   └── chat.gateway.ts
+│   └── tests/               # Test files
+│       └── integration.test.ts
+├── migrations/              # SQL migrations
+├── uploads/                 # File upload storage
+├── docker-init/             # PostgreSQL init scripts
+├── package.json
+├── tsconfig.json
+├── street.config.ts
+├── Dockerfile
+├── docker-compose.yml
+└── .env.example
+```
+
+---
+
+### `street build`
+
+Compiles TypeScript to JavaScript for production deployment.
+
+```bash
+cd my-api
+street build
+# [street] Building project for production...
+# [street] Build completed in 2.3s
+# [street] Output: ./dist/
+```
+
+Uses the project's `tsconfig.json` and outputs to `./dist/`.
+
+---
+
+### `street dev`
+
+Starts the development server with file watching and hot-reload.
+
+```bash
+cd my-api
+street dev
+```
+
+- Compiles TypeScript on startup
+- Starts the server on the configured port (default: `3000`)
+- Watches `src/` for file changes
+- Automatically recompiles and restarts the server on changes
+- Handles `SIGTERM`/`SIGINT` for graceful shutdown
+
+---
+
+### `street start`
+
+Starts the production server from compiled output.
+
+```bash
+cd my-api
+street build
+street start
+```
+
+Requires `dist/main.js` to exist (run `street build` first). Sets `NODE_ENV` to `production` by default.
+
+---
+
+### `street test`
+
+Runs the project's test suite using Node's built-in test runner.
+
+```bash
+cd my-api
+street test
+```
+
+- Compiles TypeScript first
+- Discovers test files in `dist/tests/`
+- Runs tests with `node --test`
+- Supports all `node:test` features (TAP output, concurrency, coverage)
+
+---
+
+### `street generate <type> <name>`
+
+Generates controllers, services, and repositories with boilerplate code.
+
+```bash
+street generate controller users
+street generate service users
+street generate repository users
+```
+
+**Valid types:** `controller`, `service`, `repository`
+
+**Generated files:**
+
+| Type | Output | Route (controller) |
+|---|---|---|
+| `controller` | `src/controllers/<name>.controller.ts` | `/api/<plural-name>` |
+| `service` | `src/services/<name>.service.ts` | — |
+| `repository` | `src/repositories/<name>.repository.ts` | — |
+
+**Name conventions:**
+
+| Input | Class name | File name | Route |
+|---|---|---|---|
+| `users` | `Users` | `users` | `/api/users` |
+| `blog-post` | `BlogPost` | `blog-post` | `/api/blog-posts` |
+| `user_profile` | `UserProfile` | `user-profile` | `/api/user-profiles` |
+
+Generated controllers include full CRUD endpoints (`GET /`, `GET /:id`, `POST /`, `PUT /:id`, `DELETE /:id`) with OpenAPI annotations.
+
+---
+
+### `street migrate:create <name>`
+
+Creates a pair of timestamped SQL migration files (up and rollback).
+
+```bash
+street migrate:create create_users_table
+# [street] Created migration: 20260101120000_create_users_table.sql
+# [street] Created rollback:  20260101120000_create_users_table.rollback.sql
+```
+
+Migration files are created in the `migrations/` directory with a UTC timestamp prefix for ordering.
+
+---
+
+### `street migrate:run`
+
+Runs all pending SQL migrations in order.
+
+```bash
+street migrate:run
+```
+
+- Connects to PostgreSQL using environment variables (`PG_HOST`, `PG_PORT`, `PG_DATABASE`, etc.)
+- Requires `dist/main.js` to exist (run `street build` first)
+- Discovers `.sql` files in `migrations/` directory
+- Uses `StreetMigrationRunner` to track applied migrations
+- Skips already-applied migrations
+
+---
+
+### Global flags
+
+| Flag | Description |
+|---|---|
+| `--help`, `-h` | Show help message with all commands |
+| `--version`, `-v` | Show CLI version |
+
+---
+
 ## Testing
 
-To run tests locally:
+### CLI tests (no database needed)
+
+```bash
+# Run all CLI tests (68 tests across 5 suites)
+npm run test -w packages/cli
+
+# With code coverage
+npm run coverage -w packages/cli
+```
+
+All CLI tests are fast unit tests that operate on temporary directories — no PostgreSQL or external services required. Coverage reports are generated in `packages/cli/coverage/` (text, lcov, and HTML formats).
+
+### Core integration tests (requires PostgreSQL)
+
+To run the core integration tests locally:
 
 ```bash
 ./scripts/test-setup.sh
@@ -79,3 +342,5 @@ docker-compose up -d postgres
 # wait until healthy
 PG_HOST=127.0.0.1 PG_PORT=55432 PG_USER=street PG_PASSWORD=street_secret PG_DATABASE=street_test npm run test:run
 ```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the complete test suite reference, including wire protocol, stress, memory leak, and system tests.
