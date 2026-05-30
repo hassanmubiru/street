@@ -17,16 +17,35 @@ export interface IRepository<T> {
 
 // ─── Base repository ────────────────────────────────────────────────────────────
 
+// Finding 6 fix: safe table/schema name pattern
+const SAFE_TABLE_NAME_RE = /^[a-zA-Z_][a-zA-Z0-9_.]*$/;
+
 export abstract class StreetPostgresRepository<T extends object>
   implements IRepository<T>
 {
   protected abstract readonly tableName: string;
 
-  constructor(protected readonly pool: PgPool) {}
+  constructor(protected readonly pool: PgPool) {
+    // Finding 6 fix: validate tableName at construction time so a bad subclass
+    // fails immediately rather than silently injecting SQL at query time.
+    // We defer the check to the first query because abstract properties are
+    // not yet initialised in the base constructor — use a lazy validator instead.
+  }
+
+  /** Validate tableName on first use (abstract property not available in constructor) */
+  private _assertSafeTableName(): void {
+    if (!SAFE_TABLE_NAME_RE.test(this.tableName)) {
+      throw new Error(
+        `Repository tableName contains unsafe characters: "${this.tableName}". ` +
+        'Only letters, digits, underscores, and dots are allowed.'
+      );
+    }
+  }
 
   protected abstract mapRow(row: Record<string, string | null>): T;
 
   async findById(id: string): Promise<T | null> {
+    this._assertSafeTableName();
     const result = await this.pool.query(
       `SELECT * FROM ${this.tableName} WHERE id = $1 LIMIT 1`,
       [id]
@@ -36,6 +55,7 @@ export abstract class StreetPostgresRepository<T extends object>
   }
 
   async findAll(limit = 20, offset = 0): Promise<T[]> {
+    this._assertSafeTableName();
     const safeLimit = Math.min(Math.max(1, Math.floor(limit)), 1000);
     const safeOffset = Math.max(0, Math.floor(offset));
     const result = await this.pool.query(
@@ -46,11 +66,13 @@ export abstract class StreetPostgresRepository<T extends object>
   }
 
   async count(): Promise<number> {
+    this._assertSafeTableName();
     const result = await this.pool.query(`SELECT COUNT(*) AS total FROM ${this.tableName}`);
     return parseInt(result.rows[0]?.['total'] ?? '0', 10);
   }
 
   async create(data: Partial<T>): Promise<T> {
+    this._assertSafeTableName();
     const keys = Object.keys(data).filter((k) => data[k as keyof T] !== undefined);
     const columns = keys.map((k) => `"${k}"`).join(', ');
     const placeholders = keys.map((_, i) => `$${i + 1}`).join(', ');
@@ -65,6 +87,7 @@ export abstract class StreetPostgresRepository<T extends object>
   }
 
   async update(id: string, data: Partial<T>): Promise<T | null> {
+    this._assertSafeTableName();
     if (Object.keys(data).length === 0) return this.findById(id);
     const entries = Object.entries(data).filter(([, v]) => v !== undefined);
     const setClauses = entries.map(([k], i) => `"${k}" = $${i + 1}`).join(', ');
@@ -79,6 +102,7 @@ export abstract class StreetPostgresRepository<T extends object>
   }
 
   async delete(id: string): Promise<boolean> {
+    this._assertSafeTableName();
     const result = await this.pool.query(
       `DELETE FROM ${this.tableName} WHERE id = $1`,
       [id]
