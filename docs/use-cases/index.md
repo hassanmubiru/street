@@ -1021,4 +1021,4 @@ cd my-project && npm install && street dev
 ```
 
 {: .note }
-Street is MIT-licensed and runs on Node.js 20+. See the [Getting Started](/street/getting-started/installation/) guide to scaffold your first project in under 60 seconds.
+Street is MIT-licensed and runs on Node.js 20+. See the [Getting Started](/getting-started/installation/) guide to scaffold your first project in under 60 seconds.
