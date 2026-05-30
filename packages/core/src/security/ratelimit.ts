@@ -32,14 +32,12 @@ export class RateLimiter {
   private readonly sweepTimer: NodeJS.Timeout;
 
   constructor(opts: RateLimiterOptions) {
+    const resolvedKeyFn = opts.keyFn ?? ((ctx: StreetContext) => defaultKeyFn(ctx, opts.trustProxy ?? false));
     this.opts = {
-      keyFn: (ctx) => defaultKeyFn(ctx, opts.trustProxy ?? false),
       message: 'Too Many Requests',
       trustProxy: false,
       ...opts,
-      // Re-apply keyFn after spread so the trustProxy-aware default is only
-      // used when the caller did NOT supply a custom keyFn.
-      keyFn: opts.keyFn ?? ((ctx) => defaultKeyFn(ctx, opts.trustProxy ?? false)),
+      keyFn: resolvedKeyFn,
     };
 
     // Sweep stale keys every half-window
