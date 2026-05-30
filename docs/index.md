@@ -13,7 +13,7 @@ description: "Street Framework — production-grade, memory-safe TypeScript back
     Native Node.js. No Express. No pg. No Prisma.
   </p>
   <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-    <a href="/street/getting-started/installation/" class="btn btn-primary fs-5">Get Started →</a>
+    <a href="/getting-started/installation/" class="btn btn-primary fs-5">Get Started →</a>
     <a href="https://github.com/hassanmubiru/street" class="btn fs-5" target="_blank">GitHub</a>
     <a href="https://www.npmjs.com/package/@streetjs/core" class="btn fs-5" target="_blank">npm</a>
   </div>
@@ -23,7 +23,7 @@ description: "Street Framework — production-grade, memory-safe TypeScript back
     <img src="https://img.shields.io/badge/node-%3E%3D20-brightgreen" alt="Node.js">
     <img src="https://img.shields.io/badge/typescript-%3E%3D5.0-blue" alt="TypeScript">
     <img src="https://img.shields.io/badge/License-MIT-yellow" alt="MIT License">
-    <img src="https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg" alt="CI">
+    <img src="https://github.com/hassanmubiru/actions/workflows/ci-cd.yml/badge.svg" alt="CI">
   </div>
 </div>
 
@@ -203,25 +203,25 @@ await app.listen();
 
 | Section | Description |
 |---|---|
-| [Getting Started](/street/getting-started/installation/) | Install, scaffold, configure, run |
-| [CLI Reference](/street/cli/commands/) | All `street` commands |
-| [Controllers](/street/core/controllers/) | HTTP handlers, routing, context API |
-| [Services & DI](/street/core/dependency-injection/) | IoC container, constructor injection |
-| [PostgreSQL](/street/database/postgres-wire-driver/) | Wire driver, pool, repositories, migrations |
-| [Security](/street/security/) | JWT, sessions, rate limiting, XSS, vault |
-| [WebSockets](/street/realtime/websocket/) | Real-time connections, gateways |
-| [OpenAPI](/street/core/openapi/) | Auto-generated API spec |
-| [Deployment](/street/deployment/docker/) | Docker, production, hosting |
-| [Testing](/street/testing/) | Integration tests, test runner |
-| [Examples](/street/examples/) | Complete, runnable examples for common use cases |
-| [Use Cases](/street/use-cases/) | What can be built — 16 industry verticals with architecture diagrams |
-| [FAQ](/street/faq/) | Common questions |
+| [Getting Started](/getting-started/installation/) | Install, scaffold, configure, run |
+| [CLI Reference](/cli/commands/) | All `street` commands |
+| [Controllers](/core/controllers/) | HTTP handlers, routing, context API |
+| [Services & DI](/core/dependency-injection/) | IoC container, constructor injection |
+| [PostgreSQL](/database/postgres-wire-driver/) | Wire driver, pool, repositories, migrations |
+| [Security](/security/) | JWT, sessions, rate limiting, XSS, vault |
+| [WebSockets](/realtime/websocket/) | Real-time connections, gateways |
+| [OpenAPI](/core/openapi/) | Auto-generated API spec |
+| [Deployment](/deployment/docker/) | Docker, production, hosting |
+| [Testing](/testing/) | Integration tests, test runner |
+| [Examples](/examples/) | Complete, runnable examples for common use cases |
+| [Use Cases](/use-cases/) | What can be built — 16 industry verticals with architecture diagrams |
+| [FAQ](/faq/) | Common questions |
 
 ---
 
 ## Community
 
-- [GitHub Issues](https://github.com/hassanmubiru/street/issues) — bug reports and feature requests
-- [GitHub Discussions](https://github.com/hassanmubiru/street/discussions) — questions and ideas
-- [Contributing Guide](/street/contributing/) — how to contribute
-- [Changelog](/street/changelog/) — what changed in each release
+- [GitHub Issues](https://github.com/hassanmubiru/issues) — bug reports and feature requests
+- [GitHub Discussions](https://github.com/hassanmubiru/discussions) — questions and ideas
+- [Contributing Guide](/contributing/) — how to contribute
+- [Changelog](/changelog/) — what changed in each release

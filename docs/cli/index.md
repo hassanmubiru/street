@@ -18,13 +18,13 @@ street --version   # street v1.0.3
 
 | Command | Description |
 |---|---|
-| [`street create <name>`](/street/cli/commands/#street-create-project-name) | Scaffold a new Street project |
-| [`street dev`](/street/cli/commands/#street-dev) | Start dev server with hot-reload |
-| [`street build`](/street/cli/commands/#street-build) | Compile TypeScript for production |
-| [`street start`](/street/cli/commands/#street-start) | Start production server |
-| [`street test`](/street/cli/commands/#street-test) | Run test suite |
-| [`street generate <type> <name>`](/street/cli/commands/#street-generate-type-name) | Generate controller, service, or repository |
-| [`street migrate:create <name>`](/street/cli/commands/#street-migratecreate-name) | Create SQL migration files |
-| [`street migrate:run`](/street/cli/commands/#street-migraterun) | Run pending migrations |
+| [`street create <name>`](/cli/commands/#street-create-project-name) | Scaffold a new Street project |
+| [`street dev`](/cli/commands/#street-dev) | Start dev server with hot-reload |
+| [`street build`](/cli/commands/#street-build) | Compile TypeScript for production |
+| [`street start`](/cli/commands/#street-start) | Start production server |
+| [`street test`](/cli/commands/#street-test) | Run test suite |
+| [`street generate <type> <name>`](/cli/commands/#street-generate-type-name) | Generate controller, service, or repository |
+| [`street migrate:create <name>`](/cli/commands/#street-migratecreate-name) | Create SQL migration files |
+| [`street migrate:run`](/cli/commands/#street-migraterun) | Run pending migrations |
 
-See [CLI Commands](/street/cli/commands/) for full documentation.
+See [CLI Commands](/cli/commands/) for full documentation.

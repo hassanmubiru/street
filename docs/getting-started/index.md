@@ -13,10 +13,10 @@ Everything you need to go from zero to a running Street application.
 
 | Page | Description |
 |---|---|
-| [Installation](/street/getting-started/installation/) | Prerequisites, install, build, configure, run |
-| [First Server](/street/getting-started/first-server/) | Build your first HTTP server step by step |
-| [Project Structure](/street/getting-started/project-structure/) | Directory layout, conventions, file naming |
-| [Configuration](/street/getting-started/configuration/) | Environment variables, `street.config.ts`, secrets |
+| [Installation](/getting-started/installation/) | Prerequisites, install, build, configure, run |
+| [First Server](/getting-started/first-server/) | Build your first HTTP server step by step |
+| [Project Structure](/getting-started/project-structure/) | Directory layout, conventions, file naming |
+| [Configuration](/getting-started/configuration/) | Environment variables, `street.config.ts`, secrets |
 
 ## Quick path
 
