@@ -247,7 +247,7 @@ export class CreateCommand {
           'migrate:create': 'street migrate:create',
         },
         dependencies: {
-          '@streetjs/core': '^1.0.4',
+          '@streetjs/core': '^1.0.5',
           'reflect-metadata': '^0.2.2',
           ws: '^8.18.0',
         },
