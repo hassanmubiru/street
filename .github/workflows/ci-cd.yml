@@ -308,10 +308,14 @@ jobs:
         run: npm run build:app -w packages/core
 
       - name: Run ${{ matrix.suite }} tests
-        if: env.SUITE == 'all' || env.SUITE == matrix.suite
+        if: (env.SUITE == 'all' || env.SUITE == matrix.suite) && matrix.suite != 'infrastructure'
         run: node --test packages/core/dist/tests/system/${{ matrix.suite }}.test.js
+
+      - name: Run infrastructure tests
+        if: (env.SUITE == 'all' || env.SUITE == 'infrastructure') && matrix.suite == 'infrastructure'
+        run: node --test packages/core/dist/tests/system/infrastructure.test.js
         env:
-          PG_HOST: ${{ matrix.suite != 'infrastructure' && env.PG_HOST || '' }}
+          PG_HOST: ''
 
 
 
