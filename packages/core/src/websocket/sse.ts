@@ -44,11 +44,16 @@ export class SseConnection {
     this.eventId++;
     let frame = '';
 
-    if (event.id !== undefined) frame += `id: ${event.id}\n`;
+    // Finding 12 fix: strip CR/LF from all SSE field values to prevent
+    // frame injection. An attacker who controls event.event or event.id
+    // could otherwise inject arbitrary SSE frames.
+    const sanitizeSseField = (v: string): string => v.replace(/[\r\n]/g, '');
+
+    if (event.id !== undefined) frame += `id: ${sanitizeSseField(String(event.id))}\n`;
     else frame += `id: ${this.eventId}\n`;
 
-    if (event.event) frame += `event: ${event.event}\n`;
-    if (event.retry !== undefined) frame += `retry: ${event.retry}\n`;
+    if (event.event) frame += `event: ${sanitizeSseField(event.event)}\n`;
+    if (event.retry !== undefined) frame += `retry: ${Math.floor(Math.abs(event.retry))}\n`;
 
     // undefined → empty string, null/falsy → JSON.stringify handles it
     const data = typeof event.data === 'string'
