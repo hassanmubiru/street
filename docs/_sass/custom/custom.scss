@@ -1,47 +1,110 @@
-// docs/_sass/custom/custom.scss
-// Custom styles layered on top of just-the-docs dark theme.
+// Street Framework — custom styles for just-the-docs dark theme
 
-// Brand colour: street uses a deep amber accent
-$brand-color: #f59e0b;
+// ── Brand colours ─────────────────────────────────────────────────────────────
+$street-blue:   #58a6ff;
+$street-green:  #3fb950;
+$street-purple: #bc8cff;
+$street-orange: #ffa657;
+$street-red:    #f85149;
 
-// Override just-the-docs link colour
-.site-nav .nav-list-link.active {
-  color: $brand-color !important;
+// ── Hero section ──────────────────────────────────────────────────────────────
+.hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(88, 166, 255, 0.1);
+  border: 1px solid rgba(88, 166, 255, 0.3);
+  border-radius: 2rem;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  color: $street-blue;
+  margin-bottom: 1rem;
 }
 
-// Syntax highlight adjustments for dark theme readability
+// ── Feature cards ─────────────────────────────────────────────────────────────
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+}
+
+.feature-card {
+  border: 1px solid #30363d;
+  border-radius: 8px;
+  padding: 1.25rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    border-color: $street-blue;
+    box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.2);
+  }
+
+  h3 {
+    margin-top: 0;
+    font-size: 1rem;
+  }
+}
+
+// ── Code blocks ───────────────────────────────────────────────────────────────
 .highlight {
   border-radius: 6px;
-  margin: 1rem 0;
+  border: 1px solid #30363d;
 }
 
-// Code inline — slightly warmer in dark mode
+// ── Inline code ───────────────────────────────────────────────────────────────
 code.language-plaintext {
-  background-color: #1e1e2e;
-  color: #cdd6f4;
-}
-
-// Table improvements
-table {
-  display: table;
-  width: 100%;
-}
-
-// Badge-style inline labels
-.label-yellow {
-  background-color: #f59e0b;
-  color: #000;
+  background: rgba(110, 118, 129, 0.15);
   border-radius: 4px;
-  padding: 1px 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 0.1em 0.4em;
+  font-size: 0.9em;
 }
 
-// Callout boxes
-.callout {
-  border-left: 4px solid $brand-color;
-  background: rgba(245,158,11,0.08);
-  padding: 0.8rem 1rem;
-  border-radius: 0 6px 6px 0;
-  margin: 1rem 0;
+// ── Tables ────────────────────────────────────────────────────────────────────
+table {
+  border-collapse: collapse;
+  width: 100%;
+
+  th {
+    background: #161b22;
+    border-bottom: 2px solid #30363d;
+  }
+
+  td, th {
+    border: 1px solid #30363d;
+    padding: 0.5rem 0.75rem;
+  }
+
+  tr:nth-child(even) td {
+    background: rgba(22, 27, 34, 0.5);
+  }
+}
+
+// ── Callout labels ────────────────────────────────────────────────────────────
+.label-blue   { color: $street-blue; }
+.label-green  { color: $street-green; }
+.label-purple { color: $street-purple; }
+.label-orange { color: $street-orange; }
+.label-red    { color: $street-red; }
+
+// ── Navigation ────────────────────────────────────────────────────────────────
+.nav-list-item .nav-list-link.active {
+  color: $street-blue;
+  font-weight: 600;
+}
+
+// ── Footer ────────────────────────────────────────────────────────────────────
+.site-footer {
+  border-top: 1px solid #30363d;
+  padding-top: 1rem;
+  font-size: 0.85rem;
+  color: #8b949e;
+}
+
+// ── Badges in tables ──────────────────────────────────────────────────────────
+img[src*="shields.io"],
+img[src*="img.shields.io"],
+img[src*="badge"] {
+  vertical-align: middle;
+  margin: 0 2px;
 }
