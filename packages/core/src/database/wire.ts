@@ -801,30 +801,41 @@ export class PgConnection {
   }
 
   private _parseRowDescription(body: Buffer): FieldDescriptor[] {
+    // Finding 9 fix: add bounds checks throughout to prevent OOB reads
+    // on malformed packets from a misbehaving or malicious server.
+    if (body.length < 2) return [];
     const fieldCount = body.readUInt16BE(0);
     const fields: FieldDescriptor[] = [];
     let offset = 2;
     for (let i = 0; i < fieldCount; i++) {
+      if (offset >= body.length) break;
       const nameEnd = body.indexOf(0, offset);
+      // No null terminator found, or not enough bytes for the fixed metadata
+      if (nameEnd === -1 || nameEnd + 1 + 18 > body.length) break;
       const name = body.toString('utf8', offset, nameEnd);
-      offset = nameEnd + 1 + 18; // skip tableOid(4)+attNum(2)+typeOid(4)+typeSize(2)+typeMod(4)+format(2)
+      // typeOid is at nameEnd+1 (tableOid=4) + (attNum=2) = nameEnd+7
       const typeOid = body.readUInt32BE(nameEnd + 1 + 6);
+      offset = nameEnd + 1 + 18; // skip tableOid(4)+attNum(2)+typeOid(4)+typeSize(2)+typeMod(4)+format(2)
       fields.push({ name, typeOid });
     }
     return fields;
   }
 
   private _parseDataRow(body: Buffer): PgRow {
+    // Finding 9 fix: add bounds checks to prevent OOB reads on malformed packets.
+    if (body.length < 2) return {};
     const colCount = body.readUInt16BE(0);
     const row: PgRow = {};
     let offset = 2;
     for (let i = 0; i < colCount; i++) {
+      if (offset + 4 > body.length) break; // not enough bytes for length prefix
       const len = body.readInt32BE(offset);
       offset += 4;
       const fieldName = this.fields[i]?.name ?? `col${i}`;
       if (len === -1) {
         row[fieldName] = null;
       } else {
+        if (len < 0 || offset + len > body.length) break; // malformed length
         row[fieldName] = body.toString('utf8', offset, offset + len);
         offset += len;
       }
