@@ -2,7 +2,7 @@
 
 **Production-grade, memory-safe TypeScript backend framework built on Node.js core modules.**
 
-[![CI](https://github.com/your-org/street/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/your-org/street/actions)
+[![CI](https://github.com/hassanmubiru/street/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/hassanmubiru/street/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
@@ -79,7 +79,7 @@ Every component enforces an upper bound on memory:
 ### Quick install
 
 ```bash
-git clone https://github.com/your-org/street.git my-app
+git clone https://github.com/hassanmubiru/street.git my-app
 cd my-app
 cd packages/core && npm install && npx tsc
 ```

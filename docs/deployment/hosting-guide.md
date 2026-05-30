@@ -38,7 +38,7 @@ npm view street-framework        # Check unscoped alternative
 To change the name, edit `package.json`:
 
 ```json
-{ "name": "@your-org/street" }
+{ "name": "@hassanmubiru/street" }
 ```
 
 ---
@@ -326,7 +326,7 @@ After publishing, add live badges to `README.md`:
 ```markdown
 [![npm version](https://img.shields.io/npm/v/@streetjs/core.svg)](https://www.npmjs.com/package/@streetjs/core)
 [![npm downloads](https://img.shields.io/npm/dm/@streetjs/core.svg)](https://www.npmjs.com/package/@streetjs/core)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://your-org.github.io/street)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://hassanmubiru.github.io/street)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ```
 
