@@ -71,3 +71,123 @@ description: "Street — production-grade, memory-safe TypeScript backend framew
   background-clip: text;
 }
 </style>
+
+<style>
+/* ── Section labels ───────────────────────────────────────────────────────── */
+.st-label {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--st-sky);
+  margin-bottom: 0.6rem;
+}
+.st-section-head {
+  font-family: var(--st-font-head);
+  font-size: clamp(1.5rem, 3.5vw, 2.1rem);
+  font-weight: 800;
+  color: var(--st-text-primary);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.st-section-sub {
+  color: var(--st-text-secondary);
+  font-size: 1rem;
+  margin: 0 0 2.25rem;
+  line-height: 1.65;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   HERO
+   ══════════════════════════════════════════════════════════════════════════ */
+.st-hero {
+  position: relative;
+  text-align: center;
+  padding: 5rem 1.5rem 4rem;
+  border-radius: var(--st-radius-lg);
+  margin-bottom: 2.5rem;
+  overflow: hidden;
+  background: var(--st-bg);
+  border: 1px solid var(--st-border);
+}
+/* Animated gradient orbs */
+.st-hero::before {
+  content: '';
+  position: absolute;
+  top: -120px; left: 50%; transform: translateX(-50%);
+  width: 800px; height: 500px;
+  background: radial-gradient(ellipse at 30% 40%, rgba(37,99,235,0.18) 0%, transparent 55%),
+              radial-gradient(ellipse at 70% 60%, rgba(99,102,241,0.14) 0%, transparent 55%);
+  pointer-events: none;
+  animation: heroGlow 8s ease-in-out infinite alternate;
+}
+.st-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -80px; left: 50%; transform: translateX(-50%);
+  width: 600px; height: 300px;
+  background: radial-gradient(ellipse, rgba(56,189,248,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+@keyframes heroGlow {
+  0%   { opacity: 0.7; transform: translateX(-50%) scale(1); }
+  100% { opacity: 1;   transform: translateX(-50%) scale(1.08); }
+}
+
+.st-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(37,99,235,0.12);
+  border: 1px solid rgba(37,99,235,0.3);
+  border-radius: 100px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--st-sky);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+.st-hero-eyebrow::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--st-green);
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+.st-hero h1 {
+  font-family: var(--st-font-head);
+  font-size: clamp(2.4rem, 6.5vw, 4.2rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.08;
+  margin: 0 0 1.25rem;
+  position: relative;
+}
+.st-hero .tagline {
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  color: var(--st-text-secondary);
+  max-width: 640px;
+  margin: 0 auto 0.75rem;
+  line-height: 1.7;
+  position: relative;
+}
+.st-hero .no-deps {
+  font-family: var(--st-font-mono);
+  font-size: 0.85rem;
+  color: var(--st-text-muted);
+  margin-bottom: 2.25rem;
+  position: relative;
+  letter-spacing: 0.02em;
+}
+.st-hero .no-deps span { color: var(--st-sky); }
+</style>
