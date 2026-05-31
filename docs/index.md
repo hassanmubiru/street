@@ -327,3 +327,129 @@ description: "Street — production-grade, memory-safe TypeScript backend framew
   color: var(--st-text-secondary);
 }
 </style>
+
+<style>
+/* ══════════════════════════════════════════════════════════════════════════
+   FEATURE GRID
+   ══════════════════════════════════════════════════════════════════════════ */
+.st-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 1rem;
+  margin-bottom: 3.5rem;
+}
+.st-feature-card {
+  background: var(--st-card);
+  border: 1px solid var(--st-border);
+  border-radius: var(--st-radius);
+  padding: 1.5rem;
+  transition: var(--st-transition);
+  position: relative;
+  overflow: hidden;
+}
+.st-feature-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--st-blue), var(--st-indigo));
+  opacity: 0;
+  transition: var(--st-transition);
+}
+.st-feature-card:hover {
+  border-color: var(--st-border-hover);
+  background: var(--st-card-hover);
+  transform: translateY(-3px);
+  box-shadow: var(--st-shadow-blue);
+}
+.st-feature-card:hover::before { opacity: 1; }
+.st-feature-card .fc-icon {
+  font-size: 1.75rem;
+  margin-bottom: 0.85rem;
+  display: block;
+  line-height: 1;
+}
+.st-feature-card h3 {
+  font-family: var(--st-font-head);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--st-text-primary);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.01em;
+}
+.st-feature-card p {
+  font-size: 0.875rem;
+  color: var(--st-text-secondary);
+  margin: 0;
+  line-height: 1.65;
+}
+.st-feature-card code {
+  font-family: var(--st-font-mono);
+  font-size: 0.8rem;
+  background: rgba(37,99,235,0.12);
+  color: var(--st-sky);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+  border: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   ZERO DEPENDENCIES SECTION
+   ══════════════════════════════════════════════════════════════════════════ */
+.st-nodep-section {
+  margin-bottom: 3.5rem;
+}
+.st-nodep-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+.st-nodep-item {
+  background: var(--st-card);
+  border: 1px solid var(--st-border);
+  border-radius: var(--st-radius);
+  padding: 1rem 1.25rem;
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  align-items: start;
+  gap: 0.6rem;
+  transition: var(--st-transition);
+}
+.st-nodep-item:hover {
+  border-color: var(--st-border-hover);
+  background: var(--st-card-hover);
+}
+.st-nodep-item .nd-cross {
+  color: var(--st-red);
+  font-weight: 800;
+  font-size: 0.9rem;
+  margin-top: 2px;
+  font-family: var(--st-font-mono);
+}
+.st-nodep-item .nd-arrow {
+  color: var(--st-green);
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-top: 2px;
+}
+.st-nodep-item .nd-content strong {
+  display: block;
+  color: var(--st-text-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+.st-nodep-item .nd-content span {
+  color: var(--st-text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.st-nodep-item .nd-content code {
+  font-family: var(--st-font-mono);
+  font-size: 0.78rem;
+  background: rgba(56,189,248,0.1);
+  color: var(--st-sky);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+}
+</style>
