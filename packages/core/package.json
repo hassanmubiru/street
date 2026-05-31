@@ -211,7 +211,15 @@
     "aes-gcm",
     "rate-limiting",
     "esm",
-    "nodejs"
+    "nodejs",
+    "rest-api",
+    "microservices",
+    "real-time",
+    "security",
+    "openapi",
+    "scram-sha-256",
+    "no-express",
+    "production-grade"
   ],
   "author": "street contributors",
   "license": "MIT",
