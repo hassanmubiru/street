@@ -13,7 +13,7 @@ description: "Street Framework — production-grade, memory-safe TypeScript back
     Native Node.js. No Express. No pg. No Prisma.
   </p>
   <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-    <a href="/getting-started/installation/" class="btn btn-primary fs-5">Get Started →</a>
+    <a href="/street/getting-started/installation/" class="btn btn-primary fs-5">Get Started →</a>
     <a href="https://github.com/hassanmubiru/street" class="btn fs-5" target="_blank">GitHub</a>
     <a href="https://www.npmjs.com/package/@streetjs/core" class="btn fs-5" target="_blank">npm</a>
   </div>
