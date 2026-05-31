@@ -809,3 +809,93 @@ description: "Street — production-grade, memory-safe TypeScript backend framew
   <div class="st-proof-item"><span class="pi-val">MIT</span><span class="pi-label">Open Source</span></div>
   <div class="st-proof-item"><span class="pi-val">100K</span><span class="pi-label">IP Rate Limit Cap</span></div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     FEATURES GRID
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="st-label">Core Capabilities</div>
+<div class="st-section-head">Everything you need. Nothing you don't.</div>
+<p class="st-section-sub">Every feature is built from Node.js core modules with explicit memory bounds and zero third-party middleware.</p>
+
+<div class="st-feature-grid">
+  <div class="st-feature-card">
+    <span class="fc-icon">🔷</span>
+    <h3>TypeScript First</h3>
+    <p>Strict mode, NodeNext ESM, decorator metadata, full type inference. Zero <code>any</code> in the framework source. Your IDE knows everything.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">🛡️</span>
+    <h3>Memory-Safe by Design</h3>
+    <p>Bounded body limits, connection pools, ring-buffer telemetry, LRU eviction, WebSocket caps. Every component has an explicit ceiling.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">🐘</span>
+    <h3>Native PostgreSQL Driver</h3>
+    <p>Wire protocol v3 over <code>node:net</code>. SCRAM-SHA-256 auth. Streaming rows with socket-level backpressure. No <code>pg</code> dependency.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">💉</span>
+    <h3>Dependency Injection</h3>
+    <p>IoC container with constructor injection, singleton registry, and circular dependency detection via <code>reflect-metadata</code>.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">🔐</span>
+    <h3>Security Built-in</h3>
+    <p>JWT (HMAC-SHA256), AES-256-GCM sessions, scrypt vault, sliding-window rate limiter, XSS sanitizer, CSRF, CORS, CSP — all included.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">⚡</span>
+    <h3>Real-Time Ready</h3>
+    <p>Bounded WebSocket server with heartbeat, typed event emitter, and SSE with keep-alive. Auth hook on upgrade. No socket.io needed.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">📋</span>
+    <h3>OpenAPI 3.1 Auto-gen</h3>
+    <p>Spec generated from <code>@ApiOperation</code> decorators. Always in sync with your code. Served at <code>/openapi.json</code>. No separate schema files.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">🔄</span>
+    <h3>Clustering &amp; Telemetry</h3>
+    <p><code>node:cluster</code> coordinator with IPC heartbeat, auto-restart, graceful shutdown, and P50/P99 latency ring-buffer tracking.</p>
+  </div>
+  <div class="st-feature-card">
+    <span class="fc-icon">🚀</span>
+    <h3>CLI Tooling</h3>
+    <p><code>street create</code>, <code>street dev</code>, <code>street generate</code>, <code>street migrate:create</code> — full project lifecycle from one binary.</p>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     ZERO DEPENDENCIES
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="st-nodep-section">
+  <div class="st-label">Zero Bloat</div>
+  <div class="st-section-head">No third-party middleware stack.</div>
+  <p class="st-section-sub">Every capability is implemented directly from Node.js core. Two runtime dependencies total: <code>reflect-metadata</code> and <code>ws</code>.</p>
+  <div class="st-nodep-grid">
+    <div class="st-nodep-item">
+      <span class="nd-cross">✕</span><span class="nd-arrow">→</span>
+      <div class="nd-content"><strong>No Express / Fastify</strong><span>Native <code>node:http</code> server with compiled-regex router and middleware pipeline</span></div>
+    </div>
+    <div class="st-nodep-item">
+      <span class="nd-cross">✕</span><span class="nd-arrow">→</span>
+      <div class="nd-content"><strong>No pg / postgres.js</strong><span>PostgreSQL wire protocol v3 over <code>node:net</code> with SCRAM-SHA-256 auth</span></div>
+    </div>
+    <div class="st-nodep-item">
+      <span class="nd-cross">✕</span><span class="nd-arrow">→</span>
+      <div class="nd-content"><strong>No Prisma / Zod</strong><span>Parameterized queries + <code>@Validate</code> decorator for runtime type checking</span></div>
+    </div>
+    <div class="st-nodep-item">
+      <span class="nd-cross">✕</span><span class="nd-arrow">→</span>
+      <div class="nd-content"><strong>No jsonwebtoken</strong><span>HMAC-SHA256 via <code>node:crypto</code> with <code>timingSafeEqual</code> comparison</span></div>
+    </div>
+    <div class="st-nodep-item">
+      <span class="nd-cross">✕</span><span class="nd-arrow">→</span>
+      <div class="nd-content"><strong>No bcrypt / argon2</strong><span>scrypt via <code>node:crypto</code> — battle-tested, memory-hard password hashing</span></div>
+    </div>
+    <div class="st-nodep-item">
+      <span class="nd-cross">✕</span><span class="nd-arrow">→</span>
+      <div class="nd-content"><strong>No multer / busboy</strong><span>Streaming multipart parser — ≤128 KB heap per upload, disk-streamed</span></div>
+    </div>
+  </div>
+</div>
