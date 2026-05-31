@@ -1086,3 +1086,121 @@ await app.listen();
     </div>
   </div>
 </div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     DOCUMENTATION GRID
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="st-doc-section">
+  <div class="st-label">Documentation</div>
+  <div class="st-section-head">Everything you need to ship.</div>
+  <p class="st-section-sub">Comprehensive guides, API references, and real-world examples for every part of the framework.</p>
+  <div class="st-doc-grid">
+    <a href="{{ site.baseurl }}/getting-started/installation/" class="st-doc-card">
+      <span class="dc-icon">🚀</span>
+      <span class="dc-title">Getting Started</span>
+      <span class="dc-desc">Install, scaffold, configure, and run your first API in under 60 seconds</span>
+    </a>
+    <a href="{{ site.baseurl }}/core/controllers/" class="st-doc-card">
+      <span class="dc-icon">🎮</span>
+      <span class="dc-title">Controllers</span>
+      <span class="dc-desc">HTTP handlers, routing, context API, request validation</span>
+    </a>
+    <a href="{{ site.baseurl }}/core/dependency-injection/" class="st-doc-card">
+      <span class="dc-icon">💉</span>
+      <span class="dc-title">Dependency Injection</span>
+      <span class="dc-desc">IoC container, constructor injection, singleton registry</span>
+    </a>
+    <a href="{{ site.baseurl }}/database/postgres-wire-driver/" class="st-doc-card">
+      <span class="dc-icon">🐘</span>
+      <span class="dc-title">PostgreSQL</span>
+      <span class="dc-desc">Wire driver, connection pool, repositories, migrations</span>
+    </a>
+    <a href="{{ site.baseurl }}/security/" class="st-doc-card">
+      <span class="dc-icon">🔐</span>
+      <span class="dc-title">Security</span>
+      <span class="dc-desc">JWT, sessions, rate limiting, XSS sanitizer, vault, CSRF</span>
+    </a>
+    <a href="{{ site.baseurl }}/realtime/websocket/" class="st-doc-card">
+      <span class="dc-icon">⚡</span>
+      <span class="dc-title">Real-Time</span>
+      <span class="dc-desc">WebSocket server, SSE, typed events, heartbeat, auth hook</span>
+    </a>
+    <a href="{{ site.baseurl }}/deployment/docker/" class="st-doc-card">
+      <span class="dc-icon">🐳</span>
+      <span class="dc-title">Deployment</span>
+      <span class="dc-desc">Docker, production config, environment variables, hosting</span>
+    </a>
+    <a href="{{ site.baseurl }}/examples/" class="st-doc-card">
+      <span class="dc-icon">📦</span>
+      <span class="dc-title">Examples</span>
+      <span class="dc-desc">REST API, WebSocket chat, file upload, full auth flow</span>
+    </a>
+    <a href="{{ site.baseurl }}/use-cases/" class="st-doc-card">
+      <span class="dc-icon">🌍</span>
+      <span class="dc-title">Use Cases</span>
+      <span class="dc-desc">16 industry verticals — fintech, IoT, AI, gaming, and more</span>
+    </a>
+    <a href="{{ site.baseurl }}/cli/commands/" class="st-doc-card">
+      <span class="dc-icon">🛠️</span>
+      <span class="dc-title">CLI Reference</span>
+      <span class="dc-desc">All street commands, flags, and options documented</span>
+    </a>
+    <a href="{{ site.baseurl }}/testing/" class="st-doc-card">
+      <span class="dc-icon">🧪</span>
+      <span class="dc-title">Testing</span>
+      <span class="dc-desc">Integration tests, test runner, real PostgreSQL test setup</span>
+    </a>
+    <a href="{{ site.baseurl }}/faq/" class="st-doc-card">
+      <span class="dc-icon">❓</span>
+      <span class="dc-title">FAQ</span>
+      <span class="dc-desc">Common questions, migration guides, and troubleshooting</span>
+    </a>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     PACKAGES TABLE
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="st-packages-section">
+  <div class="st-label">Packages</div>
+  <div class="st-section-head">Two packages. One framework.</div>
+  <div class="st-table-wrap">
+    <table class="st-table">
+      <thead>
+        <tr><th>Package</th><th>Version</th><th>Description</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><a href="https://www.npmjs.com/package/@streetjs/core" target="_blank" rel="noopener"><code>@streetjs/core</code></a></td>
+          <td><a href="https://www.npmjs.com/package/@streetjs/core" target="_blank" rel="noopener"><img src="https://img.shields.io/npm/v/@streetjs/core?style=flat-square&color=2563EB" alt="npm version"></a></td>
+          <td>Framework runtime — HTTP, router, DI, PostgreSQL, security, WebSocket, SSE, clustering, telemetry</td>
+        </tr>
+        <tr>
+          <td><a href="https://www.npmjs.com/package/@streetjs/cli" target="_blank" rel="noopener"><code>@streetjs/cli</code></a></td>
+          <td><a href="https://www.npmjs.com/package/@streetjs/cli" target="_blank" rel="noopener"><img src="https://img.shields.io/npm/v/@streetjs/cli?style=flat-square&color=2563EB" alt="npm version"></a></td>
+          <td>CLI — project scaffolding, code generation, dev server with hot-reload, migration management</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     COMMUNITY
+     ══════════════════════════════════════════════════════════════════════════ -->
+<div class="st-community-section">
+  <div class="st-label">Community</div>
+  <div class="st-section-head">Built in the open. Improved together.</div>
+  <p class="st-section-sub" style="max-width:520px;margin:0 auto 0;position:relative;">
+    Street is MIT-licensed and actively developed. Bug reports, feature requests, and contributions are welcome.
+  </p>
+  <div class="st-community-links">
+    <a href="https://github.com/hassanmubiru/street/issues" class="st-community-link" target="_blank" rel="noopener">🐛 GitHub Issues</a>
+    <a href="https://github.com/hassanmubiru/street/discussions" class="st-community-link" target="_blank" rel="noopener">💬 Discussions</a>
+    <a href="{{ site.baseurl }}/contributing/" class="st-community-link">🤝 Contributing Guide</a>
+    <a href="{{ site.baseurl }}/changelog/" class="st-community-link">📋 Changelog</a>
+    <a href="https://github.com/hassanmubiru/street" class="st-community-link" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+  </div>
+</div>
+
+</div><!-- end .street-page -->
