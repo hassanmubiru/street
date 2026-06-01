@@ -153,3 +153,106 @@ description: "Street — production-grade, memory-safe TypeScript backend framew
 </div>
 
 </div>
+
+<!-- CODE EXAMPLE -->
+<div class="sp sec">
+  <div class="ey">Quick Example</div>
+  <div class="sh2">A complete production API. One file. No extra packages.</div>
+  <p class="ssub">PostgreSQL, JWT auth, rate limiting, and auto-generated OpenAPI — all from <code style="font-family:var(--fm);font-size:.82em;background:var(--cbg);color:var(--ac);padding:.1em .4em;border-radius:4px">@streetjs/core</code>.</p>
+  <div class="cwin">
+    <div class="cwin-bar"><div class="d"></div><div class="d"></div><div class="d"></div><span class="fn">src/main.ts</span><span class="lb">TypeScript</span></div>
+</div>
+
+```typescript
+import 'reflect-metadata';
+import {
+  streetApp, Injectable, Controller, Get, Post,
+  PgPool, securityHeaders, corsMiddleware,
+  RateLimiter, authMiddleware, JwtService, ApiOperation,
+} from '@streetjs/core';
+import type { StreetContext } from '@streetjs/core';
+
+@Injectable()
+class ItemService {
+  constructor(private readonly pool: PgPool) {}
+  async findAll() {
+    const { rows } = await this.pool.query(
+      'SELECT id, name, created_at FROM items ORDER BY created_at DESC'
+    );
+    return rows;
+  }
+  async create(name: string) {
+    const { rows } = await this.pool.query(
+      'INSERT INTO items (name) VALUES ($1) RETURNING *', [name]
+    );
+    return rows[0];
+  }
+}
+
+@Controller('/api/items')
+class ItemController {
+  constructor(private readonly svc: ItemService) {}
+
+  @Get('/')
+  @ApiOperation({ summary: 'List items', tags: ['items'] })
+  async list(ctx: StreetContext): Promise<void> {
+    ctx.json({ items: await this.svc.findAll() });
+  }
+
+  @Post('/')
+  @ApiOperation({ summary: 'Create item', tags: ['items'] })
+  async create(ctx: StreetContext): Promise<void> {
+    const { name } = ctx.body as { name: string };
+    ctx.json(await this.svc.create(name), 201);
+  }
+}
+
+const jwt     = new JwtService(process.env.JWT_SECRET!);
+const limiter = new RateLimiter({ windowMs: 60_000, maxRequests: 100 });
+const app     = streetApp({ port: 3000 });
+
+app.use(securityHeaders);
+app.use(corsMiddleware(['https://app.example.com']));
+app.use(limiter.middleware());
+app.use(authMiddleware(jwt));
+app.registerController(ItemController);
+
+await app.listen();
+// [street] Listening on http://0.0.0.0:3000
+// [street] OpenAPI → http://0.0.0.0:3000/openapi.json
+```
+
+<div class="sp sec">
+  <div class="ey">Documentation</div>
+  <div class="sh2">Everything you need to ship.</div>
+  <p class="ssub">Comprehensive guides, API references, and real-world examples for every part of the framework.</p>
+  <div class="docs">
+    <a href="{{ site.baseurl }}/getting-started/installation/" class="dc"><span class="di">🚀</span><span class="dt">Getting Started</span><span class="dd">Install, scaffold, configure, and run in 60 seconds</span></a>
+    <a href="{{ site.baseurl }}/core/controllers/" class="dc"><span class="di">🎮</span><span class="dt">Controllers</span><span class="dd">HTTP handlers, routing, context API, validation</span></a>
+    <a href="{{ site.baseurl }}/core/dependency-injection/" class="dc"><span class="di">💉</span><span class="dt">Dependency Injection</span><span class="dd">IoC container, constructor injection, singletons</span></a>
+    <a href="{{ site.baseurl }}/database/postgres-wire-driver/" class="dc"><span class="di">🐘</span><span class="dt">PostgreSQL</span><span class="dd">Wire driver, connection pool, repositories, migrations</span></a>
+    <a href="{{ site.baseurl }}/security/" class="dc"><span class="di">🔐</span><span class="dt">Security</span><span class="dd">JWT, sessions, rate limiting, XSS, vault, CSRF</span></a>
+    <a href="{{ site.baseurl }}/realtime/websocket/" class="dc"><span class="di">⚡</span><span class="dt">Real-Time</span><span class="dd">WebSocket server, SSE, typed events, heartbeat</span></a>
+    <a href="{{ site.baseurl }}/deployment/docker/" class="dc"><span class="di">🐳</span><span class="dt">Deployment</span><span class="dd">Docker, production config, environment variables</span></a>
+    <a href="{{ site.baseurl }}/examples/" class="dc"><span class="di">📦</span><span class="dt">Examples</span><span class="dd">REST API, WebSocket chat, file upload, auth flow</span></a>
+    <a href="{{ site.baseurl }}/use-cases/" class="dc"><span class="di">🌍</span><span class="dt">Use Cases</span><span class="dd">16 industry verticals — fintech, IoT, AI, gaming</span></a>
+    <a href="{{ site.baseurl }}/cli/commands/" class="dc"><span class="di">🛠️</span><span class="dt">CLI Reference</span><span class="dd">All street commands, flags, and options</span></a>
+    <a href="{{ site.baseurl }}/testing/" class="dc"><span class="di">🧪</span><span class="dt">Testing</span><span class="dd">Integration tests, test runner, real PostgreSQL</span></a>
+    <a href="{{ site.baseurl }}/faq/" class="dc"><span class="di">❓</span><span class="dt">FAQ</span><span class="dd">Common questions, migration guides, troubleshooting</span></a>
+  </div>
+</div>
+
+<div class="sp">
+<div class="cta">
+  <h2><span class="gt">Built in the open. Improved together.</span></h2>
+  <p>Street is MIT-licensed and actively developed. Bug reports, feature requests, and contributions are welcome.</p>
+  <div class="cta-links">
+    <a href="https://github.com/hassanmubiru/street" class="cl" target="_blank" rel="noopener">⭐ Star on GitHub</a>
+    <a href="https://github.com/hassanmubiru/street/issues" class="cl" target="_blank" rel="noopener">🐛 Issues</a>
+    <a href="https://github.com/hassanmubiru/street/discussions" class="cl" target="_blank" rel="noopener">💬 Discussions</a>
+    <a href="{{ site.baseurl }}/contributing/" class="cl">🤝 Contribute</a>
+    <a href="{{ site.baseurl }}/changelog/" class="cl">📋 Changelog</a>
+    <a href="{{ site.baseurl }}/roadmap/" class="cl">🗺️ Roadmap</a>
+  </div>
+</div>
+</div>
