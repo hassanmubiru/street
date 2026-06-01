@@ -1,15 +1,19 @@
 ---
-layout:       default
-title:        "Getting Started"
-nav_order:    2
+layout:    default
+title:     "Getting Started"
+nav_order: 2
 has_children: true
-permalink:    /getting-started/
-description:  "Get started with Street Framework — install, scaffold a project, configure TypeScript, run the dev server."
+permalink: /getting-started/
+description: "Get started with Street Framework — install, scaffold, configure, run."
 ---
 
-# Getting Started
+{% include doc-styles.html %}
 
-Everything you need to go from zero to a running Street application.
+<div class="doc-header">
+<span class="dh-label">Getting Started</span>
+<h1>Getting Started</h1>
+<p>Everything you need to go from zero to a running Street application.</p>
+</div>
 
 | Page | Description |
 |---|---|
