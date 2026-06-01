@@ -6,7 +6,13 @@ nav_order: 1
 permalink: /getting-started/installation/
 ---
 
-# Installation
+{% include doc-styles.html %}
+
+<div class="doc-header">
+<span class="dh-label">Getting Started</span>
+<h1>Installation</h1>
+<p>Get Street running in under 60 seconds — prerequisites, install, configure, and run.</p>
+</div>
 
 This guide walks you through getting a street server running from zero, explains every configuration decision, and prepares you for production deployment.
 
