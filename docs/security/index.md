@@ -7,7 +7,13 @@ permalink: /security/
 description: "Security features in Street Framework — JWT, sessions, AES-256-GCM vault, rate limiting, XSS sanitization, CORS, security headers."
 ---
 
-# Security
+{% include doc-styles.html %}
+
+<div class="doc-header">
+<span class="dh-label">Security</span>
+<h1>Security</h1>
+<p>JWT, AES-256-GCM sessions, scrypt vault, rate limiting, XSS sanitizer, CSRF, CORS, CSP — all built in, no plugins needed.</p>
+</div>
 
 Street includes a complete security layer built on `node:crypto`. No third-party auth libraries — every primitive is implemented directly.
 
