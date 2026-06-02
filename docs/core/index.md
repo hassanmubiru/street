@@ -7,7 +7,13 @@ permalink:    /core/
 description:  "Street Framework core concepts — HTTP server, router, controllers, services, dependency injection, middleware, OpenAPI."
 ---
 
-# Core
+{% include doc-styles.html %}
+
+<div class="doc-header">
+<span class="dh-label">Core</span>
+<h1>Core Concepts</h1>
+<p>Controllers, routing, middleware, DI container, and OpenAPI spec generation.</p>
+</div>
 
 The core module provides the HTTP server, router, dependency injection container, and all the building blocks for a Street application.
 

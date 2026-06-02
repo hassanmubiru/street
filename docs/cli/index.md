@@ -7,7 +7,13 @@ permalink:    /cli/
 description:  "Street Framework CLI — street create, street dev, street build, street generate, street migrate."
 ---
 
-# CLI Reference
+{% include doc-styles.html %}
+
+<div class="doc-header">
+<span class="dh-label">CLI</span>
+<h1>CLI Reference</h1>
+<p>All street commands — create, dev, build, generate, migrate — with full examples.</p>
+</div>
 
 The `@streetjs/cli` package provides the `street` command for the full project lifecycle.
 
