@@ -7,7 +7,13 @@ permalink:    /examples/
 description:  "Street Framework examples — REST API, WebSocket chat, file upload, authentication, SSE notifications."
 ---
 
-# Examples
+{% include doc-styles.html %}
+
+<div class="doc-header">
+<span class="dh-label">Examples</span>
+<h1>Examples</h1>
+<p>Complete, runnable examples for REST APIs, WebSocket chat, file uploads, and auth flows.</p>
+</div>
 
 Complete, runnable examples for common Street Framework use cases.
 
