@@ -1,7 +1,7 @@
 {
   "name": "@streetjs/cli",
   "version": "1.0.3",
-  "description": "Street framework CLI — scaffolding, dev server, code generation, and migration management",
+  "description": "Street Framework CLI — scaffold, generate, migrate, and run TypeScript backend projects.",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
