@@ -88,3 +88,105 @@
   - [ ] 10.7 Emit `pool:exhausted` event on `PgPool`'s internal `EventEmitter` before enqueueing a wait request when the pool is full
   - [ ] 10.8 Write tests: seed runs are idempotent (same hash → skip), diff detects added column, profiler records slow queries, `pool:exhausted` fires on pool saturation
 
+
+- [ ] 11. v1.3 — OpenTelemetry Integration
+  - [ ] 11.1 Create `packages/core/src/observability/otel.ts`: define `SpanContext`, `Span`, and `OtelTracer` interfaces; implement span lifecycle (`startSpan`, `end`) with `process.hrtime.bigint()` timing
+  - [ ] 11.2 Implement W3C `traceparent` header parsing in `OtelTracer.extractContext()` and injection in `OtelTracer.injectContext()` per the W3C Trace Context spec
+  - [ ] 11.3 Implement OTLP HTTP exporter in `OtelTracer`: serialize spans to OTLP JSON format, POST to `OTEL_EXPORTER_OTLP_ENDPOINT` using `node:https`; batch up to 1,000 spans; flush every 5 seconds
+  - [ ] 11.4 Implement retry with exponential backoff on OTLP export failure; emit a single `warn` log per drop event when the buffer overflows
+  - [ ] 11.5 Create `otelMiddleware(tracer)` factory: extract context from `traceparent`, start HTTP span, call `next()`, end span with response status; store span in `ctx.state['otelSpan']`
+  - [ ] 11.6 Instrument `PgPool.query()` to create a child span when `ctx.state['otelSpan']` is present; span attributes: `db.system`, `db.statement`, duration
+  - [ ] 11.7 Call `OtelTracer.flush()` during graceful shutdown (before pool close) to drain buffered spans
+  - [ ] 11.8 Export `OtelTracer`, `otelMiddleware`, `SpanContext` from `packages/core/src/index.ts`
+  - [ ] 11.9 Write integration tests: parent-child span relationship is correct, `traceparent` round-trip, buffer capped at 1,000, flush called on shutdown
+
+- [ ] 12. v1.3 — Structured Logging
+  - [ ] 12.1 Create `packages/core/src/observability/logger.ts`: `Logger` class, `LogLevel` type, `LogEntry` interface with `timestamp`, `level`, `message`, `correlationId`, `service` fields
+  - [ ] 12.2 Implement `Logger.debug/info/warn/error(msg, meta?)`: serialize to JSON `LogEntry` and write to `outputStream` (default `process.stderr`); suppress entries below configured `level`
+  - [ ] 12.3 Implement `Logger.child(bindings)`: return a new `Logger` instance with bindings merged into every entry; used for per-request loggers with `correlationId` pre-set
+  - [ ] 12.4 Implement `Error` serialization: if any `meta` value is an `Error` instance, replace it with `{ name, message, stack }` before `JSON.stringify`
+  - [ ] 12.5 Implement dev pretty-formatter: when `NODE_ENV=development`, output colorized single-line text to the terminal in addition to JSON to `outputStream`
+  - [ ] 12.6 Create `correlationMiddleware(logger)`: generate UUID v4 correlation ID or extract from `X-Correlation-ID` header; store in `ctx.state['correlationId']`; create child logger in `ctx.state['logger']`; set `X-Correlation-ID` response header
+  - [ ] 12.7 Make `Logger` injectable via the DI container by decorating it with `@Injectable()`
+  - [ ] 12.8 Export `Logger`, `LogLevel`, `LogEntry`, `correlationMiddleware` from `packages/core/src/index.ts`
+  - [ ] 12.9 Write tests: JSON output structure, level filtering, Error serialization, correlation ID propagation to child logger, pretty formatter in dev mode
+
+- [ ] 13. v1.3 — Prometheus Metrics Exporter
+  - [ ] 13.1 Create `packages/core/src/observability/prometheus.ts`: `MetricsRegistry`, `Counter`, `Gauge`, `Histogram` classes; `MetricConflictError` exception
+  - [ ] 13.2 Implement `Counter.inc(labels?, value?)`, `Gauge.set(value, labels?)`, `Histogram.observe(value, labels?)`: store label-keyed values in `Map<string, number>` (synchronous, event-loop-safe)
+  - [ ] 13.3 Implement `MetricsRegistry.collect()`: render all registered metrics to Prometheus text exposition format 0.0.4 with correct `# HELP`, `# TYPE`, and metric lines; return as `string`
+  - [ ] 13.4 Register default metrics: `http_requests_total` (counter), `http_request_duration_seconds` (histogram with buckets 0.005–10), `process_heap_bytes` (gauge), `db_pool_connections` (gauge) in `prometheusMiddleware(registry, pool?)`
+  - [ ] 13.5 Throw `MetricConflictError` synchronously at registration time if a metric name is already registered
+  - [ ] 13.6 Register `GET /metrics` route in `StreetApp` when `prometheusMiddleware` is used; set correct `Content-Type` header
+  - [ ] 13.7 Export `MetricsRegistry`, `prometheusMiddleware`, `MetricConflictError` from `packages/core/src/index.ts`
+  - [ ] 13.8 Write tests: Prometheus text format is valid, concurrent scrapes produce consistent snapshots, conflict detection, default metrics are present
+
+- [ ] 14. v1.3 — Health Check DSL
+  - [ ] 14.1 Create `packages/core/src/observability/health.ts`: `HealthCheckRegistry`, `CheckFn`, `CheckResult`, `HealthResponse`, `CheckType` types
+  - [ ] 14.2 Implement `HealthCheckRegistry.addCheck(name, fn, opts)`: store checks in a `Map<string, { fn, type, timeoutMs }>`
+  - [ ] 14.3 Implement `HealthCheckRegistry.runLiveness()` and `runReadiness()`: execute all matching checks in parallel with `Promise.allSettled()`; wrap each in `Promise.race([fn(), timeoutPromise])`; mark any that reject or time out as `down`; return `HealthResponse`
+  - [ ] 14.4 Create `registerHealthRoutes(app, registry)`: register `GET /health/live` and `GET /health/ready` on `StreetApp`; respond 200 on all `up`, 503 on any `down`
+  - [ ] 14.5 Export `HealthCheckRegistry`, `registerHealthRoutes`, `CheckResult` from `packages/core/src/index.ts`
+  - [ ] 14.6 Write tests: all-up returns 200, one-down returns 503 with body listing the failed check, timed-out check marked `down`, thrown exception caught and marked `down`
+
+- [ ] 15. v1.3 — Request Profiler and Diagnostics Dashboard
+  - [ ] 15.1 Create `packages/core/src/diagnostics/route-profiler.ts` with `RouteProfiler`: `Map<routeKey, CircularBuffer<LatencySample>>` capped at 10,000 samples per route; `record(method, pattern, latencyNs, isError)` and `stats(method, pattern)` returning `RouteStats` with P50/P95/P99
+  - [ ] 15.2 Integrate `RouteProfiler` into the `Router.dispatch()` path: record latency after every dispatched request
+  - [ ] 15.3 Create `packages/core/src/diagnostics/socket-server.ts` with `DiagnosticsServer`: listen on Unix domain socket `/tmp/street-<pid>.sock`; accept connections; push JSON snapshots from `RouteProfiler` and `process.memoryUsage()` every 1 second
+  - [ ] 15.4 Create `packages/cli/src/commands/diagnostics.ts`: connect to the running process's Unix socket (detect PID from `--pid` flag or environment); render live terminal table with ANSI escape sequences; refresh every 1 second
+  - [ ] 15.5 Implement stale socket detection in the CLI: check if the PID is alive via `process.kill(pid, 0)`; if not, remove the stale socket file and print a warning
+  - [ ] 15.6 Ensure `DiagnosticsServer.stop()` removes the socket file and closes all client connections
+  - [ ] 15.7 Write tests: ring buffer caps at 10,000 samples, P99 is calculated correctly, socket server sends JSON on connection, stale socket is cleaned up
+
+
+- [ ] 16. v1.4 — OAuth2 and OpenID Connect
+  - [ ] 16.1 Create `packages/core/src/auth/oauth2.ts`: `OAuthProvider`, `OAuthProfile`, `OAuthTokens`, `OAuthSuccessCallback` interfaces; `OAuthManager` class
+  - [ ] 16.2 Implement PKCE generation: `code_verifier` = 32 random bytes as base64url; `code_challenge` = `S256` (SHA-256 of verifier) using `node:crypto`; store both in the encrypted session before redirect
+  - [ ] 16.3 Implement `OAuthManager.authorizationUrl(provider)`: construct the provider's authorization URL with `response_type=code`, `client_id`, `redirect_uri`, `scope`, `state`, and `code_challenge` params
+  - [ ] 16.4 Implement `OAuthManager.handleCallback(provider, code, state, sessionState, codeVerifier)`: validate `state` with `timingSafeEqual`, exchange code for tokens at provider's token endpoint via `node:https`
+  - [ ] 16.5 Create `JwksCache` class: fetch provider JWKS on first use, cache for 5 minutes, serve from cache on subsequent calls; fall back to cached keys for up to 5 minutes if provider is unreachable
+  - [ ] 16.6 Implement OIDC ID token validation: decode JWT header to get `kid`, look up public key in `JwksCache`, verify RS256/ES256 signature using `node:crypto`'s `verify()`; enforce `exp`, `aud`, `iss` claims
+  - [ ] 16.7 Create built-in provider configs for Google (`accounts.google.com`), GitHub (`github.com`), and Microsoft (`login.microsoftonline.com`)
+  - [ ] 16.8 Write `oauth2.test.ts` integration tests: PKCE code challenge matches verifier, state round-trip, invalid state rejected with 400, JWKS cache serves stale on provider failure
+
+- [ ] 17. v1.4 — API Keys
+  - [ ] 17.1 Create `packages/core/src/auth/api-keys.ts` with `ApiKeyService` class, `ApiKey` interface; write `street_api_keys` migration SQL file
+  - [ ] 17.2 Implement `ApiKeyService.generate(opts)`: generate `randomBytes(32).toString('base64url')` prefixed with configurable namespace; store `createHash('sha256').update(rawKey).digest('hex')` in DB; return the raw key once only
+  - [ ] 17.3 Implement `ApiKeyService.verify(rawKey)`: compute SHA-256 hash; query DB for matching hash; use `timingSafeEqual` with equal-length check; check `expiresAt`; use `LruCache` for 60-second result caching
+  - [ ] 17.4 Implement `ApiKeyService.revoke(id)`: delete from DB; remove from `LruCache` immediately
+  - [ ] 17.5 Create `apiKeyMiddleware(service)`: extract `Authorization: Bearer <key>`, call `service.verify()`, set `ctx.user`; throw `UnauthorizedException` on invalid/expired key
+  - [ ] 17.6 Write tests: key generation produces correct prefix, only hash stored in DB, timing-safe comparison, revocation invalidates cache, expired key returns 401
+
+- [ ] 18. v1.4 — Refresh Tokens and Token Rotation
+  - [ ] 18.1 Create `packages/core/src/auth/refresh-tokens.ts` with `RefreshTokenService`; write `street_refresh_tokens` migration SQL
+  - [ ] 18.2 Implement `RefreshTokenService.issue(userId, familyId?)`: generate new `familyId` (if not provided) from `randomBytes(16)`, issue access token (15 min) and refresh token (30 days), store only SHA-256 hash of refresh token
+  - [ ] 18.3 Implement `RefreshTokenService.rotate(rawRefreshToken)`: inside a single `pool.transaction()`: hash the token, find and verify it, check `revoked_at IS NULL`; if already revoked → call `revokeFamily()` and throw `TokenReplayError`; otherwise atomically create new tokens and set `revoked_at` on the old one
+  - [ ] 18.4 Implement `RefreshTokenService.revokeFamily(familyId)`: `UPDATE street_refresh_tokens SET revoked_at = NOW() WHERE family_id = $1`
+  - [ ] 18.5 Export `RefreshTokenService`, `TokenReplayError` from `packages/core/src/index.ts`
+  - [ ] 18.6 Write tests: rotation invalidates old token, replay attack revokes whole family, rotation invariant (old token invalid after rotation, new token valid), configurable lifetimes respected
+
+- [ ] 19. v1.4 — RBAC and Permission Decorators
+  - [ ] 19.1 Create `packages/core/src/auth/rbac.ts`: `RoleHierarchy` type, `RbacService` class, `@Roles()` and `@Permissions()` method decorators, `rbacGuard(service)` middleware factory
+  - [ ] 19.2 Implement `RbacService` constructor: traverse hierarchy using BFS to build a `Map<role, Set<string>>` of flattened permissions; store at construction time for synchronous lookups
+  - [ ] 19.3 Implement `@Roles(...roles)` decorator: store roles on route metadata under `street:roles` key using `Reflect.defineMetadata`
+  - [ ] 19.4 Implement `@Permissions(...perms)` decorator: store permissions under `street:permissions` key
+  - [ ] 19.5 Implement `rbacGuard(service)` middleware: read metadata from the route handler class/method; call `service.hasRole()` or `service.hasPermission()`; throw `ForbiddenException` with `{ error: 'Forbidden', required: string[] }` on failure
+  - [ ] 19.6 Write tests: role inheritance resolves permissions, `@Roles` guard blocks non-matching roles with 403, `@Permissions` guard blocks missing permission, synchronous resolution (no DB calls)
+
+- [ ] 20. v1.4 — WebAuthn / Passkeys
+  - [ ] 20.1 Create `packages/core/src/auth/webauthn.ts` with `WebAuthnService`; write `street_webauthn_credentials` migration SQL
+  - [ ] 20.2 Implement a minimal CBOR decoder in `packages/core/src/auth/cbor.ts` using `node:buffer`; handle the subset of CBOR used in WebAuthn attestation and assertion objects
+  - [ ] 20.3 Implement `WebAuthnService.beginRegistration(userId)`: generate 16+ byte random challenge; store in session with 60-second expiry; return `PublicKeyCredentialCreationOptions` JSON
+  - [ ] 20.4 Implement `WebAuthnService.finishRegistration(userId, credential)`: verify challenge from session (check expiry), validate origin and rpId, decode CBOR attestation, store public key and initial `signCount`
+  - [ ] 20.5 Implement `WebAuthnService.beginAuthentication(userId)`: generate challenge; store in session
+  - [ ] 20.6 Implement `WebAuthnService.finishAuthentication(userId, assertion)`: verify challenge, verify assertion signature against stored public key using `node:crypto`'s `createVerify()`; enforce `signCount > stored` (replay protection); update stored `signCount`
+  - [ ] 20.7 Write tests: expired challenge returns 400 with `challenge_expired`, signature verification rejects tampered assertion, sign count replay protection, round-trip registration + authentication
+
+- [ ] 21. v1.4 — Session Revocation and Audit Trails
+  - [ ] 21.1 Create `packages/core/src/auth/session-store.ts` with `StreetSessionStore`: backed by `street_sessions` DB table; `create(data)`, `find(sessionId)`, `revoke(sessionId)`, `revokeAll(userId)` methods; write migration SQL
+  - [ ] 21.2 Implement revocation check middleware: on every authenticated request, check session ID against a `LruCache<string, boolean>` revocation set (DB fallback on cache miss); throw `UnauthorizedException` if revoked
+  - [ ] 21.3 Create `packages/core/src/auth/audit-writer.ts` with `AuditWriter` class; write `street_audit_log` migration SQL with `append-only` database trigger or rule
+  - [ ] 21.4 Implement `AuditWriter.write(record)`: inside a transaction, write the audit entry; if the write fails, re-throw so the calling transaction rolls back
+  - [ ] 21.5 Integrate `AuditWriter` into auth flows: call `write()` after login success, login failure, logout, token refresh, session revocation, and permission denial
+  - [ ] 21.6 Write tests: revoked session returns 401 on next request, audit log entry written for each of the 6 event types, failed audit write causes transaction rollback, audit log cannot be deleted via public API
+
