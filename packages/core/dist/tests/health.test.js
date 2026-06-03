@@ -42,16 +42,16 @@ describe('HealthCheckRegistry', () => {
     });
     it('marks check as down when it times out', async () => {
         const registry = new HealthCheckRegistry();
-        // Check function that never resolves during the timeout window
-        // Using a 10ms timeout so the test completes quickly
-        let resolveCheck = null;
+        // Use a manually resolvable promise; resolve it after runLiveness() returns
+        // to avoid leaving a dangling promise in the test runner.
+        let resolveCheck;
         registry.addCheck('slow', () => new Promise((resolve) => {
-            resolveCheck = () => resolve({ status: 'up' });
+            resolveCheck = resolve;
         }), { timeoutMs: 10 });
         const result = await registry.runLiveness();
-        // Resolve the dangling promise to avoid test-runner cancellation
+        // Clean up the dangling promise so the event loop can drain
         if (resolveCheck)
-            resolveCheck();
+            resolveCheck({ status: 'up' });
         assert.equal(result.status, 'degraded');
         assert.equal(result.checks['slow']?.status, 'down');
         assert.deepEqual(result.checks['slow']?.details, { reason: 'timeout' });
