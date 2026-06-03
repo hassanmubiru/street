@@ -469,6 +469,7 @@ export class MysqlConnection {
     this.sha2State = other.sha2State;
     this.sha2Seed = other.sha2Seed;
     this.seq = other.seq;
+    this._inExec = other._inExec;
     // Re-wire socket event listeners to this instance
     if (this.socket) {
       this.socket.removeAllListeners('data');
@@ -539,8 +540,6 @@ export class MysqlConnection {
     }
   }
 
-
-  private _inExec = false; // true when current query is binary-protocol execute
 
   private _handlePacket(body: Buffer): void {
     if (body.length === 0) return;
@@ -927,6 +926,7 @@ export class MysqlConnection {
     this.execColCount = 0;
     this.execColsReceived = 0;
     this.execExpectRows = false;
+    this._inExec = false;
   }
 
   /** Parse a binary protocol result row. */
