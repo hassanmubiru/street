@@ -79,4 +79,8 @@ export { RbacService, Roles, Permissions, rbacGuard } from './auth/rbac.js';
 export { WebAuthnService, decodeCbor, WEBAUTHN_MIGRATION_SQL } from './auth/webauthn.js';
 // ── Auth: Session Store & Audit ───────────────────────────────────────────────
 export { StreetSessionStore, sessionRevocationMiddleware, AuditWriter, SESSION_STORE_MIGRATION_SQL, AUDIT_LOG_MIGRATION_SQL } from './auth/session-store.js';
+// ── Jobs: Queue, Scheduler, Workflow ─────────────────────────────────────────
+export { JobQueue, Job, STREET_JOBS_MIGRATION_SQL, STREET_DLQ_MIGRATION_SQL, } from './jobs/queue.js';
+export { CronScheduler, CronParseError } from './jobs/scheduler.js';
+export { WorkflowEngine, STREET_WORKFLOWS_MIGRATION_SQL, } from './jobs/workflow.js';
 //# sourceMappingURL=index.js.map
