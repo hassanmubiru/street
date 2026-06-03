@@ -44,6 +44,8 @@ export { WebhookDispatcher } from './webhook/dispatcher.js';
 export { DevWatcher } from './dev/watcher.js';
 // ── Query Builder ─────────────────────────────────────────────────────────────
 export { QueryBuilder, SqlDialect } from './database/query-builder.js';
+// ── Schema Inspector ──────────────────────────────────────────────────────────
+export { SchemaInspector } from './database/schema-inspector.js';
 // ── Config ────────────────────────────────────────────────────────────────────
 export { defineConfig, ConfigValidationError } from './config/validator.js';
 // ── Diagnostics ───────────────────────────────────────────────────────────────
