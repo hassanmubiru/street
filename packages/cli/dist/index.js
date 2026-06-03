@@ -11,6 +11,8 @@ import { MigrateCommand } from './commands/migrate.js';
 import { InfoCommand } from './commands/info.js';
 import { DoctorCommand, EnvValidateCommand } from './commands/doctor.js';
 import { AuditCommand } from './commands/audit.js';
+import { SeedCommand } from './commands/seed.js';
+import { DiagnosticsCommand } from './commands/diagnostics.js';
 const VERSION = '1.0.3';
 const APP_NAME = 'street';
 /**
@@ -56,6 +58,9 @@ export async function runCli(argv) {
             case 'migrate:run':
                 await new MigrateCommand().executeRun(ctx);
                 break;
+            case 'migrate:diff':
+                await new MigrateCommand().executeDiff(ctx);
+                break;
             case 'info':
                 await new InfoCommand().execute(ctx);
                 break;
@@ -73,6 +78,12 @@ export async function runCli(argv) {
                 break;
             case 'audit':
                 await new AuditCommand().execute(ctx);
+                break;
+            case 'db:seed':
+                await new SeedCommand().execute(ctx);
+                break;
+            case 'diagnostics':
+                await new DiagnosticsCommand().execute(ctx);
                 break;
             default:
                 console.error(`[street] Unknown command: "${args.command}"`);
@@ -102,6 +113,8 @@ Commands:
   generate <type> <name>          Generate a controller, service, or repository
   migrate:create <name>           Create a new empty migration file
   migrate:run                     Run all pending migrations
+  migrate:diff [--confirm-destructive]  Diff live schema vs entity metadata
+  db:seed <file>                  Run a SQL seed file (idempotent)
 
 Flags:
   --help, -h                      Show this help message
