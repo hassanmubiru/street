@@ -346,3 +346,63 @@ export class ${className}Repository {
     return str + 's';
   }
 }
+
+// ── Standalone generator functions (also used by sub-commands) ───────────────
+
+/** Resolve the templates directory regardless of CJS/ESM layout. */
+function templatesDir(): string {
+  // When compiled to dist/, __dirname is packages/cli/dist/commands/
+  // Templates are at packages/cli/templates/generate/
+  return resolve(__dirname, '..', '..', 'templates', 'generate');
+}
+
+/**
+ * Validate a generator name against /^[a-z][a-z0-9_-]*$/.
+ * Exits process with code 1 if invalid.
+ */
+function assertValidName(name: string): void {
+  if (!NAME_PATTERN.test(name)) {
+    process.stderr.write(
+      `[street] Invalid name "${name}". Name must match [a-z][a-z0-9_-]*\n`,
+    );
+    process.exit(1);
+  }
+}
+
+/**
+ * Ensure a target file does not already exist.
+ * Exits process with code 1 if it does (non-destructive).
+ */
+async function assertNotExists(targetPath: string): Promise<void> {
+  try {
+    await access(targetPath);
+    // If access() did not throw, the file exists.
+    process.stderr.write(
+      `[street] File already exists: ${targetPath}\nAbort — no files were overwritten.\n`,
+    );
+    process.exit(1);
+  } catch {
+    // File does not exist — continue.
+  }
+}
+
+/**
+ * Generate a typed StreetMiddleware scaffold.
+ *
+ * Output: `<cwd>/src/middleware/<name>.middleware.ts`
+ */
+export async function generateMiddleware(name: string, cwd: string): Promise<void> {
+  assertValidName(name);
+
+  const targetPath = resolve(cwd, 'src', 'middleware', `${name}.middleware.ts`);
+  await assertNotExists(targetPath);
+
+  const tplPath = resolve(templatesDir(), 'middleware.ts.tpl');
+  const tpl = await readFile(tplPath, 'utf8');
+  const content = tpl.replaceAll('{{NAME}}', name);
+
+  await mkdir(dirname(targetPath), { recursive: true });
+  await writeFile(targetPath, content, 'utf8');
+
+  process.stdout.write(`[street] Created middleware: src/middleware/${name}.middleware.ts\n`);
+}
