@@ -84,6 +84,10 @@ export type { ClusterOptions } from './cluster/coordinator.js';
 export { WebhookDispatcher } from './webhook/dispatcher.js';
 export type { WebhookPayload, WebhookTarget } from './webhook/dispatcher.js';
 
+// ── Dev ───────────────────────────────────────────────────────────────────────
+export { DevWatcher } from './dev/watcher.js';
+export type { WatcherOptions } from './dev/watcher.js';
+
 // ── CLI ───────────────────────────────────────────────────────────────────────
 export { CliKernel, parseArgv } from './cli/kernel.js';
 export type { ParsedArgs, CliKernelOptions } from './cli/kernel.js';
