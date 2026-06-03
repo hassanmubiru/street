@@ -312,7 +312,10 @@ export class MysqlConnection {
         // Check if the server is actually MariaDB
         const version = conn.greeting?.serverVersion ?? '';
         if (version.includes('MariaDB') || version.startsWith('5.5.5-')) {
-            // Re-use the already-connected socket by transferring to a MariaDbConnection
+            // Lazy import to avoid circular dependency (mariadb.ts imports from this file).
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            const { MariaDbConnection } = await import('./mariadb.js');
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-call
             const mariaConn = new MariaDbConnection();
             mariaConn._transferFrom(conn);
             return mariaConn;
@@ -1038,8 +1041,6 @@ function buildStmtExecutePacket(stmtId, params) {
     }
     // Assemble packet
     // header: COM_STMT_EXECUTE(1) + stmtId(4) + flags(1) + iteration(4) + nullBitmap + newParamsBound(1) + types + values
-    const typesTotal = typeBufs.reduce((n, b) => n + b.length, 0);
-    const valsTotal = valBufs.reduce((n, b) => n + b.length, 0);
     const header = Buffer.allocUnsafe(1 + 4 + 1 + 4 + nullBitmapLen + 1);
     let off = 0;
     header[off++] = COM_STMT_EXECUTE;

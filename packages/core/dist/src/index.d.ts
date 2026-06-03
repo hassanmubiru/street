@@ -47,6 +47,8 @@ export type { WebhookPayload, WebhookTarget } from './webhook/dispatcher.js';
 export { DevWatcher } from './dev/watcher.js';
 export type { WatcherOptions } from './dev/watcher.js';
 export { QueryBuilder, SqlDialect } from './database/query-builder.js';
+export { SchemaInspector } from './database/schema-inspector.js';
+export type { ColumnMeta, IndexMeta, FkMeta, TableSchema, DatabaseSchema, QueryablePool, } from './database/schema-inspector.js';
 export { defineConfig, ConfigValidationError } from './config/validator.js';
 export type { FieldType, ConfigFieldDef, ConfigSchema, ConfigResult } from './config/validator.js';
 export { DiagnosticsReporter, diagnosticsReporter } from './diagnostics/reporter.js';
