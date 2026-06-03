@@ -8,16 +8,16 @@
   - [x] 1.5 Write integration tests in `packages/cli/src/tests/dev.test.ts`: verify FSWatcher handles are closed on stop, verify recompile triggers on file save, verify error output on type errors keeps previous server running
   - [x] 1.6 Export `DevWatcher` and `WatcherOptions` from `packages/core/src/index.ts`
 
-- [ ] 2. v1.1 — Code Generators (middleware, gateway, migration)
+- [x] 2. v1.1 — Code Generators (middleware, gateway, migration)
   - [x] 2.1 Create generator templates in `packages/cli/templates/generate/`: `middleware.ts.tpl`, `gateway.ts.tpl`, `migration-up.sql.tpl`, `migration-rollback.sql.tpl`
   - [x] 2.2 Implement `generateMiddleware(name, cwd)` in `packages/cli/src/commands/generate.ts`: validate name with `/^[a-z][a-z0-9_-]*$/`, check target file existence (exit 1 if exists), write typed `StreetMiddleware` function scaffold to `src/middleware/<name>.middleware.ts`
   - [x] 2.3 Implement `generateGateway(name, cwd)`: write `@Injectable()` + `@WebSocketGateway` scaffold with `onConnect`, `onMessage`, `onDisconnect` handlers to `src/gateways/<name>.gateway.ts`
   - [x] 2.4 Implement `generateMigration(name, cwd)`: create timestamped `migrations/<timestamp>_<name>.sql` and `migrations/<timestamp>_<name>.rollback.sql` files
   - [x] 2.5 Extend `GenerateCommand.execute()` switch to route `middleware`, `gateway`, `migration` sub-types to their respective functions
-  - [-] 2.6 Write tests in `packages/cli/src/tests/generate.test.ts`: verify each generator creates the correct files, verify exit 1 on duplicate, verify name validation rejects uppercase/special chars
+  - [x] 2.6 Write tests in `packages/cli/src/tests/generate.test.ts`: verify each generator creates the correct files, verify exit 1 on duplicate, verify name validation rejects uppercase/special chars
 
 - [ ] 3. v1.1 — Configuration Validation Engine
-  - [~] 3.1 Create `packages/core/src/config/validator.ts`: define `FieldType` union (`string | number | boolean | url | port`), `ConfigFieldDef` interface, `ConfigSchema` type, `ConfigResult<S>` mapped type
+  - [-] 3.1 Create `packages/core/src/config/validator.ts`: define `FieldType` union (`string | number | boolean | url | port`), `ConfigFieldDef` interface, `ConfigSchema` type, `ConfigResult<S>` mapped type
   - [~] 3.2 Implement `defineConfig<S extends ConfigSchema>(schema: S): ConfigResult<S>`: reads `process.env`, validates each field against its type and constraints, collects ALL errors before throwing, throws `ConfigValidationError` with the full error list
   - [~] 3.3 Implement `ConfigValidationError` class extending `Error` with `errors: string[]` property
   - [~] 3.4 Add `url` type validation (uses `new URL()`) and `port` type validation (integer 1–65535) to the field validator
