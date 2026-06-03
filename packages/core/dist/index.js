@@ -15,8 +15,11 @@ export { Router, notFoundHandler, errorHandler } from './router/router.js';
 // ── Database ──────────────────────────────────────────────────────────────────
 export { PgConnection, StreetPostgresWireStream } from './database/wire.js';
 export { PgPool } from './database/pool.js';
+export { onPoolExhausted } from './database/pool.js';
 export { StreetPostgresRepository } from './database/repository.js';
-export { StreetMigrationRunner } from './database/migrations.js';
+export { StreetMigrationRunner, MigrationDiffer } from './database/migrations.js';
+export { StreetSeeder } from './database/seeder.js';
+export { QueryProfiler, ProfiledPool, ConnectionDiagnostics } from './database/profiler.js';
 export { SqlitePool } from './database/sqlite/pool.js';
 export { MysqlConnection, MysqlResultStream } from './database/mysql/wire.js';
 export { MysqlPool } from './database/mysql/pool.js';
@@ -52,4 +55,16 @@ export { defineConfig, ConfigValidationError } from './config/validator.js';
 export { DiagnosticsReporter, diagnosticsReporter } from './diagnostics/reporter.js';
 // ── CLI ───────────────────────────────────────────────────────────────────────
 export { CliKernel, parseArgv } from './cli/kernel.js';
+// ── Observability (OpenTelemetry-compatible) ──────────────────────────────────
+export { OtelTracer, otelMiddleware } from './observability/otel.js';
+// ── Health Check DSL ──────────────────────────────────────────────────────────
+export { HealthCheckRegistry, registerHealthRoutes } from './observability/health.js';
+// ── Structured Logging ────────────────────────────────────────────────────────
+export { Logger, correlationMiddleware } from './observability/logger.js';
+// ── Prometheus Metrics ────────────────────────────────────────────────────────
+export { MetricsRegistry, Counter, Gauge, Histogram, MetricConflictError, prometheusMiddleware, metricsHandler } from './observability/prometheus.js';
+// ── Route Profiler ────────────────────────────────────────────────────────────
+export { RouteProfiler } from './diagnostics/route-profiler.js';
+// ── Diagnostics Socket Server ─────────────────────────────────────────────────
+export { DiagnosticsServer, isStaleSocket } from './diagnostics/socket-server.js';
 //# sourceMappingURL=index.js.map
