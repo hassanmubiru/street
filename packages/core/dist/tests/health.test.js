@@ -42,13 +42,15 @@ describe('HealthCheckRegistry', () => {
     });
     it('marks check as down when it times out', async () => {
         const registry = new HealthCheckRegistry();
-        // Use a 10ms timeout; the check delays 500ms but will be beaten by the timeout
+        // Check function that never resolves during the timeout window
+        // Using a 10ms timeout so the test completes quickly
+        let resolveCheck = null;
         registry.addCheck('slow', () => new Promise((resolve) => {
-            // Resolve after a long delay — the health check timeout fires first
-            const t = setTimeout(() => resolve({ status: 'up' }), 500);
-            t.unref();
-        }), { timeoutMs: 20 });
+            resolveCheck = () => resolve({ status: 'up' });
+        }), { timeoutMs: 10 });
         const result = await registry.runLiveness();
+        // Resolve the dangling promise to avoid test-runner cancellation
+        resolveCheck?.();
         assert.equal(result.status, 'degraded');
         assert.equal(result.checks['slow']?.status, 'down');
         assert.deepEqual(result.checks['slow']?.details, { reason: 'timeout' });
