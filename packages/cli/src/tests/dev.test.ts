@@ -87,7 +87,7 @@ void describe('DevWatcher integration tests', () => {
       const originalSpawn = cp.spawn;
 
       // @ts-expect-error — intentional runtime override for testing
-      cp.spawn = makeSuccessSpawn(originalSpawn);
+      cp.spawn = makeSuccessSpawn();
 
       try {
         const watcher = new DevWatcher({
