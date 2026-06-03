@@ -116,3 +116,7 @@ export type { DiagnosticEvent } from './diagnostics/reporter.js';
 // ── CLI ───────────────────────────────────────────────────────────────────────
 export { CliKernel, parseArgv } from './cli/kernel.js';
 export type { ParsedArgs, CliKernelOptions } from './cli/kernel.js';
+
+// ── Observability (OpenTelemetry-compatible) ──────────────────────────────────
+export { OtelTracer, otelMiddleware } from './observability/otel.js';
+export type { SpanContext, Span } from './observability/otel.js';
