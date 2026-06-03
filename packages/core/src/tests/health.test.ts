@@ -71,7 +71,7 @@ describe('HealthCheckRegistry', () => {
 
     const result = await registry.runLiveness();
     // Resolve the dangling promise to avoid test-runner cancellation
-    resolveCheck?.();
+    if (resolveCheck) resolveCheck();
 
     assert.equal(result.status, 'degraded');
     assert.equal(result.checks['slow']?.status, 'down');
