@@ -141,3 +141,6 @@ export { MetricsRegistry, Counter, Gauge, Histogram, MetricConflictError, promet
 // ── Route Profiler ────────────────────────────────────────────────────────────
 export { RouteProfiler } from './diagnostics/route-profiler.js';
 export type { LatencySample, RouteStats } from './diagnostics/route-profiler.js';
+
+// ── Diagnostics Socket Server ─────────────────────────────────────────────────
+export { DiagnosticsServer, isStaleSocket } from './diagnostics/socket-server.js';
