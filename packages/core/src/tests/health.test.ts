@@ -3,8 +3,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createServer } from 'node:http';
-import type { IncomingMessage, ServerResponse } from 'node:http';
+import * as nodeHttp from 'node:http';
 
 import { HealthCheckRegistry, registerHealthRoutes } from '../observability/health.js';
 import { streetApp } from '../http/server.js';
