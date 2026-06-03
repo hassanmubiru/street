@@ -255,3 +255,284 @@ function buildHandshakeResponse(
   return wrapPacket(body, 1); // sequence id = 1
 }
 
+
+// ─── Column definition ────────────────────────────────────────────────────────
+interface ColumnDef {
+  name: string;
+  fieldType: number;
+}
+
+/** Parse a column definition packet (41-format). Returns just the column name. */
+function parseColumnDef(body: Buffer): ColumnDef {
+  let offset = 0;
+  // catalog (lenenc string)
+  const cat = readLenEncInt(body, offset);
+  offset += cat.bytesRead + cat.value;
+  // schema (lenenc string)
+  const schema = readLenEncInt(body, offset);
+  offset += schema.bytesRead + schema.value;
+  // table (lenenc string)
+  const tbl = readLenEncInt(body, offset);
+  offset += tbl.bytesRead + tbl.value;
+  // org_table (lenenc string)
+  const orgTbl = readLenEncInt(body, offset);
+  offset += orgTbl.bytesRead + orgTbl.value;
+  // name (lenenc string)
+  const nameLen = readLenEncInt(body, offset);
+  offset += nameLen.bytesRead;
+  const name = body.toString('utf8', offset, offset + nameLen.value);
+  offset += nameLen.value;
+  // org_name (lenenc string)
+  const orgNameLen = readLenEncInt(body, offset);
+  offset += orgNameLen.bytesRead + orgNameLen.value;
+  // next_length (0x0c)
+  offset += 1;
+  // charset (2), colLen (4), type (1), flags (2), decimals (1), filler (2)
+  offset += 2 + 4;
+  const fieldType = body[offset] ?? 0;
+  return { name, fieldType };
+}
+
+
+// ─── OK / ERR packet parsers ──────────────────────────────────────────────────
+interface OkPacket {
+  affectedRows: number;
+  lastInsertId: number;
+  statusFlags: number;
+}
+
+function parseOkPacket(body: Buffer): OkPacket {
+  let offset = 1; // skip 0x00 header
+  const ar = readLenEncInt(body, offset);
+  offset += ar.bytesRead;
+  const li = readLenEncInt(body, offset);
+  offset += li.bytesRead;
+  const statusFlags = body.length >= offset + 2 ? body.readUInt16LE(offset) : 0;
+  return { affectedRows: ar.value, lastInsertId: li.value, statusFlags };
+}
+
+function parseErrPacket(body: Buffer): Error {
+  // 0xFF + 2-byte error code + '#' + 5-byte sqlstate + message
+  const code = body.readUInt16LE(1);
+  let msgStart = 3;
+  if (body[msgStart] === 0x23 /* '#' */) msgStart += 6; // skip '#' + 5 sqlstate
+  const msg = body.toString('utf8', msgStart).replace(/\0$/, '');
+  return new Error(`MySQL error ${code}: ${msg}`);
+}
+
+
+// ─── Streaming result row stream ──────────────────────────────────────────────
+export class MysqlResultStream extends Readable {
+  private _done = false;
+
+  constructor() {
+    super({ objectMode: true, highWaterMark: 64 });
+  }
+
+  pushRow(row: Record<string, string | null>): boolean {
+    if (this._done) return false;
+    return this.push(row);
+  }
+
+  finalize(error?: Error): void {
+    this._done = true;
+    if (error) {
+      this.destroy(error);
+    } else {
+      this.push(null);
+    }
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  _read(_size: number): void {
+    // push-mode stream — backpressure is handled by the connection layer
+  }
+}
+
+// ─── Connection options ───────────────────────────────────────────────────────
+export interface MysqlConnectOptions {
+  host: string;
+  port?: number;
+  user: string;
+  password: string;
+  database: string;
+  connectTimeoutMs?: number;
+}
+
+
+// ─── Internal connection state ────────────────────────────────────────────────
+type ConnState = 'connecting' | 'authenticating' | 'ready' | 'query' | 'closed';
+
+interface PreparedStatement {
+  stmtId: number;
+  numParams: number;
+  numColumns: number;
+  paramDefs: ColumnDef[];
+  colDefs: ColumnDef[];
+}
+
+interface PendingQuery {
+  resolve: (result: DbResult) => void;
+  reject: (err: Error) => void;
+  rows: Record<string, string | null>[];
+  command: string;
+  affectedRows: number;
+  lastInsertId: number;
+}
+
+// ─── caching_sha2_password second-factor states ───────────────────────────────
+type Sha2State = 'initial' | 'expect_more';
+
+
+// ─── MysqlConnection ──────────────────────────────────────────────────────────
+export class MysqlConnection {
+  protected socket: Socket | null = null;
+  protected state: ConnState = 'connecting';
+  private buffer = Buffer.alloc(0);
+
+  // Server greeting info stored during auth
+  protected greeting: ServerGreeting | null = null;
+  private opts: MysqlConnectOptions | null = null;
+
+  // Auth resolve/reject
+  private authResolve: (() => void) | null = null;
+  private authReject: ((err: Error) => void) | null = null;
+
+  // Query state
+  private pendingQuery: PendingQuery | null = null;
+  private streamTarget: MysqlResultStream | null = null;
+  private columns: ColumnDef[] = [];
+  private colCount = 0;           // expected column count for result set
+  private colsReceived = 0;       // column defs received so far
+  private expectEof = false;      // waiting for EOF/OK after columns
+
+  // Prepared statement state
+  private pendingPrepare: {
+    resolve: (stmt: PreparedStatement) => void;
+    reject: (err: Error) => void;
+    stmt: Partial<PreparedStatement>;
+    paramsReceived: number;
+    colsReceived: number;
+  } | null = null;
+
+  // caching_sha2_password sub-state
+  private sha2State: Sha2State = 'initial';
+  private sha2Seed: Buffer = Buffer.alloc(0);
+
+  // Sequence number for outgoing packets (increments per command)
+  private seq = 0;
+
+  get isReady(): boolean { return this.state === 'ready'; }
+  get isClosed(): boolean { return this.state === 'closed'; }
+
+  /** The server version string from the greeting packet. */
+  get serverVersion(): string { return this.greeting?.serverVersion ?? ''; }
+
+
+  /**
+   * Static factory: connects to MySQL/MariaDB and returns the appropriate
+   * subclass based on the server greeting (task 6.7).
+   */
+  static async connect(opts: MysqlConnectOptions): Promise<MysqlConnection> {
+    const conn = new MysqlConnection();
+    await conn._connect(opts);
+    // Check if the server is actually MariaDB
+    const version = conn.greeting?.serverVersion ?? '';
+    if (version.includes('MariaDB') || version.startsWith('5.5.5-')) {
+      // Re-use the already-connected socket by transferring to a MariaDbConnection
+      const mariaConn = new MariaDbConnection();
+      mariaConn._transferFrom(conn);
+      return mariaConn;
+    }
+    return conn;
+  }
+
+  /** @internal Used by MariaDbConnection to take over a connected MysqlConnection. */
+  _transferFrom(other: MysqlConnection): void {
+    this.socket = other.socket;
+    this.state = other.state;
+    this.buffer = other.buffer;
+    this.greeting = other.greeting;
+    this.opts = other.opts;
+    this.authResolve = other.authResolve;
+    this.authReject = other.authReject;
+    this.pendingQuery = other.pendingQuery;
+    this.streamTarget = other.streamTarget;
+    this.columns = other.columns;
+    this.colCount = other.colCount;
+    this.colsReceived = other.colsReceived;
+    this.expectEof = other.expectEof;
+    this.pendingPrepare = other.pendingPrepare;
+    this.sha2State = other.sha2State;
+    this.sha2Seed = other.sha2Seed;
+    this.seq = other.seq;
+    // Re-wire socket event listeners to this instance
+    if (this.socket) {
+      this.socket.removeAllListeners('data');
+      this.socket.on('data', (chunk: Buffer) => this._onData(chunk));
+    }
+  }
+
+
+  protected _connect(opts: MysqlConnectOptions): Promise<void> {
+    this.opts = opts;
+    const port = opts.port ?? 3306;
+
+    return new Promise((resolve, reject) => {
+      const timeoutMs = opts.connectTimeoutMs ?? 10_000;
+      const timer = setTimeout(() => {
+        this.socket?.destroy();
+        reject(new Error('MySQL connection timeout'));
+      }, timeoutMs);
+      timer.unref();
+
+      this.authResolve = () => { clearTimeout(timer); resolve(); };
+      this.authReject  = (err) => { clearTimeout(timer); reject(err); };
+
+      const socket = createConnection({ host: opts.host, port });
+      this.socket = socket;
+
+      socket.setKeepAlive(true, 10_000);
+      socket.setNoDelay(true);
+
+      socket.once('connect', () => {
+        this.state = 'authenticating';
+        // Server will send its greeting first; nothing to write yet
+      });
+
+      socket.on('data', (chunk: Buffer) => this._onData(chunk));
+
+      socket.once('error', (err) => {
+        this.state = 'closed';
+        if (this.authReject) { this.authReject(err as Error); this.authReject = null; }
+        if (this.pendingQuery) { this.pendingQuery.reject(err as Error); this.pendingQuery = null; }
+        if (this.streamTarget) { this.streamTarget.finalize(err as Error); this.streamTarget = null; }
+      });
+
+      socket.once('close', () => {
+        this.state = 'closed';
+        const err = new Error('MySQL connection closed unexpectedly');
+        if (this.pendingQuery) { this.pendingQuery.reject(err); this.pendingQuery = null; }
+        if (this.streamTarget) { this.streamTarget.finalize(err); this.streamTarget = null; }
+      });
+    });
+  }
+
+  private _onData(chunk: Buffer): void {
+    this.buffer = Buffer.concat([this.buffer, chunk]);
+    this._processBuffer();
+  }
+
+  private _processBuffer(): void {
+    while (this.buffer.length >= 4) {
+      const bodyLen = this.buffer.readUIntLE(0, 3);
+      const totalLen = 4 + bodyLen;
+      if (this.buffer.length < totalLen) break;
+
+      // seq = this.buffer[3] — not used for state machine, just updated
+      const body = this.buffer.subarray(4, totalLen);
+      this.buffer = this.buffer.subarray(totalLen);
+      this._handlePacket(body);
+    }
+  }
+
