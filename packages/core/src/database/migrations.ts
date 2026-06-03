@@ -5,6 +5,8 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join, resolve, sep } from 'node:path';
 import { PgPool } from './pool.js';
 import { Injectable } from '../core/container.js';
+import { SchemaInspector } from './schema-inspector.js';
+import type { QueryablePool } from './schema-inspector.js';
 
 const MIGRATIONS_TABLE = 'street_migrations';
 
