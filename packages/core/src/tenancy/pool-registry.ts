@@ -87,7 +87,7 @@ export class TenantPoolRegistry {
         database: url.pathname.replace(/^\//, '') || undefined,
         minConnections: 1,
         maxConnections: 5,
-      } as Parameters<typeof PgPool.prototype.initialize>[0] extends never ? never : Parameters<(typeof PgPool)['prototype']['query']>[0] extends string ? Parameters<ConstructorParameters<typeof PgPool>[0]> : never);
+      });
       return pool as unknown as GenericPool;
     } catch {
       return this._masterPool;
