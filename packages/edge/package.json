@@ -1,0 +1,27 @@
+{
+  "name": "@streetjs/edge",
+  "version": "1.0.0",
+  "description": "Edge Runtime adapter for the Street framework",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "clean": "rm -rf dist"
+  },
+  "keywords": ["street", "edge", "runtime", "adapter", "cloudflare", "vercel"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@streetjs/core": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
