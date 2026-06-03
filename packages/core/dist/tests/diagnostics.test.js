@@ -130,39 +130,39 @@ describe('Container — dependency chain appears in DI error messages', () => {
         container.reset();
     });
     it('includes the class names in the error when resolution fails due to circular dep', () => {
-        let ServiceA = class ServiceA {
+        let DepA = class DepA {
             b;
             constructor(b) {
                 this.b = b;
             }
         };
-        ServiceA = __decorate([
+        DepA = __decorate([
             Injectable(),
-            __metadata("design:paramtypes", [ServiceB])
-        ], ServiceA);
-        let ServiceB = class ServiceB {
+            __metadata("design:paramtypes", [Object])
+        ], DepA);
+        let DepB = class DepB {
             a;
             constructor(a) {
                 this.a = a;
             }
         };
-        ServiceB = __decorate([
+        DepB = __decorate([
             Injectable(),
-            __metadata("design:paramtypes", [ServiceA])
-        ], ServiceB);
-        // Manually register metadata since decorators may not emit in test
-        Reflect.defineMetadata('design:paramtypes', [ServiceB], ServiceA);
-        Reflect.defineMetadata('design:paramtypes', [ServiceA], ServiceB);
+            __metadata("design:paramtypes", [Object])
+        ], DepB);
+        // Manually wire circular metadata
+        Reflect.defineMetadata('design:paramtypes', [DepB], DepA);
+        Reflect.defineMetadata('design:paramtypes', [DepA], DepB);
         let errorMessage = '';
         try {
-            container.resolve(ServiceA);
+            container.resolve(DepA);
         }
         catch (err) {
             errorMessage = err.message;
         }
         assert.ok(errorMessage.length > 0, 'expected an error to be thrown');
         // Circular dep error must mention the class names involved
-        assert.ok(errorMessage.includes('ServiceA') || errorMessage.includes('ServiceB'), `Error message should mention class names, got: "${errorMessage}"`);
+        assert.ok(errorMessage.includes('DepA') || errorMessage.includes('DepB'), `Error message should mention class names, got: "${errorMessage}"`);
     });
     it('includes dependency chain with arrow notation "→" for nested resolution failures', () => {
         let Leaf = class Leaf {
