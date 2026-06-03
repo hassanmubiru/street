@@ -36,6 +36,10 @@ export { TelemetryTracker, telemetryMiddleware } from './telemetry/tracker.js';
 export { ClusterCoordinator, workerHeartbeat, signalReady, } from './cluster/coordinator.js';
 // ── Webhook ───────────────────────────────────────────────────────────────────
 export { WebhookDispatcher } from './webhook/dispatcher.js';
+// ── Dev ───────────────────────────────────────────────────────────────────────
+export { DevWatcher } from './dev/watcher.js';
+// ── Config ────────────────────────────────────────────────────────────────────
+export { defineConfig, ConfigValidationError } from './config/validator.js';
 // ── CLI ───────────────────────────────────────────────────────────────────────
 export { CliKernel, parseArgv } from './cli/kernel.js';
 //# sourceMappingURL=index.js.map
