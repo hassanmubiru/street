@@ -91,6 +91,9 @@ export type { WebhookPayload, WebhookTarget } from './webhook/dispatcher.js';
 export { DevWatcher } from './dev/watcher.js';
 export type { WatcherOptions } from './dev/watcher.js';
 
+// ── Query Builder ─────────────────────────────────────────────────────────────
+export { QueryBuilder, SqlDialect } from './database/query-builder.js';
+
 // ── Config ────────────────────────────────────────────────────────────────────
 export { defineConfig, ConfigValidationError } from './config/validator.js';
 export type { FieldType, ConfigFieldDef, ConfigSchema, ConfigResult } from './config/validator.js';
