@@ -1,9 +1,9 @@
 // packages/cli/src/commands/info.ts
-// `street info` — prints a summary table of environment versions and project config.
+// `street info` — prints framework, runtime, and project diagnostics.
 
-import { readFileSync } from 'node:fs';
+import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import { platform, arch } from 'node:os';
+import { platform, arch, release } from 'node:os';
 import type { CliContext } from '../index.js';
 
 interface InfoRow {
@@ -16,72 +16,53 @@ export class InfoCommand {
     const rows: InfoRow[] = [];
 
     // ── Street version ────────────────────────────────────────────────────
-    rows.push({ label: 'Street version', value: this.readStreetVersion(ctx.cwd) });
+    const streetVersion = await this.readPackageVersion(
+      resolve(ctx.cwd, 'node_modules', '@streetjs', 'core', 'package.json'),
+    ) ?? await this.readPackageVersion(
+      resolve(ctx.cwd, '..', 'core', 'package.json'),
+    ) ?? '(unknown)';
+    rows.push({ label: 'Street version', value: streetVersion });
 
     // ── Node.js version ───────────────────────────────────────────────────
     rows.push({ label: 'Node.js version', value: process.version });
 
     // ── TypeScript version ────────────────────────────────────────────────
-    rows.push({ label: 'TypeScript version', value: this.readTypeScriptVersion(ctx.cwd) });
+    const tsVersion = await this.readPackageVersion(
+      resolve(ctx.cwd, 'node_modules', 'typescript', 'package.json'),
+    ) ?? '(not found)';
+    rows.push({ label: 'TypeScript version', value: `v${tsVersion}` });
 
-    // ── OS / Platform ─────────────────────────────────────────────────────
-    rows.push({ label: 'OS', value: `${platform()} (${arch()})` });
+    // ── Operating system ──────────────────────────────────────────────────
+    rows.push({ label: 'OS', value: `${platform()} ${arch()} (${release()})` });
 
-    // ── Node.js environment ───────────────────────────────────────────────
-    rows.push({ label: 'NODE_ENV', value: process.env['NODE_ENV'] ?? '(not set)' });
-
-    this.printTable(rows);
-  }
-
-  /** Read the Street CLI version from the nearest package.json in cwd, or fallback to CLI's own. */
-  readStreetVersion(cwd: string): string {
-    // Try project's package.json first
-    try {
-      const projectPkg = JSON.parse(readFileSync(resolve(cwd, 'package.json'), 'utf8')) as Record<string, unknown>;
-      const deps = (projectPkg['dependencies'] ?? {}) as Record<string, string>;
-      const devDeps = (projectPkg['devDependencies'] ?? {}) as Record<string, string>;
-      const ver = deps['@streetjs/core'] ?? devDeps['@streetjs/core'] ?? deps['@streetjs/cli'] ?? devDeps['@streetjs/cli'];
-      if (ver) return ver;
-    } catch {
-      // fallthrough
+    // ── Project config ────────────────────────────────────────────────────
+    const projectPkg = await this.readJson<{ name?: string; version?: string }>(
+      resolve(ctx.cwd, 'package.json'),
+    );
+    if (projectPkg) {
+      rows.push({ label: 'Project', value: `${projectPkg.name ?? '?'} v${projectPkg.version ?? '?'}` });
     }
 
-    // Fallback: CLI's own package.json
-    try {
-      const cliPkg = JSON.parse(
-        readFileSync(new URL('../../package.json', import.meta.url), 'utf8'),
-      ) as Record<string, unknown>;
-      return String(cliPkg['version'] ?? 'unknown');
-    } catch {
-      return 'unknown';
-    }
-  }
-
-  /** Read TypeScript version from node_modules/typescript/package.json. */
-  readTypeScriptVersion(cwd: string): string {
-    const candidates = [
-      resolve(cwd, 'node_modules', 'typescript', 'package.json'),
-      // Walk up one level (monorepo root)
-      resolve(cwd, '..', 'node_modules', 'typescript', 'package.json'),
-    ];
-
-    for (const candidate of candidates) {
-      try {
-        const pkg = JSON.parse(readFileSync(candidate, 'utf8')) as Record<string, unknown>;
-        return `v${String(pkg['version'])}`;
-      } catch {
-        // try next
-      }
-    }
-    return 'not found';
-  }
-
-  private printTable(rows: InfoRow[]): void {
+    // ── Print aligned table ───────────────────────────────────────────────
     const labelWidth = Math.max(...rows.map((r) => r.label.length)) + 2;
-    console.log('\n  Street Project Info\n  ' + '─'.repeat(labelWidth + 20));
+    console.log('\n  Street Framework — Info\n');
     for (const { label, value } of rows) {
-      console.log(`  ${(label + ':').padEnd(labelWidth)}${value}`);
+      console.log(`  ${label.padEnd(labelWidth)}${value}`);
     }
     console.log('');
+  }
+
+  private async readPackageVersion(pkgPath: string): Promise<string | null> {
+    const pkg = await this.readJson<{ version?: string }>(pkgPath);
+    return pkg?.version ? `v${pkg.version}` : null;
+  }
+
+  private async readJson<T>(filePath: string): Promise<T | null> {
+    try {
+      const raw = await readFile(filePath, 'utf8');
+      return JSON.parse(raw) as T;
+    } catch {
+      return null;
+    }
   }
 }
