@@ -11,15 +11,24 @@ import { mkdtempSync, rmSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { EventEmitter } from 'node:events';
+import * as cp from 'node:child_process';
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+// Loose spawn signature used when overriding cp.spawn in tests.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SpawnFn = (...args: any[]) => any;
+
+type WatcherInternals = { watcherHandles: Array<{ close: () => void }> };
 
 // ── Minimal ChildProcess stub ────────────────────────────────────────────────
-// Lightweight EventEmitter-based stand-in for ChildProcess so we can control
-// spawn() return values without spawning real processes.
+// Lightweight EventEmitter stand-in for ChildProcess so we can control
+// spawn() return values without launching real OS processes.
 
 class FakeChildProcess extends EventEmitter {
   exitCode: number | null = null;
   killed = false;
-  // DevWatcher pipes stdout/stderr; provide readable EventEmitter stubs.
+  // DevWatcher pipes .stdout / .stderr; provide readable EventEmitter stubs.
   readonly stdout: NodeJS.ReadableStream = new EventEmitter() as unknown as NodeJS.ReadableStream;
   readonly stderr: NodeJS.ReadableStream = new EventEmitter() as unknown as NodeJS.ReadableStream;
 
@@ -34,32 +43,25 @@ class FakeChildProcess extends EventEmitter {
   }
 }
 
-// ── Temporary src directory helper ──────────────────────────────────────────
+// ── Helpers ──────────────────────────────────────────────────────────────────
 
 function makeTempSrcDir(): { srcDir: string; cleanup: () => void } {
   const base = mkdtempSync(join(tmpdir(), 'dev-test-'));
   const srcDir = join(base, 'src');
   mkdirSync(srcDir, { recursive: true });
-  return {
-    srcDir,
-    cleanup: () => rmSync(base, { recursive: true, force: true }),
-  };
+  return { srcDir, cleanup: () => rmSync(base, { recursive: true, force: true }) };
 }
 
-// ── Spawn factory: always succeeds ──────────────────────────────────────────
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySpawn = (...args: any[]) => any;
-
-function makeSuccessSpawn(): AnySpawn {
-  return (..._args: unknown[]): FakeChildProcess => {
-    const fake = new FakeChildProcess();
-    setImmediate(() => {
-      fake.exitCode = 0;
-      fake.emit('close', 0, null);
-    });
-    return fake;
+/** Create a FakeChildProcess that emits 'close' with the given exit code. */
+function fakeProcess(exitCode: number, delayMs = 0): FakeChildProcess {
+  const fake = new FakeChildProcess();
+  const emit = (): void => {
+    fake.exitCode = exitCode;
+    fake.emit('close', exitCode, null);
   };
+  if (delayMs > 0) setTimeout(emit, delayMs);
+  else setImmediate(emit);
+  return fake;
 }
 
 // ── Test suite ───────────────────────────────────────────────────────────────
@@ -72,22 +74,17 @@ void describe('DevWatcher integration tests', () => {
     let cleanup: () => void = () => { /* no-op */ };
 
     before(() => {
-      const tmp = makeTempSrcDir();
-      srcDir = tmp.srcDir;
-      cleanup = tmp.cleanup;
+      ({ srcDir, cleanup } = makeTempSrcDir());
     });
 
-    after(() => {
-      cleanup();
-    });
+    after(() => { cleanup(); });
 
     void it('closes all watcher handles after stop() is called', async () => {
       const { DevWatcher } = await import('@streetjs/core');
-      const cp = await import('node:child_process');
       const originalSpawn = cp.spawn;
 
-      // @ts-expect-error — intentional runtime override for testing
-      cp.spawn = makeSuccessSpawn();
+      // Override spawn: all processes succeed immediately.
+      (cp as { spawn: SpawnFn }).spawn = (..._args: unknown[]) => fakeProcess(0);
 
       try {
         const watcher = new DevWatcher({
@@ -99,24 +96,21 @@ void describe('DevWatcher integration tests', () => {
 
         await watcher.start();
 
-        // Access the private handles array via type casting.
-        type WatcherInternals = { watcherHandles: Array<{ close: () => void }> };
+        // Access the private handles array.
         const handles = (watcher as unknown as WatcherInternals).watcherHandles;
-
         assert.ok(handles.length > 0, 'Expected at least one FSWatcher handle after start()');
 
         const countBefore = handles.length;
-
         await watcher.stop();
 
-        // After stop(), the internal array must be cleared (all handles closed).
+        // After stop() the internal array must be emptied (all handles closed).
         assert.strictEqual(
           handles.length,
           0,
           `watcherHandles must be empty after stop() — no listener leaks. Had ${countBefore} before stop.`,
         );
       } finally {
-        cp.spawn = originalSpawn;
+        (cp as { spawn: SpawnFn }).spawn = originalSpawn;
       }
     });
   });
@@ -127,38 +121,25 @@ void describe('DevWatcher integration tests', () => {
     let cleanup: () => void = () => { /* no-op */ };
 
     before(() => {
-      const tmp = makeTempSrcDir();
-      srcDir = tmp.srcDir;
-      cleanup = tmp.cleanup;
+      ({ srcDir, cleanup } = makeTempSrcDir());
     });
 
-    after(() => {
-      cleanup();
-    });
+    after(() => { cleanup(); });
 
     void it('calls compile() when a .ts file changes', async () => {
       const { DevWatcher } = await import('@streetjs/core');
-      const cp = await import('node:child_process');
       const originalSpawn = cp.spawn;
 
       let compileCallCount = 0;
 
-      // @ts-expect-error — intentional runtime override for testing
-      cp.spawn = (...args: unknown[]): FakeChildProcess => {
+      (cp as { spawn: SpawnFn }).spawn = (...args: unknown[]) => {
         const [cmd, cmdArgs] = args as [string, string[]];
-        // DevWatcher spawns 'npx' ['tsc', '--incremental'] for compilation.
-        const isTsc =
-          cmd === 'npx' ||
-          (Array.isArray(cmdArgs) && cmdArgs.includes('tsc'));
+        // DevWatcher compiles via: spawn('npx', ['tsc', '--incremental'], …)
+        const isTsc = cmd === 'npx' || (Array.isArray(cmdArgs) && cmdArgs.includes('tsc'));
         if (isTsc) compileCallCount++;
-
-        const fake = new FakeChildProcess();
-        setImmediate(() => {
-          fake.exitCode = 0;
-          fake.emit('close', 0, null);
-        });
-        return fake as unknown as ReturnType<typeof originalSpawn>;
+        return fakeProcess(0);
       };
+
       try {
         const watcher = new DevWatcher({
           srcDir,
@@ -168,14 +149,12 @@ void describe('DevWatcher integration tests', () => {
         });
 
         await watcher.start();
-
-        // Record compile count after initial boot.
         const compileCountAfterStart = compileCallCount;
 
-        // Trigger a file-change by writing a .ts file in srcDir.
+        // Trigger a file-change event by writing a .ts file into srcDir.
         writeFileSync(join(srcDir, 'app.ts'), 'export const x = 1;');
 
-        // Wait longer than the debounce window (150 ms) to allow recompile to fire.
+        // Wait longer than the debounce window (150 ms) so the recompile fires.
         await new Promise<void>((resolve) => setTimeout(resolve, 400));
 
         await watcher.stop();
@@ -186,7 +165,7 @@ void describe('DevWatcher integration tests', () => {
           `Calls before trigger: ${compileCountAfterStart}, after: ${compileCallCount}`,
         );
       } finally {
-        cp.spawn = originalSpawn;
+        (cp as { spawn: SpawnFn }).spawn = originalSpawn;
       }
     });
   });
@@ -197,68 +176,45 @@ void describe('DevWatcher integration tests', () => {
     let cleanup: () => void = () => { /* no-op */ };
 
     before(() => {
-      const tmp = makeTempSrcDir();
-      srcDir = tmp.srcDir;
-      cleanup = tmp.cleanup;
+      ({ srcDir, cleanup } = makeTempSrcDir());
     });
 
-    after(() => {
-      cleanup();
-    });
+    after(() => { cleanup(); });
 
     void it('does not kill the server process when compile() returns false', async () => {
       const { DevWatcher } = await import('@streetjs/core');
-      const cp = await import('node:child_process');
       const originalSpawn = cp.spawn;
 
-      // 'initial' = first compile+server; 'failing' = simulate type error
+      // 'initial' = first compile succeeds; 'failing' = type error
       let phase: 'initial' | 'failing' = 'initial';
       let serverKillCount = 0;
       let serverFakeProcess: FakeChildProcess | null = null;
 
-      // @ts-expect-error — intentional runtime override for testing
-      cp.spawn = (...args: unknown[]): FakeChildProcess => {
+      (cp as { spawn: SpawnFn }).spawn = (...args: unknown[]) => {
         const [cmd, cmdArgs] = args as [string, string[]];
 
         const isNode = cmd === 'node';
-        const isTsc =
-          cmd === 'npx' ||
-          (Array.isArray(cmdArgs) && cmdArgs.includes('tsc'));
-
-        const fake = new FakeChildProcess();
+        const isTsc = cmd === 'npx' || (Array.isArray(cmdArgs) && cmdArgs.includes('tsc'));
 
         if (isNode) {
-          // Server process: track kill() calls, stay running indefinitely.
+          // Server process: track kill() calls; never emit 'exit' on its own.
+          const fake = new FakeChildProcess();
           const originalKill = fake.kill.bind(fake);
           fake.kill = (signal?: NodeJS.Signals | number): boolean => {
             serverKillCount++;
             return originalKill(signal);
           };
           serverFakeProcess = fake;
-          // Intentionally do NOT emit 'exit' — server stays "alive".
-        } else if (isTsc) {
-          if (phase === 'initial') {
-            // Initial compile succeeds → server can boot.
-            setImmediate(() => {
-              fake.exitCode = 0;
-              fake.emit('close', 0, null);
-            });
-          } else {
-            // Failing compile (type error) → exit code 1.
-            setImmediate(() => {
-              fake.exitCode = 1;
-              fake.emit('close', 1, null);
-            });
-          }
-        } else {
-          // Fallback: succeed immediately.
-          setImmediate(() => {
-            fake.exitCode = 0;
-            fake.emit('close', 0, null);
-          });
+          return fake;
         }
 
-        return fake as unknown as ReturnType<typeof originalSpawn>;
+        if (isTsc) {
+          // Compile: succeed on initial boot, fail with exit 1 on type errors.
+          return fakeProcess(phase === 'initial' ? 0 : 1);
+        }
+
+        // Fallback: succeed.
+        return fakeProcess(0);
       };
 
       try {
@@ -275,14 +231,14 @@ void describe('DevWatcher integration tests', () => {
         assert.ok(serverFakeProcess !== null, 'Server process should be running after start()');
         const killsAfterStart = serverKillCount;
 
-        // Switch to failing mode and trigger a file change.
+        // Switch to failing mode and trigger a .ts file change.
         phase = 'failing';
         writeFileSync(join(srcDir, 'broken.ts'), 'const x: string = 42;');
 
         // Wait for debounce (150 ms) + async compile to complete.
         await new Promise<void>((resolve) => setTimeout(resolve, 500));
 
-        // The server must NOT have been killed due to the compile failure.
+        // The running server must NOT have been killed due to compile failure.
         assert.strictEqual(
           serverKillCount,
           killsAfterStart,
@@ -290,10 +246,10 @@ void describe('DevWatcher integration tests', () => {
           `kills before: ${killsAfterStart}, kills after: ${serverKillCount}`,
         );
 
-        // Stop the watcher (this legitimately kills the server — that's fine).
+        // stop() legitimately kills the server — that's expected behaviour.
         await watcher.stop();
       } finally {
-        cp.spawn = originalSpawn;
+        (cp as { spawn: SpawnFn }).spawn = originalSpawn;
       }
     });
   });
