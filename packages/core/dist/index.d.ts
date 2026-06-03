@@ -37,6 +37,8 @@ export { ClusterCoordinator, workerHeartbeat, signalReady, } from './cluster/coo
 export type { ClusterOptions } from './cluster/coordinator.js';
 export { WebhookDispatcher } from './webhook/dispatcher.js';
 export type { WebhookPayload, WebhookTarget } from './webhook/dispatcher.js';
+export { DevWatcher } from './dev/watcher.js';
+export type { WatcherOptions } from './dev/watcher.js';
 export { CliKernel, parseArgv } from './cli/kernel.js';
 export type { ParsedArgs, CliKernelOptions } from './cli/kernel.js';
 //# sourceMappingURL=index.d.ts.map
