@@ -201,3 +201,215 @@ Module	Current	Phase 1 Target	Public Release Target
 packages/core (unit)	135 tests, ~70% of files	200+ tests, 80% of files	300+ tests, 90% of files
 Auth module	0%	80%	95%
 Jobs module	15 tests		
+
+Street Framework: Production Readiness Verification Audit
+Audit Date: Post-remediation review
+Evidence Basis: Direct source code inspection, test execution (199 tests), CI pipeline review, runtime verification
+Audit Standard: A finding is RESOLVED only when: vulnerability no longer exists + tests validate the fix + CI validates + no regression introduced
+
+Executive Summary
+No remediation work has been performed since the Gap Analysis was published.
+
+Every Critical and High security finding from the previous audit remains unresolved. The evidence is unambiguous:
+
+S-01 (WebAuthn bypass): test mode — skip verification still present at line 309 of webauthn.ts
+S-02 (RBAC inoperative): ctx.state['routeHandler'] still never set by the router
+S-03 (OAuth2 PKCE): sessionManager still optional, still defaults to null
+S-06 (API key timing leak): length pre-check before timingSafeEqual still at line 121
+CI-01 (TODO breaks hygiene scan): both TODO comments still present in pool.ts and repository.ts
+T-01 (No auth tests): zero auth test files exist
+P-01 (No benchmarks): no benchmarks/ directory
+D-02 (No examples): no examples/ directory
+198 of 199 core unit tests pass. TypeScript compiles cleanly. The v1.0 foundation is solid. But zero Phase 1 remediation work has been done.
+
+Resolved Findings
+Finding	Status	Evidence
+R-02 (AuditLogger timer accumulation)	✓ RESOLVED	flushTimer null-check exists at line 86: else if (!this.flushTimer) before setTimeout — only one timer accumulates at a time. clearTimeout called at line 97 in _flush(). No accumulation possible.
+R-05 (AgentExecutor unbounded history)	✓ RESOLVED	maxSteps enforced at line 129: for (let step = 0; step < this.maxSteps; step++). _summarizeHistory() resets history.length = 0 at line 227. Bounded by design.
+R-03 (CronScheduler persistence documented)	✓ PARTIALLY	No persistence is by design and documented in CONTRIBUTING.md. Acceptable as known limitation.
+Remaining Findings
+SECURITY
+Finding	Severity	Evidence	Required Fix
+S-01 — WebAuthn signature bypass	CRITICAL	webauthn.ts:300: // If signature length is 0 (test mode), skip verification. webauthn.ts:309: // Key format error in test mode — skip verification. Any credential with a DER-unparseable stored key authenticates without verification. Vulnerability confirmed present and exploitable.	Remove all test mode bypass paths. Store proper COSE keys (fix S-05 first). Signature failure must always reject.
+S-02 — RBAC guard inoperative	CRITICAL	router.ts grep returns zero hits for routeHandler. rbac.ts:153: const handler = ctx.state?.['routeHandler'] — this is never populated. All @Roles / @Permissions decorated routes are unprotected at runtime. Confirmed exploitable.	In router.ts dispatch(), store the matched handler in ctx.state['routeHandler'] before executing the pipeline, OR call Reflect.getMetadata directly in the router using the handler reference.
+S-03 — OAuth2 PKCE sessionManager nullable	HIGH	oauth2.ts:242: sessionManager?: (optional). oauth2.ts:253: this._session = opts.sessionManager ?? null. When null, PKCE state is never persisted — CSRF protection silently disabled.	Make sessionManager required. Add runtime assertion in authorizationUrl() that throws if _session is null.
+S-04 — Unaudited AWS SigV4 implementation	HIGH	
+secret-providers.ts
+ — hand-rolled SigV4. No test vectors. No verification against AWS canonical examples.	Add test vectors from AWS SigV4 test suite. Add describe('AwsSigV4', ...) tests with known inputs and expected signatures.
+S-05 — WebAuthn stores raw authData not COSE key	HIGH	webauthn.ts:219: // Real implementation would parse COSE key from authData; store base64url encoded authData as public key placeholder. Raw authData stored. finishAuthentication attempts createPublicKey({ format: 'der', type: 'spki' }) on this data — always fails.	Parse COSE key from attestedCredentialData in authData using the existing decodeCbor() function. Extract kty/crv/x/y fields. Store as JWK JSON.
+S-06 — API key timing side-channel	MEDIUM	api-keys.ts:121: if (storedHash.length !== computedHash.length || — length comparison executed before timingSafeEqual, leaking buffer length information.	Remove length pre-check. Both hashes are always 32 bytes (SHA-256). Use try/catch around timingSafeEqual instead.
+S-07 — Seeder executes raw SQL files	MEDIUM	seeder.ts executes content (raw file contents) directly via exec(content). No statement validation.	Document risk. Add --dry-run flag.
+S-08 — TODO in pool.ts breaks CI hygiene scan	HIGH	pool.ts:218: // TODO(otel): Instrument this method. CI enforcement workflow (ci-cd-enforcement.yml) scans for TODO and fails the build. This means CI cannot pass in current state.	Either complete the OTel instrumentation (O-01) or replace with a non-TODO comment.
+S-09 — TODO in repository.ts breaks CI hygiene scan	HIGH	repository.ts:127: // TODO: add parameterized queryStream. Same CI enforcement failure.	Complete or remove.
+TESTING
+Finding	Severity	Evidence	Required Fix
+T-01 — Zero auth module tests	CRITICAL	find command returned zero auth test files. No auth.test.ts, webauthn.test.ts, rbac.test.ts, oauth.test.ts, api-keys.test.ts. Zero tests exist for any of the v1.4 auth features.	Write comprehensive auth test suite: ≥60 tests across all 6 auth modules.
+T-02 — Zero tenancy/microservices/enterprise/platform tests	HIGH	grep for auth|tenancy|workflow|Workflow across all test files returns only CLI tests (create.test.ts, generate.test.ts) and system tests — not dedicated module tests.	Write unit tests for all v1.7–v3.0 modules. Minimum 5 tests per file.
+T-03 — Health check tests: 9 of 11 cancelled	HIGH	Confirmed: node --test --test-force-exit dist/tests/health.test.js → # pass 2 / # cancelled 9 / # fail 0. The timeout test still leaves a pending microtask. The fix (using a manually-resolvable promise) was implemented in source but still cancels tests.	The resolve callback approach works but the pending-promise test structure cancels sibling tests. Restructure describe blocks so timeout test is isolated.
+T-04 — No MySQL CI job	HIGH	ci-cd.yml and ci-cd-enforcement.yml — no MySQL service containers. MySQL driver ships without any real-database CI validation.	Add MySQL 8.x service to GitHub Actions.
+T-05 — No benchmarks	HIGH	ls /benchmarks → NO_BENCHMARKS. No benchmark code, no benchmark CI job, no performance data.	Create benchmarks/ with autocannon scripts.
+T-06 — Missing WorkflowEngine, MigrationDiffer, versioning, SDK tests	MEDIUM	No dedicated test files for these modules found.	Add at minimum happy-path tests per module.
+T-07 — MySQL integration tests require live DB (not in CI)	MEDIUM	mysql.test.ts guards with if (!process.env.MYSQL_HOST) process.exit(0). No CI provides this.	Add MySQL service to CI (see T-04).
+T-08 — No end-to-end smoke test	LOW	No test creates a Street app, migrates, inserts, and queries end-to-end.	Add one E2E smoke test in CLI suite.
+DOCUMENTATION
+Finding	Severity	Evidence	Required Fix
+D-01 — No docs for v1.1–v3.0 features	HIGH	docs/ site has getting-started/, security/ (JWT only), database/ (PG only). No auth guide, no observability guide, no jobs guide, no tenancy/microservices/enterprise docs.	Write feature guides for all post-v1.0 modules.
+D-02 — No working example applications	HIGH	ls /examples → NO_EXAMPLES. docs/examples/ has markdown stubs only — no runnable code.	Create ≥3 runnable example apps.
+D-03 — API reference incomplete	MEDIUM	
+api-reference.md
+ is 172 lines, covers only v1.0 exports. 100+ new exported symbols undocumented.	Generate via typedoc. Add TSDoc to all exports.
+D-04 — CHANGELOG not auto-generated	MEDIUM	CHANGELOG.md is manually maintained.	Add conventional-changelog to release workflow.
+D-05 — README doesn't mention v1.1+ features	LOW	README.md — no mention of MySQL, SQLite, logging, metrics, health checks, jobs, auth.	Update README.
+DEVELOPER EXPERIENCE
+Finding	Severity	Evidence	Required Fix
+DX-01 — Generated project may not compile	HIGH	street create templates not verified to include reflect-metadata.	Verify scaffolded project compiles with npm run build. Fix templates.
+DX-02 — @Encrypt() silently does nothing	HIGH	data-policy.ts — decorator exists, metadata is stored, but nothing in StreetPostgresRepository reads street:encrypt or encrypts/decrypts data.	Wire into repository or mark @experimental.
+DX-03 — enableVersioning() not wired into StreetApp	MEDIUM	server.ts grep for enableVersioning returns only registerController(ctor: Constructor) definition — enableVersioning is not called. strategy.ts exports the function but it is never invoked by the framework.	Wire into streetApp() or registerController().
+DX-04 — Seeder brittle placeholder detection	MEDIUM	seeder.ts:71–88: isSqlite check present (correctly avoids the retry), but the fallback catch for the ? → $1 retry still exists at line 86. Complex SQL with ? in string literals will still fail.	Detected pool type is correctly used for DDL. The SELECT query still uses ? with PG fallback — needs to use the detected placeholder unconditionally.
+DX-05 — street dev may fail without npx	MEDIUM	dev.ts uses spawn('npx', ['tsc', ...]).	Use resolved local tsc binary path.
+DX-06 — Missing CLI commands	LOW	No plugin:install, plugin:list, jobs:dashboard, audit:export, compliance:report in 
+index.ts
+ switch.	Register or remove stubs.
+PERFORMANCE
+Finding	Severity	Evidence	Required Fix
+P-01 — No benchmarks	HIGH	Confirmed: no benchmarks/ directory.	Create benchmark suite (see T-05).
+P-02 — Edge adapter spins up full HTTP server per request	HIGH	adapter.ts:127,163,169,188: const tempServer = http.createServer(), await app.listen(port, '127.0.0.1'), http.request({...port...}). Full TCP round-trip per edge invocation. Unfixably slow for edge use.	Implement direct in-process dispatch via an internal StreetApp._handle(req, res) method.
+P-03 — GraphQL schema re-parsed on every call	MEDIUM	No query AST cache in engine.ts.	Add LruCache for parsed query documents.
+P-04 — MySQL introspection confirmed parallel	NONE	Source confirmed to use Promise.all(). Finding was incorrect — no action needed.	
+RELIABILITY
+Finding	Severity	Evidence	Required Fix
+R-01 — WorkflowEngine no distributed lock	HIGH	workflow.ts grep returns no reference to DistributedLock. Two processes can execute same step simultaneously.	Acquire DistributedLock on workflowId before step execution.
+R-02	✓ RESOLVED	See Resolved section.	—
+R-03	✓ RESOLVED	Documented limitation.	—
+R-04 — SQLite MEMFS documented but no runtime warning	MEDIUM	No console.warn when non-:memory: path is used.	Add warning log in SqlitePool constructor for non-:memory: paths.
+R-05	✓ RESOLVED	maxSteps enforced.	—
+DATABASE
+Finding	Severity	Evidence	Required Fix
+DB-01 — MySQL RSA auth sends cleartext	HIGH	wire.ts:608–610: // Server requests full password over TLS or RSA — we don't support RSA here. // Send password in cleartext if server requested it (only safe over TLS). Password sent cleartext to any server requesting RSA. No check that TLS is established.	Reject with error if RSA auth requested and TLS not active. Never send cleartext without verified TLS.
+DB-02 — No MySQL CI	HIGH	Confirmed: no MySQL service in any CI job.	(See T-04)
+DB-03	⚠ PARTIALLY	isSqlite detection works for DDL. SELECT query still has dual-placeholder fallback.	Fix SELECT query to use detected placeholder unconditionally (see DX-04).
+DB-04 — MigrationDiffer undocumented entity contract	LOW	No documentation for entity decorator requirements.	Document @Column decorator contract.
+CI/CD
+Finding	Severity	Evidence	Required Fix
+CI-01 — TODO comments break hygiene CI	HIGH	pool.ts:218 and repository.ts:127 — both TODO comments confirmed present. ci-cd-enforcement.yml would fail build immediately. CI enforcement is currently broken.	Remove or complete both TODOs.
+CI-02 — No benchmark CI job	HIGH	ci-cd.yml and ci-cd-enforcement.yml — no benchmark job.	Create benchmark job.
+CI-03 — No MySQL CI service	HIGH	(See T-04, DB-02.)	Add MySQL service container.
+CI-04 — CLI coverage threshold risk	MEDIUM	diagnostics.ts and seed.ts added but not tested in CLI coverage run.	Verify with npm run coverage -w packages/cli.
+CI-05 — CHANGELOG not auto-generated	LOW	(See D-04.)	—
+OBSERVABILITY
+Finding	Severity	Evidence	Required Fix
+O-01 — OTel DB span is TODO only	HIGH	pool.ts:218: // TODO(otel): Instrument this method. Zero DB spans emitted.	Complete child span instrumentation. Also removes the CI-01 blocker.
+O-02 — Correlation ID format undocumented	MEDIUM	No documentation for UUID v4 format.	Document in observability guide.
+O-03 — Heap metric collected per-request	LOW	prometheusMiddleware calls process.memoryUsage() on every request.	Move to background setInterval.
+DEPLOYMENT
+Finding	Severity	Evidence	Required Fix
+DEP-01/P-02 — Edge adapter broken	HIGH	adapter.ts:188: await app.listen(port) inside request handler. Full TCP server per edge request.	Implement direct dispatch.
+DEP-02 — STREET_READINESS_DELAY_MS not implemented	MEDIUM	No reference found in health.ts or server.ts.	Implement in HealthCheckRegistry.runReadiness().
+DEP-03 — GCP Cloud Run log format not implemented	MEDIUM	No K_SERVICE check in Logger constructor.	Add Cloud Run format detection.
+DEP-04 — Kubernetes manifest missing production fields	LOW	deployment.ts generates basic manifests without imagePullSecrets, serviceAccountName, namespace.	Add optional fields.
+Scores
+Security Score: 28 / 100
+Component	Score
+Core HTTP security (headers, XSS, CORS, rate limiting)	90/100
+JWT/Session/Vault (v1.0)	88/100
+WebAuthn	5/100 — COSE key storage broken; signature bypass exists
+RBAC	0/100 — Guard is architecturally inoperative
+OAuth2	45/100 — PKCE framework exists; state not persisted when session manager absent
+API Keys	70/100 — timing side-channel present
+Refresh Tokens	65/100 — correct design, untested
+MySQL Auth	40/100 — cleartext password sent when RSA requested
+Testing Score: 41 / 100
+Component	Coverage
+v1.0 core (HTTP, router, DI, PG, wire protocol)	~90%
+v1.1 (hot reload, generators, config, diagnostics)	~85%
+v1.2 (SQLite, query-builder, schema-inspector)	~75%
+v1.3 (logger, prometheus, otel, route-profiler)	~70%
+v1.4 auth	0%
+v1.5 jobs/scheduler	~60%
+v1.6 GraphQL	~65%
+v1.7–v3.0 tenancy/microservices/enterprise/platform	~5%
+MySQL integration	0% (no CI)
+Benchmarks	0%
+198 of 199 tests pass. 1 test fails (route-profiler P99 assertion).
+
+Documentation Score: 52 / 100
+Component	Status
+Getting Started (v1.0)	95% complete — 387 lines, comprehensive
+PostgreSQL + Repository	85% complete
+Security/JWT (v1.0)	80% complete
+WebSockets, Multipart	75% complete
+Auth (OAuth2, RBAC, API Keys, WebAuthn)	0%
+Observability (Logger, Prometheus, OTel, Health)	0%
+Jobs/Cron/Workflow	0%
+Tenancy/Microservices/Enterprise	0%
+Runnable examples	0%
+API reference (v1.1+ exports)	5%
+Performance Score: 22 / 100
+Component	Status
+Benchmark suite	0% — does not exist
+Benchmark CI job	0% — does not exist
+Edge adapter efficiency	5% — full TCP server per request
+GraphQL query caching	0% — no AST cache
+Core HTTP throughput	Untested — presumed competitive given zero-dep design
+Reliability Score: 62 / 100
+Component	Score
+PgPool bounded queues	95%
+LruCache bounded	95%
+JobQueue ring buffers	90%
+CronScheduler timer cleanup	85%
+AuditLogger timer accumulation	FIXED — 90%
+AgentExecutor bounded history	FIXED — 85%
+WorkflowEngine distributed lock	0% — not implemented
+SqlitePool MEMFS warning	40% — not warned
+Developer Experience Score: 49 / 100
+Component	Score
+CLI (create/dev/build/generate/migrate)	85%
+street info/doctor/audit	90%
+@Encrypt() decorator works	0% — silently does nothing
+API versioning works	15% — API exists, not integrated
+RBAC guards work	0% — inoperative
+Examples available	0%
+Missing CLI commands	30%
+Production Readiness Score: 31 / 100
+Production Readiness Checklist
+Criterion	Status	Evidence
+0 Critical security findings	✗ FAILED	S-01 (WebAuthn bypass) and T-01 (no auth tests) — 2 Critical findings remain
+0 High security findings	✗ FAILED	S-02 (RBAC inoperative), S-03, S-04, S-05, S-08, S-09, DB-01, CI-01
+Auth system verified	✗ FAILED	Zero auth tests; two critical vulnerabilities unpatched
+WebAuthn verified	✗ FAILED	Signature bypass present; COSE key storage broken
+RBAC verified	✗ FAILED	Guard reads field never set by router; all protected routes are open
+OAuth2 verified	✗ FAILED	sessionManager nullable; PKCE state lost without session manager
+CI passing	✗ FAILED	Code-hygiene scan would fail on 2 TODO comments; no MySQL CI; no benchmark CI
+Benchmarks available	✗ FAILED	No benchmarks/ directory; no benchmark data
+Documentation complete	✗ FAILED	60% of API surface undocumented; zero auth/observability/jobs docs
+Examples available	✗ FAILED	No examples/ directory; no runnable example apps
+Memory audit passed	⚠ PARTIAL	Core memory safety good; WorkflowEngine lacks distributed lock
+Security audit passed	✗ FAILED	2 Critical + 6 High security findings unresolved
+Checklist result: 0 of 12 criteria fully met. 1 partially met.
+
+Final Verdict
+✗ NOT READY
+Street Framework remains in the same state as when the Gap Analysis was published. No remediation work has been performed on any Critical or High finding.
+
+The framework has three distinct tiers:
+
+Tier 1 — Solid (v1.0 core): The PostgreSQL wire protocol, HTTP server, router, DI container, JWT/session/vault security, and v1.1 developer tooling are well-implemented, tested, and approaching production quality for their own scope.
+
+Tier 2 — Broken by design (v1.4 auth): WebAuthn signature verification has a production bypass. RBAC decorators are architecturally disconnected from the router and will never enforce access control in any deployment. These are not edge cases — they are the primary security features of the 1.4 release and both fail completely.
+
+Tier 3 — Untested features (v1.5–v3.0): Jobs, tenancy, microservices, enterprise, and platform features have source code but zero tests. They may work or they may not — there is no evidence either way.
+
+The minimum work required to reach "Mostly Ready" status:
+
+Fix S-01 + S-05 (WebAuthn COSE key + bypass removal) — 2.5 days
+Fix S-02 (RBAC router wiring) — 1.5 days
+Fix S-03 (OAuth2 session required) — 0.5 days
+Fix CI-01/S-08/S-09 (remove TODOs) — 0.5 days
+Write auth test suite T-01 — 5 days
+Add MySQL CI job T-04 — 0.5 days
+Create benchmark suite P-01 — 3 days
+Fix edge adapter DEP-01 — 2 days
+Write 3 example apps D-02 — 4 days
+Estimated minimum effort to reach "Mostly Ready": 3–4 weeks of focused engineering.
+Estimated effort to reach "Production Ready": 8–10 weeks.
+Estimated effort to reach "Enterprise Ready": 16–20 weeks.
