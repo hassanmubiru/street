@@ -1,5 +1,6 @@
 import { type Socket } from 'node:net';
 import { Readable } from 'node:stream';
+import type { DbResult } from '../types.js';
 interface ServerGreeting {
     protocolVersion: number;
     serverVersion: string;
@@ -43,6 +44,7 @@ export declare class MysqlConnection {
     private pendingPrepare;
     private sha2State;
     private sha2Seed;
+    private _inExec;
     private seq;
     get isReady(): boolean;
     get isClosed(): boolean;
@@ -58,7 +60,6 @@ export declare class MysqlConnection {
     protected _connect(opts: MysqlConnectOptions): Promise<void>;
     private _onData;
     private _processBuffer;
-    private _inExec;
     private _handlePacket;
     private _handleAuthPacket;
     private _handleQueryPacket;
@@ -70,7 +71,27 @@ export declare class MysqlConnection {
     private execExpectRows;
     private execPendingQuery;
     private execStreamTarget;
-    if(firstByte: any): any;
+    private _handleExecPacket;
+    private _resetExecState;
+    /** Parse a binary protocol result row. */
+    private _parseBinaryRow;
+    /**
+     * Execute a SQL query.
+     * - With params: uses COM_STMT_PREPARE + COM_STMT_EXECUTE (binary protocol).
+     * - Without params: uses COM_QUERY (text protocol).
+     */
+    query(sql: string, params?: unknown[]): Promise<DbResult>;
+    private _queryText;
+    private _execPrepared;
+    private _prepare;
+    private _execute;
+    private _stmtClose;
+    /**
+     * Execute a SELECT query and return a Readable stream of rows.
+     * Uses text protocol (COM_QUERY) with socket.pause()/resume() for backpressure.
+     */
+    queryStream(sql: string): MysqlResultStream;
+    close(): Promise<void>;
 }
 export {};
 //# sourceMappingURL=wire.d.ts.map
