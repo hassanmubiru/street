@@ -174,3 +174,81 @@ describe('MysqlConnection — transaction rollback', () => {
   });
 });
 
+
+// ─── 6. Concurrent queries via MysqlPool ─────────────────────────────────────
+describe('MysqlPool — concurrent queries', () => {
+  let pool: MysqlPool;
+
+  before(async () => {
+    pool = new MysqlPool({ ...opts, minConnections: 2, maxConnections: 5 });
+    await pool.query('CREATE TABLE IF NOT EXISTS _street_test_concurrent (id INT, val INT)');
+    // Seed rows
+    for (let i = 0; i < 10; i++) {
+      await pool.query('INSERT INTO _street_test_concurrent VALUES (?, ?)', [i, i * 10]);
+    }
+  });
+
+  after(async () => {
+    await pool.query('DROP TABLE IF EXISTS _street_test_concurrent');
+    await pool.close();
+  });
+
+  it('runs 8 concurrent SELECT queries and returns correct results', async () => {
+    const promises = Array.from({ length: 8 }, (_, i) =>
+      pool.query('SELECT val FROM _street_test_concurrent WHERE id = ?', [i]),
+    );
+    const results = await Promise.all(promises);
+
+    for (let i = 0; i < 8; i++) {
+      const row = results[i]!.rows[0];
+      assert.ok(row, `expected row for id=${i}`);
+      assert.equal(row['val'], String(i * 10));
+    }
+  });
+
+  it('pool transaction commits correctly', async () => {
+    await pool.transaction(async (conn) => {
+      await conn.query("INSERT INTO _street_test_concurrent VALUES (99, 990)");
+    });
+    const r = await pool.query('SELECT val FROM _street_test_concurrent WHERE id = 99');
+    assert.equal(r.rows[0]!['val'], '990');
+  });
+
+  it('pool transaction rolls back on error', async () => {
+    await assert.rejects(
+      () => pool.transaction(async (conn) => {
+        await conn.query("INSERT INTO _street_test_concurrent VALUES (100, 1000)");
+        throw new Error('deliberate rollback');
+      }),
+      /deliberate rollback/,
+    );
+    const r = await pool.query('SELECT COUNT(*) AS cnt FROM _street_test_concurrent WHERE id = 100');
+    assert.equal(r.rows[0]!['cnt'], '0');
+  });
+});
+
+// ─── 7. MysqlPool lifecycle ───────────────────────────────────────────────────
+describe('MysqlPool — lifecycle', () => {
+  it('close() shuts down cleanly', async () => {
+    const pool = new MysqlPool({ ...opts, minConnections: 1, maxConnections: 2 });
+    await pool.query('SELECT 1');
+    await assert.doesNotReject(() => pool.close());
+  });
+
+  it('rejects queries after close', async () => {
+    const pool = new MysqlPool({ ...opts, minConnections: 0, maxConnections: 1 });
+    await pool.close();
+    await assert.rejects(() => pool.query('SELECT 1'), /closed/i);
+  });
+
+  it('pool.size and pool.idle reflect state', async () => {
+    const pool = new MysqlPool({ ...opts, minConnections: 0, maxConnections: 3 });
+    try {
+      await pool.query('SELECT 1');
+      assert.ok(pool.size >= 1);
+      assert.ok(pool.idle >= 1);
+    } finally {
+      await pool.close();
+    }
+  });
+});
