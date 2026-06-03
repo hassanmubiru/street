@@ -16,7 +16,6 @@ import { tmpdir } from 'node:os';
 import { SqlitePool } from '../database/sqlite/pool.js';
 import { StreetSeeder } from '../database/seeder.js';
 import { QueryProfiler } from '../database/profiler.js';
-import type { QueryRecord } from '../database/profiler.js';
 import type { DbResult } from '../database/types.js';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
