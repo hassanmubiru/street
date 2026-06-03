@@ -4,10 +4,14 @@ import { BadRequestException, NotFoundException, isStreetException } from '../ht
 import { diagnosticsReporter } from '../diagnostics/reporter.js';
 export class Router {
     routes = [];
+    _profiler;
+    constructor(opts) {
+        this._profiler = opts?.profiler;
+    }
     /** Compile and register a route */
     add(method, path, middlewares, handler, validate) {
         const { pattern, paramNames } = compilePath(path);
-        this.routes.push({ method: method.toUpperCase(), pattern, paramNames, middlewares, handler, validate });
+        this.routes.push({ method: method.toUpperCase(), pattern, paramNames, middlewares, handler, validate, pathTemplate: path });
     }
     /** Match a request and execute the middleware pipeline */
     async dispatch(ctx) {
@@ -24,7 +28,24 @@ export class Router {
                 await route.handler(c);
             },
         ];
-        await runPipeline(ctx, pipeline, 0);
+        if (this._profiler) {
+            const start = process.hrtime.bigint();
+            let isError = false;
+            try {
+                await runPipeline(ctx, pipeline, 0);
+            }
+            catch (err) {
+                isError = true;
+                throw err;
+            }
+            finally {
+                const latencyNs = process.hrtime.bigint() - start;
+                this._profiler.record(route.method, route.pathTemplate, latencyNs, isError);
+            }
+        }
+        else {
+            await runPipeline(ctx, pipeline, 0);
+        }
         return true;
     }
     match(method, path) {

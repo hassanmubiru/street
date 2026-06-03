@@ -1,7 +1,13 @@
 import type { StreetContext } from '../core/context.js';
 import type { MiddlewareFn, ValidationSchema } from '../core/types.js';
+import type { RouteProfiler } from '../diagnostics/route-profiler.js';
+export interface RouterOptions {
+    profiler?: RouteProfiler;
+}
 export declare class Router {
     private readonly routes;
+    private readonly _profiler;
+    constructor(opts?: RouterOptions);
     /** Compile and register a route */
     add(method: string, path: string, middlewares: MiddlewareFn[], handler: (ctx: StreetContext) => Promise<void> | void, validate?: ValidationSchema): void;
     /** Match a request and execute the middleware pipeline */
