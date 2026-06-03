@@ -119,15 +119,19 @@ void describe('InfoCommand', () => {
         // and are not the header / blank lines.
         const dataRows = output.logs.filter((l) => /^ {2}\S/.test(l) && !l.includes('Street Framework') && l.trim() !== '');
         assert.ok(dataRows.length >= 3, `Expected at least 3 table rows, got: ${dataRows.join(' | ')}`);
-        // Find where each value starts: skip the 2-space prefix, skip label chars (non-space),
-        // then skip any padding spaces — the remaining position is the value start column.
+        // Find where each value starts. The format is:
+        //   '  ' + label.padEnd(labelWidth) + value
+        // labelWidth = maxLabelLength + 2, so the gap between label text and value
+        // is always >=2 spaces. We locate the first run of >=2 consecutive spaces
+        // to find where the value column begins.
+        const twoSpaces = / {2,}/g;
         const valueStartCols = dataRows.map((row) => {
-            let i = 2; // skip leading '  '
-            while (i < row.length && row[i] !== ' ')
-                i++; // skip label text
-            while (i < row.length && row[i] === ' ')
-                i++; // skip padding
-            return i;
+            // Reset lastIndex for global regex
+            twoSpaces.lastIndex = 2; // start searching after the '  ' row prefix
+            const m = twoSpaces.exec(row);
+            if (!m)
+                return -1;
+            return m.index + m[0].length;
         });
         const uniqueCols = new Set(valueStartCols);
         assert.equal(uniqueCols.size, 1, `Expected all value columns to be aligned, got cols: ${valueStartCols.join(',')} for rows:\n${dataRows.join('\n')}`);
