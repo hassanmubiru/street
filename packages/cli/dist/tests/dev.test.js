@@ -11,16 +11,18 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { EventEmitter } from 'node:events';
 // ── Minimal ChildProcess stub ────────────────────────────────────────────────
-// We create a lightweight EventEmitter-based stand-in for `ChildProcess` so
-// we can control spawn() return values without spawning real processes.
+// Lightweight EventEmitter-based stand-in for ChildProcess so we can control
+// spawn() return values without spawning real processes.
 class FakeChildProcess extends EventEmitter {
     exitCode = null;
     killed = false;
+    // DevWatcher pipes stdout/stderr; provide readable EventEmitter stubs.
+    stdout = new EventEmitter();
+    stderr = new EventEmitter();
     kill(signal) {
         if (this.killed)
             return false;
         this.killed = true;
-        // Simulate async exit after SIGTERM/SIGKILL.
         setImmediate(() => {
             this.exitCode = 0;
             this.emit('exit', 0, signal ?? 'SIGTERM');
@@ -28,10 +30,6 @@ class FakeChildProcess extends EventEmitter {
         return true;
     }
 }
-// ── Module-level mock helpers ────────────────────────────────────────────────
-// Node's `node:test` module-mock API is only available in ≥v22.
-// We use manual prototype patching with proper cleanup instead, which works
-// across Node ≥20 (the minimum required by this project).
 // ── Temporary src directory helper ──────────────────────────────────────────
 function makeTempSrcDir() {
     const base = mkdtempSync(join(tmpdir(), 'dev-test-'));
@@ -40,6 +38,18 @@ function makeTempSrcDir() {
     return {
         srcDir,
         cleanup: () => rmSync(base, { recursive: true, force: true }),
+    };
+}
+// ── Spawn factory: always succeeds ──────────────────────────────────────────
+function makeSuccessSpawn(originalSpawn) {
+    // @ts-expect-error — intentional runtime override for testing
+    return (..._args) => {
+        const fake = new FakeChildProcess();
+        setImmediate(() => {
+            fake.exitCode = 0;
+            fake.emit('close', 0, null);
+        });
+        return fake;
     };
 }
 // ── Test suite ───────────────────────────────────────────────────────────────
@@ -57,29 +67,11 @@ void describe('DevWatcher integration tests', () => {
             cleanup();
         });
         void it('closes all watcher handles after stop() is called', async () => {
-            // Dynamically import DevWatcher so we can patch child_process.spawn
-            // before the module runs its first spawn.
             const { DevWatcher } = await import('@streetjs/core');
-            // ── Patch child_process.spawn to avoid real tsc/node processes ────────
             const cp = await import('node:child_process');
             const originalSpawn = cp.spawn;
-            // compile() call returns a fake tsc process that exits with code 0.
-            // restartServer() call returns a fake node process.
-            let spawnCallCount = 0;
-            // @ts-expect-error — intentional override for testing
-            cp.spawn = (..._args) => {
-                spawnCallCount++;
-                const fake = new FakeChildProcess();
-                // Emit stdout/stderr data events that the real spawn provides
-                fake.stdout = new EventEmitter();
-                fake.stderr = new EventEmitter();
-                // Simulate quick exit with success
-                setImmediate(() => {
-                    fake.exitCode = 0;
-                    fake.emit('close', 0, null);
-                });
-                return fake;
-            };
+            // @ts-expect-error — intentional runtime override for testing
+            cp.spawn = makeSuccessSpawn(originalSpawn);
             try {
                 const watcher = new DevWatcher({
                     srcDir,
@@ -88,22 +80,15 @@ void describe('DevWatcher integration tests', () => {
                     entrypoint: join(srcDir, '..', 'dist', 'main.js'),
                 });
                 await watcher.start();
-                // The watcher should have opened at least one FSWatcher handle.
-                // Access the private array via type casting.
                 const handles = watcher.watcherHandles;
-                assert.ok(handles.length > 0, 'Expected at least one watcher handle after start()');
-                // Capture the handles before stop() for verification.
-                const handlesBefore = [...handles];
+                assert.ok(handles.length > 0, 'Expected at least one FSWatcher handle after start()');
+                const countBefore = handles.length;
                 await watcher.stop();
-                // After stop(), the handles array must be empty (all closed + cleared).
-                assert.strictEqual(handles.length, 0, 'watcherHandles array must be empty after stop() — no listener leaks');
-                // Also verify that calling close() again on the captured handles
-                // does not throw — they should already be closed/harmless.
-                assert.ok(handlesBefore.length > 0, 'Captured handles before stop()');
+                // After stop(), the internal array must be cleared (all handles closed).
+                assert.strictEqual(handles.length, 0, `watcherHandles must be empty after stop() — no listener leaks. Had ${countBefore} before stop.`);
             }
             finally {
                 cp.spawn = originalSpawn;
-                _ = spawnCallCount; // suppress unused-variable warning
             }
         });
     });
@@ -124,16 +109,15 @@ void describe('DevWatcher integration tests', () => {
             const cp = await import('node:child_process');
             const originalSpawn = cp.spawn;
             let compileCallCount = 0;
-            // @ts-expect-error — intentional override for testing
+            // @ts-expect-error — intentional runtime override for testing
             cp.spawn = (...args) => {
-                const cmdArgs = args;
-                // Detect compile calls: they use 'npx' with 'tsc'
-                if (cmdArgs[0] === 'npx' || (Array.isArray(cmdArgs[1]) && cmdArgs[1].includes('tsc'))) {
+                const [cmd, cmdArgs] = args;
+                // DevWatcher spawns 'npx' ['tsc', '--incremental'] for compilation.
+                const isTsc = cmd === 'npx' ||
+                    (Array.isArray(cmdArgs) && cmdArgs.includes('tsc'));
+                if (isTsc)
                     compileCallCount++;
-                }
                 const fake = new FakeChildProcess();
-                fake.stdout = new EventEmitter();
-                fake.stderr = new EventEmitter();
                 setImmediate(() => {
                     fake.exitCode = 0;
                     fake.emit('close', 0, null);
@@ -148,17 +132,15 @@ void describe('DevWatcher integration tests', () => {
                     entrypoint: join(srcDir, '..', 'dist', 'main.js'),
                 });
                 await watcher.start();
-                // Record compile calls after initial start.
+                // Record compile count after initial boot.
                 const compileCountAfterStart = compileCallCount;
                 // Trigger a file-change by writing a .ts file in srcDir.
                 writeFileSync(join(srcDir, 'app.ts'), 'export const x = 1;');
-                // Wait longer than the debounce window (150 ms) to allow the
-                // recompile to fire.
+                // Wait longer than the debounce window (150 ms) to allow recompile to fire.
                 await new Promise((resolve) => setTimeout(resolve, 400));
                 await watcher.stop();
-                // compile() must have been called at least once more than after start.
                 assert.ok(compileCallCount > compileCountAfterStart, `Expected at least one additional compile() call after file change. ` +
-                    `compile calls before: ${compileCountAfterStart}, after: ${compileCallCount}`);
+                    `Calls before trigger: ${compileCountAfterStart}, after: ${compileCallCount}`);
             }
             finally {
                 cp.spawn = originalSpawn;
@@ -181,41 +163,37 @@ void describe('DevWatcher integration tests', () => {
             const { DevWatcher } = await import('@streetjs/core');
             const cp = await import('node:child_process');
             const originalSpawn = cp.spawn;
-            // Phase tracking: 'initial' → initial compile/server, 'failing' → fail compile
+            // 'initial' = first compile+server; 'failing' = simulate type error
             let phase = 'initial';
             let serverKillCount = 0;
             let serverFakeProcess = null;
-            // Intercept spawn so we can track the server fake process and
-            // make subsequent tsc calls fail.
-            // @ts-expect-error — intentional override for testing
+            // @ts-expect-error — intentional runtime override for testing
             cp.spawn = (...args) => {
-                const cmdArgs = args;
-                const isNode = cmdArgs[0] === 'node';
-                const isTsc = cmdArgs[0] === 'npx' ||
-                    (Array.isArray(cmdArgs[1]) && cmdArgs[1].includes('tsc'));
+                const [cmd, cmdArgs] = args;
+                const isNode = cmd === 'node';
+                const isTsc = cmd === 'npx' ||
+                    (Array.isArray(cmdArgs) && cmdArgs.includes('tsc'));
                 const fake = new FakeChildProcess();
-                fake.stdout = new EventEmitter();
-                fake.stderr = new EventEmitter();
                 if (isNode) {
-                    // This is the server process — capture it and track kills.
+                    // Server process: track kill() calls, stay running indefinitely.
                     const originalKill = fake.kill.bind(fake);
                     fake.kill = (signal) => {
                         serverKillCount++;
                         return originalKill(signal);
                     };
                     serverFakeProcess = fake;
-                    // Server stays running — does NOT emit exit on its own.
+                    // Intentionally do NOT emit 'exit' — server stays "alive".
                 }
                 else if (isTsc) {
                     if (phase === 'initial') {
-                        // Initial compile succeeds.
+                        // Initial compile succeeds → server can boot.
                         setImmediate(() => {
                             fake.exitCode = 0;
                             fake.emit('close', 0, null);
                         });
                     }
                     else {
-                        // Failing compile: exit code 1 (type error).
+                        // Failing compile (type error) → exit code 1.
                         setImmediate(() => {
                             fake.exitCode = 1;
                             fake.emit('close', 1, null);
@@ -245,12 +223,12 @@ void describe('DevWatcher integration tests', () => {
                 // Switch to failing mode and trigger a file change.
                 phase = 'failing';
                 writeFileSync(join(srcDir, 'broken.ts'), 'const x: string = 42;');
-                // Wait for debounce + async compile.
+                // Wait for debounce (150 ms) + async compile to complete.
                 await new Promise((resolve) => setTimeout(resolve, 500));
-                // The server should NOT have been killed due to compile failure.
-                assert.strictEqual(serverKillCount, killsAfterStart, `Server kill count should not increase when compile fails. ` +
+                // The server must NOT have been killed due to the compile failure.
+                assert.strictEqual(serverKillCount, killsAfterStart, `Server must not be killed when compile() returns false. ` +
                     `kills before: ${killsAfterStart}, kills after: ${serverKillCount}`);
-                // Explicitly stop the watcher (this WILL kill the server — that's ok).
+                // Stop the watcher (this legitimately kills the server — that's fine).
                 await watcher.stop();
             }
             finally {
@@ -259,7 +237,4 @@ void describe('DevWatcher integration tests', () => {
         });
     });
 });
-// Suppress TS unused-variable errors for spawnCallCount assignment used
-// only for side-effect suppression.
-let _;
 //# sourceMappingURL=dev.test.js.map
