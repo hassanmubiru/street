@@ -168,3 +168,18 @@ export type { WebAuthnConfig, PublicKeyCredentialCreationOptionsJSON, PublicKeyC
 // ── Auth: Session Store & Audit ───────────────────────────────────────────────
 export { StreetSessionStore, sessionRevocationMiddleware, AuditWriter, SESSION_STORE_MIGRATION_SQL, AUDIT_LOG_MIGRATION_SQL } from './auth/session-store.js';
 export type { SessionData as ServerSessionData, SessionStorePool, AuditEvent, AuditRecord } from './auth/session-store.js';
+
+// ── Jobs: Queue, Scheduler, Workflow ─────────────────────────────────────────
+export {
+  JobQueue,
+  Job,
+  STREET_JOBS_MIGRATION_SQL,
+  STREET_DLQ_MIGRATION_SQL,
+} from './jobs/queue.js';
+export type { JobHandler, JobContext, RetryPolicy, JobQueuePool } from './jobs/queue.js';
+export { CronScheduler, CronParseError } from './jobs/scheduler.js';
+export {
+  WorkflowEngine,
+  STREET_WORKFLOWS_MIGRATION_SQL,
+} from './jobs/workflow.js';
+export type { WorkflowStep, WorkflowContext } from './jobs/workflow.js';
