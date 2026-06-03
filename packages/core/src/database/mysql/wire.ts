@@ -537,6 +537,8 @@ export class MysqlConnection {
   }
 
 
+  private _inExec = false; // true when current query is binary-protocol execute
+
   private _handlePacket(body: Buffer): void {
     if (body.length === 0) return;
 
@@ -548,7 +550,11 @@ export class MysqlConnection {
     }
 
     if (this.state === 'query') {
-      this._handleQueryPacket(body, firstByte);
+      if (this._inExec) {
+        this._handleExecPacket(body, firstByte);
+      } else {
+        this._handleQueryPacket(body, firstByte);
+      }
       return;
     }
   }
@@ -833,11 +839,10 @@ export class MysqlConnection {
   private execExpectRows = false;
   private execPendingQuery: PendingQuery | null = null;
   private execStreamTarget: MysqlResultStream | null = null;
-
-  private _handleExecPacket(body: Buffer, firstByte: number): void {
     if (firstByte === 0xff) {
       const err = parseErrPacket(body);
       this.state = 'ready';
+      this._inExec = false;
       const pq = this.execPendingQuery;
       const st = this.execStreamTarget;
       this.execPendingQuery = null;
@@ -852,6 +857,7 @@ export class MysqlConnection {
     if (firstByte === 0x00 && this.execColCount === 0 && !this.execExpectRows) {
       const ok = parseOkPacket(body);
       this.state = 'ready';
+      this._inExec = false;
       const pq = this.execPendingQuery;
       this.execPendingQuery = null;
       this._resetExecState();
@@ -869,6 +875,7 @@ export class MysqlConnection {
       }
       // End of result set
       this.state = 'ready';
+      this._inExec = false;
       const pq = this.execPendingQuery;
       const st = this.execStreamTarget;
       this.execPendingQuery = null;
@@ -1042,12 +1049,12 @@ export class MysqlConnection {
     this.state = 'query';
     this.seq = 0;
     this._resetExecState();
+    this._inExec = true;
 
     return new Promise<DbResult>((resolve, reject) => {
       const cmd = 'SELECT';
       this.execPendingQuery = { resolve, reject, rows: [], command: cmd, affectedRows: 0, lastInsertId: 0 };
 
-      // Override _handleQueryPacket for exec responses
       const execBody = buildStmtExecutePacket(stmt.stmtId, params);
       const pkt = wrapPacket(execBody, this.seq++);
       this.socket?.write(pkt);
@@ -1061,4 +1068,119 @@ export class MysqlConnection {
     const pkt = wrapPacket(body, this.seq++);
     this.socket?.write(pkt);
   }
+
+
+  // ─── Public API: queryStream (task 6.5) ────────────────────────────────────
+  /**
+   * Execute a SELECT query and return a Readable stream of rows.
+   * Uses text protocol (COM_QUERY) with socket.pause()/resume() for backpressure.
+   */
+  queryStream(sql: string): MysqlResultStream {
+    if (this.state !== 'ready') throw new Error('MySQL connection not ready');
+
+    this.state = 'query';
+    this.seq = 0;
+    this.columns = [];
+    this.colCount = 0;
+    this.colsReceived = 0;
+    this.expectEof = false;
+
+    const stream = new MysqlResultStream();
+
+    // When the consumer is ready for more data, resume the socket
+    stream.on('drain', () => { this.socket?.resume(); });
+
+    this.streamTarget = stream;
+    this.pendingQuery = { resolve: () => {}, reject: () => {}, rows: [], command: 'SELECT', affectedRows: 0, lastInsertId: 0 };
+
+    const sqlBuf = Buffer.from(sql, 'utf8');
+    const body = Buffer.allocUnsafe(1 + sqlBuf.length);
+    body[0] = COM_QUERY;
+    sqlBuf.copy(body, 1);
+    const pkt = wrapPacket(body, this.seq++);
+    this.socket?.write(pkt);
+
+    return stream;
+  }
+
+  // ─── Close ────────────────────────────────────────────────────────────────
+  async close(): Promise<void> {
+    if (this.state === 'closed') return;
+    this.state = 'closed';
+    try {
+      if (this.socket && !this.socket.destroyed) {
+        const quitBody = Buffer.from([COM_QUIT]);
+        const pkt = wrapPacket(quitBody, 0);
+        this.socket.write(pkt);
+        this.socket.destroy();
+      }
+    } catch {
+      // Ignore errors on close
+    }
+    this.socket = null;
+  }
+}
+
+
+// ─── COM_STMT_EXECUTE packet builder ─────────────────────────────────────────
+function buildStmtExecutePacket(stmtId: number, params: unknown[]): Buffer {
+  const numParams = params.length;
+
+  // Null bitmap
+  const nullBitmapLen = Math.ceil(numParams / 8);
+  const nullBitmap = Buffer.alloc(nullBitmapLen, 0);
+
+  // Mark null params in bitmap
+  for (let i = 0; i < numParams; i++) {
+    if (params[i] === null || params[i] === undefined) {
+      nullBitmap[Math.floor(i / 8)]! |= (1 << (i % 8));
+    }
+  }
+
+  // Type + value buffers
+  const typeBufs: Buffer[] = [];
+  const valBufs: Buffer[] = [];
+
+  for (let i = 0; i < numParams; i++) {
+    const p = params[i];
+    if (p === null || p === undefined) {
+      // NULL — type FIELD_TYPE_NULL, no value
+      const t = Buffer.allocUnsafe(2);
+      t[0] = FIELD_TYPE_NULL; t[1] = 0;
+      typeBufs.push(t);
+    } else if (typeof p === 'number' && Number.isInteger(p)) {
+      const t = Buffer.allocUnsafe(2); t[0] = 3 /* LONG */; t[1] = 0;
+      const v = Buffer.allocUnsafe(4); v.writeInt32LE(p, 0);
+      typeBufs.push(t); valBufs.push(v);
+    } else if (typeof p === 'number') {
+      const t = Buffer.allocUnsafe(2); t[0] = 5 /* DOUBLE */; t[1] = 0;
+      const v = Buffer.allocUnsafe(8); v.writeDoubleLE(p, 0);
+      typeBufs.push(t); valBufs.push(v);
+    } else {
+      // String/bool/Buffer — send as VARCHAR (lenenc string)
+      const str = typeof p === 'boolean' ? (p ? '1' : '0') : String(p);
+      const strBuf = Buffer.from(str, 'utf8');
+      const lenBuf = writeLenEncInt(strBuf.length);
+      const t = Buffer.allocUnsafe(2); t[0] = FIELD_TYPE_VARCHAR; t[1] = 0;
+      typeBufs.push(t);
+      valBufs.push(Buffer.concat([lenBuf, strBuf]));
+    }
+  }
+
+  // Assemble packet
+  // header: COM_STMT_EXECUTE(1) + stmtId(4) + flags(1) + iteration(4) + nullBitmap + newParamsBound(1) + types + values
+  const typesTotal = typeBufs.reduce((n, b) => n + b.length, 0);
+  const valsTotal  = valBufs.reduce((n, b) => n + b.length, 0);
+
+  const header = Buffer.allocUnsafe(1 + 4 + 1 + 4 + nullBitmapLen + 1);
+  let off = 0;
+  header[off++] = COM_STMT_EXECUTE;
+  header.writeUInt32LE(stmtId, off); off += 4;
+  header[off++] = 0; // flags
+  header.writeUInt32LE(1, off); off += 4; // iteration-count
+  nullBitmap.copy(header, off); off += nullBitmapLen;
+  header[off++] = 1; // new-params-bound-flag
+
+  return Buffer.concat([header, ...typeBufs, ...valBufs]);
+}
 
