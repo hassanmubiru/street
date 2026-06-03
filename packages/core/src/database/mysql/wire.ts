@@ -1177,9 +1177,6 @@ function buildStmtExecutePacket(stmtId: number, params: unknown[]): Buffer {
 
   // Assemble packet
   // header: COM_STMT_EXECUTE(1) + stmtId(4) + flags(1) + iteration(4) + nullBitmap + newParamsBound(1) + types + values
-  const typesTotal = typeBufs.reduce((n, b) => n + b.length, 0);
-  const valsTotal  = valBufs.reduce((n, b) => n + b.length, 0);
-
   const header = Buffer.allocUnsafe(1 + 4 + 1 + 4 + nullBitmapLen + 1);
   let off = 0;
   header[off++] = COM_STMT_EXECUTE;
