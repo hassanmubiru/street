@@ -92,6 +92,10 @@ export type { WatcherOptions } from './dev/watcher.js';
 export { defineConfig, ConfigValidationError } from './config/validator.js';
 export type { FieldType, ConfigFieldDef, ConfigSchema, ConfigResult } from './config/validator.js';
 
+// ── Diagnostics ───────────────────────────────────────────────────────────────
+export { DiagnosticsReporter, diagnosticsReporter } from './diagnostics/reporter.js';
+export type { DiagnosticEvent } from './diagnostics/reporter.js';
+
 // ── CLI ───────────────────────────────────────────────────────────────────────
 export { CliKernel, parseArgv } from './cli/kernel.js';
 export type { ParsedArgs, CliKernelOptions } from './cli/kernel.js';
