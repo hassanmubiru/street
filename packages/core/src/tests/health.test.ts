@@ -60,7 +60,10 @@ describe('HealthCheckRegistry', () => {
     const registry = new HealthCheckRegistry();
     registry.addCheck(
       'slow',
-      () => new Promise<never>(() => { /* never resolves */ }),
+      () => new Promise<never>((_, reject) => {
+        const t = setTimeout(() => reject(new Error('forced')), 10_000);
+        t.unref();
+      }),
       { timeoutMs: 50 },
     );
 
