@@ -51,6 +51,8 @@ export { StreetMigrationRunner, MigrationDiffer } from './database/migrations.js
 export type { MigrationDiff, EntityColumnMeta } from './database/migrations.js';
 export { StreetSeeder } from './database/seeder.js';
 export type { SeedablePool, SeedablePoolConn } from './database/seeder.js';
+export { QueryProfiler, ProfiledPool, ConnectionDiagnostics } from './database/profiler.js';
+export type { QueryRecord, PoolStats, ProfileablePool } from './database/profiler.js';
 export { SqlitePool } from './database/sqlite/pool.js';
 export type { SqlitePoolOptions } from './database/sqlite/pool.js';
 export { MysqlConnection, MysqlResultStream } from './database/mysql/wire.js';
