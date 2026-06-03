@@ -17,6 +17,7 @@ export { PgConnection, StreetPostgresWireStream } from './database/wire.js';
 export { PgPool } from './database/pool.js';
 export { StreetPostgresRepository } from './database/repository.js';
 export { StreetMigrationRunner } from './database/migrations.js';
+export { SqlitePool } from './database/sqlite/pool.js';
 // ── Security ──────────────────────────────────────────────────────────────────
 export { JwtService } from './security/jwt.js';
 export { SessionManager } from './security/session.js';
@@ -38,6 +39,8 @@ export { ClusterCoordinator, workerHeartbeat, signalReady, } from './cluster/coo
 export { WebhookDispatcher } from './webhook/dispatcher.js';
 // ── Dev ───────────────────────────────────────────────────────────────────────
 export { DevWatcher } from './dev/watcher.js';
+// ── Query Builder ─────────────────────────────────────────────────────────────
+export { QueryBuilder, SqlDialect } from './database/query-builder.js';
 // ── Config ────────────────────────────────────────────────────────────────────
 export { defineConfig, ConfigValidationError } from './config/validator.js';
 // ── Diagnostics ───────────────────────────────────────────────────────────────
