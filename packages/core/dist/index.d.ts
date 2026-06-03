@@ -71,4 +71,16 @@ export { MetricsRegistry, Counter, Gauge, Histogram, MetricConflictError, promet
 export { RouteProfiler } from './diagnostics/route-profiler.js';
 export type { LatencySample, RouteStats } from './diagnostics/route-profiler.js';
 export { DiagnosticsServer, isStaleSocket } from './diagnostics/socket-server.js';
+export { OAuthManager, JwksCache } from './auth/oauth2.js';
+export type { OAuthProvider, OAuthProfile, OAuthTokens, OAuthSuccessCallback, OAuthErrorCallback } from './auth/oauth2.js';
+export { ApiKeyService, apiKeyMiddleware, API_KEYS_MIGRATION_SQL } from './auth/api-keys.js';
+export type { ApiKey, ApiKeyGenerateOpts, ApiKeyPool } from './auth/api-keys.js';
+export { RefreshTokenService, TokenReplayError, REFRESH_TOKENS_MIGRATION_SQL } from './auth/refresh-tokens.js';
+export type { RefreshTokenPool, RefreshTokenServiceOptions } from './auth/refresh-tokens.js';
+export { RbacService, Roles, Permissions, rbacGuard } from './auth/rbac.js';
+export type { RoleHierarchy } from './auth/rbac.js';
+export { WebAuthnService, decodeCbor, WEBAUTHN_MIGRATION_SQL } from './auth/webauthn.js';
+export type { WebAuthnConfig, PublicKeyCredentialCreationOptionsJSON, PublicKeyCredentialRequestOptionsJSON, RegistrationResponseJSON, AuthenticationResponseJSON, WebAuthnSession, WebAuthnPool } from './auth/webauthn.js';
+export { StreetSessionStore, sessionRevocationMiddleware, AuditWriter, SESSION_STORE_MIGRATION_SQL, AUDIT_LOG_MIGRATION_SQL } from './auth/session-store.js';
+export type { SessionData as ServerSessionData, SessionStorePool, AuditEvent, AuditRecord } from './auth/session-store.js';
 //# sourceMappingURL=index.d.ts.map
