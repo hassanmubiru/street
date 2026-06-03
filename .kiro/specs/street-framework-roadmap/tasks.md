@@ -270,3 +270,28 @@
   - [ ] 30.6 Implement `verifyIncomingWebhook(secret, signature, rawBody)`: HMAC-SHA256 constant-time comparison; reuse `signPayload` from `dispatcher.ts`
   - [ ] 30.7 Write tests: published event delivered to matching endpoints, non-matching event skipped, delivery retry on 5xx, HMAC verification accepts valid and rejects invalid signatures
 
+
+- [ ] 31. v1.7 — Tenant Isolation and Routing
+  - [ ] 31.1 Write `street_tenants` migration SQL: `id UUID, name TEXT, plan TEXT, connection_string TEXT, status TEXT, created_at`
+  - [ ] 31.2 Create `packages/core/src/tenancy/context.ts`: `TenantContextData` interface; `tenantMiddleware(opts)` factory supporting `subdomain`, `path`, and `header` resolution strategies; populate `ctx.state['tenant']`; return 400 `{ error: 'tenant_not_found' }` when resolution fails
+  - [ ] 31.3 Create `TenantPoolRegistry` in `packages/core/src/tenancy/pool-registry.ts`: `Map<tenantId, PgPool>` keyed by tenant; create pool from `street_tenants.connection_string` on first access; reap idle pools after configurable timeout
+  - [ ] 31.4 Implement `@TenantScoped()` class decorator: intercept `create()`, `update()`, `findById()`, `findAll()`, `delete()` on the decorated repository to automatically inject `tenant_id` filter from `ctx.state['tenant']`
+  - [ ] 31.5 Implement `TenantScopedRepository<T>` base class extending `StreetPostgresRepository<T>`: override SQL generation to include `AND tenant_id = $N` in all WHERE clauses and add `tenant_id = $N` to all INSERTs
+  - [ ] 31.6 Write tests: subdomain resolution extracts tenant from hostname, missing tenant returns 400, per-tenant pool routes queries to correct connection, `@TenantScoped` prevents cross-tenant data access
+
+- [ ] 32. v1.7 — Tenant Provisioning, Billing, and Quotas
+  - [ ] 32.1 Write `street_tenant_usage` migration SQL: `tenant_id, period DATE, metric_key TEXT, value BIGINT, updated_at`
+  - [ ] 32.2 Create `packages/core/src/tenancy/provisioner.ts` with `TenantService.provision(opts)`: atomic transaction that INSERTs `street_tenants` row, runs tenant-specific migrations, registers the connection pool, and emits `tenant:provisioned` event
+  - [ ] 32.3 Implement `TenantService.checkQuota(tenantId, quotaKey)`: reads configured limits from a `QuotaConfig` map; reads current usage from `street_tenant_usage`; returns `QuotaStatus { allowed, current, limit, reset }`
+  - [ ] 32.4 Create `QuotaEnforcer.middleware()`: call `checkQuota()` before handler; return 429 with `{ error: 'quota_exceeded', quota, limit, reset }` if exceeded; emit `tenant:quota:warning` event at 80% threshold
+  - [ ] 32.5 Create `TenantBillingAdapter` interface in `packages/core/src/tenancy/billing.ts`: `reportUsage(tenantId, period, metrics)` abstract method; no coupling to specific billing provider
+  - [ ] 32.6 Write tests: provisioning creates tenant record and runs migrations atomically, quota exceeded returns 429 with correct fields, warning event fires at 80%, `reportUsage` adapter is called with correct metrics
+
+- [ ] 33. v1.7 — Tenant Metrics
+  - [ ] 33.1 Write `street_tenant_daily_stats` migration SQL: `tenant_id, date DATE, metrics JSONB, created_at`
+  - [ ] 33.2 Create `packages/core/src/tenancy/metrics.ts` with `TenantMetricsRegistry`: wraps `MetricsRegistry`; all metric registrations automatically include a `tenant_id` label; enforces max 10,000 tenant entries with LRU eviction
+  - [ ] 33.3 Implement `TenantMetricsRegistry.forTenant(tenantId)`: returns a scoped `TenantMetricsView` that pre-labels all metric operations with `tenant_id`; evicts the LRU entry when the 10,000 cap is reached
+  - [ ] 33.4 Register `GET /admin/tenants/:id/metrics` route: protected by `requireRoles('admin')`; return current usage and quota status for the specified tenant
+  - [ ] 33.5 Add a nightly `CronScheduler` job that aggregates `street_tenant_usage` rows into `street_tenant_daily_stats`
+  - [ ] 33.6 Write tests: Prometheus output includes `tenant_id` label, LRU eviction at 10,000 tenants, admin endpoint returns correct stats, daily aggregation job produces correct summaries
+
