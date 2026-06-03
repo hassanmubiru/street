@@ -190,3 +190,37 @@
   - [ ] 21.5 Integrate `AuditWriter` into auth flows: call `write()` after login success, login failure, logout, token refresh, session revocation, and permission denial
   - [ ] 21.6 Write tests: revoked session returns 401 on next request, audit log entry written for each of the 6 event types, failed audit write causes transaction rollback, audit log cannot be deleted via public API
 
+
+- [ ] 22. v1.5 — Job Queue and Cron Scheduler
+  - [ ] 22.1 Write `street_jobs` migration SQL: `id UUID, type TEXT, payload JSONB, status TEXT, attempt_count INT, run_at TIMESTAMPTZ, created_at TIMESTAMPTZ, worker_id TEXT, locked_at TIMESTAMPTZ, error TEXT`; add index on `(status, run_at)` for polling efficiency
+  - [ ] 22.2 Create `packages/core/src/jobs/queue.ts` with `JobQueue` class: `enqueue(opts)` inserts a row; `register(type, handler)` stores handler in a `Map`; `start()` starts the polling loop; `stop()` clears the interval
+  - [ ] 22.3 Implement polling loop: `setInterval` runs `SELECT ... FOR UPDATE SKIP LOCKED LIMIT $concurrency`, dispatches each job to its handler, marks success (`DELETE` or `status=completed`) or failure (`UPDATE attempt_count, error`)
+  - [ ] 22.4 Implement `@Job('type')` class decorator: marks a class as a job handler, stores type in metadata; `JobQueue.registerClass(ctor)` reads metadata and registers the `execute(payload, ctx)` method
+  - [ ] 22.5 Write `CronParseError` class and a 5-field cron expression parser in `packages/core/src/jobs/scheduler.ts`: validate field ranges (minute 0-59, hour 0-23, day 1-31, month 1-12, weekday 0-7); throw `CronParseError` with invalid expression and reason at registration time
+  - [ ] 22.6 Implement `CronScheduler`: `register(expression, name, fn)` parses and stores the cron config; `start()` computes next fire time and schedules via `setTimeout`; single-instance guard per job name prevents overlapping execution
+  - [ ] 22.7 Write tests: job enqueued and executed, delayed job not executed before `runAt`, cron fires on correct tick, single-instance guard prevents overlap, invalid cron expression throws at registration
+
+- [ ] 23. v1.5 — Delayed Jobs, Retry Policies, and Dead Letter Queues
+  - [ ] 23.1 Write `street_dead_letter_queue` migration SQL: `id, job_id, type, payload JSONB, error TEXT, exhausted_at TIMESTAMPTZ, created_at`
+  - [ ] 23.2 Implement `RetryPolicy` interface and per-job-type retry config: `maxAttempts`, `initialDelayMs`, `backoffMultiplier`, `maxDelayMs`; register policies via `JobQueue.setRetryPolicy(type, policy)`
+  - [ ] 23.3 Implement geometric backoff in the polling loop: on job failure, compute `Math.min(initialDelayMs * Math.pow(backoffMultiplier, attempt), maxDelayMs)`, update `run_at = NOW() + interval`; increment `attempt_count`
+  - [ ] 23.4 Implement DLQ promotion: when `attempt_count >= maxAttempts`, `INSERT INTO street_dead_letter_queue` and `DELETE FROM street_jobs` in the same transaction
+  - [ ] 23.5 Implement DLQ pruning: `CronScheduler` runs a nightly job that `DELETE FROM street_dead_letter_queue WHERE id NOT IN (SELECT id FROM street_dead_letter_queue ORDER BY created_at DESC LIMIT $maxEntries)`
+  - [ ] 23.6 Write tests: backoff formula `initialDelay * multiplier^attempt` is correct, DLQ receives job after exhausting retries, DLQ pruning respects max entries, delayed job not executed before `runAt`
+
+- [ ] 24. v1.5 — Workflow Engine
+  - [ ] 24.1 Write `street_workflows` migration SQL: `id UUID, name TEXT, status TEXT, current_step INT, step_outputs JSONB, input JSONB, error TEXT, created_at, updated_at`
+  - [ ] 24.2 Create `packages/core/src/jobs/workflow.ts` with `WorkflowEngine`: `define(name, steps)` stores the definition; `start(name, input)` inserts a row and begins execution; `resume(workflowId)` loads row and skips completed steps
+  - [ ] 24.3 Implement step execution: after each step succeeds, serialize the output to `step_outputs[stepName]` and update `current_step` in the DB; if the process restarts, `resume()` reads `current_step` and skips already-recorded outputs
+  - [ ] 24.4 Implement step timeout: `Promise.race([step.run(input, ctx), timeoutPromise])` where `timeoutPromise` rejects after `step.timeoutMs`; on timeout, run compensation and mark workflow `timed_out`
+  - [ ] 24.5 Implement Saga compensation: on step failure, call `step.compensate()` for completed steps in reverse order; log compensation errors without re-throwing
+  - [ ] 24.6 Write tests: workflow resumes from last step after restart, compensation runs in reverse on failure, step timeout triggers compensation, conditional branch evaluates correctly
+
+- [ ] 25. v1.5 — Distributed Jobs and Queue Monitoring
+  - [ ] 25.1 Write `street_job_history` migration SQL: `id, job_id, type, status, duration_ms, created_at`; add nightly pruning via `CronScheduler` (keep last 1,000 per type)
+  - [ ] 25.2 Implement worker heartbeat: each `JobQueue` worker writes its `worker_id` and updates `locked_at` every 30 seconds on in-flight jobs; a background scanner re-enqueues jobs where `locked_at < NOW() - interval '2 minutes'`
+  - [ ] 25.3 Register `GET /api/jobs/metrics` route: return `{ pending, inFlight, failed, succeeded, byType: { [type]: { avgDurationMs } } }` via SQL aggregation against `street_jobs` and `street_job_history`
+  - [ ] 25.4 Extend the `DiagnosticsServer` (from task 15.3) to include job queue metrics in its snapshot payload so `street jobs:dashboard` CLI command can display them
+  - [ ] 25.5 Create `packages/cli/src/commands/jobs-dashboard.ts`: connect to the diagnostics socket, render live terminal table showing queue depth, worker count, last 50 job history entries, DLQ depth; refresh every 2 seconds
+  - [ ] 25.6 Write tests: crashed-worker job recovery re-enqueues after heartbeat timeout, metrics endpoint returns correct counts, history pruning keeps last 1,000 entries per type
+
