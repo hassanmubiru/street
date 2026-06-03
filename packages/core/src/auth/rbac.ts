@@ -150,14 +150,14 @@ export class RbacService {
  */
 export function rbacGuard(service: RbacService): MiddlewareFn {
   return async (ctx, next) => {
-    const handler = ctx.state?.['routeHandler'];
+    const handler = ctx.state?.['routeHandler'] as Record<string, unknown> | undefined;
     if (!handler) {
       await next();
       return;
     }
 
-    const proto = Object.getPrototypeOf(handler);
-    const methodName = handler.name ?? handler._methodName;
+    const proto = Object.getPrototypeOf(handler) as object;
+    const methodName = (handler['name'] ?? handler['_methodName']) as string | symbol | undefined;
 
     const userRoles: string[] = (ctx.user?.roles as string[] | undefined) ?? [];
 
