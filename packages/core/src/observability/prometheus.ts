@@ -282,6 +282,8 @@ export function prometheusMiddleware(
   }
 
   // Collect heap usage on a background interval (not per-request)
+  // Also set it immediately so the initial scrape shows a non-zero value.
+  processHeap.set(process.memoryUsage().heapUsed);
   const heapInterval = setInterval(() => {
     processHeap.set(process.memoryUsage().heapUsed);
   }, 5_000);
