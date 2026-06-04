@@ -204,6 +204,12 @@ export function streetHttp2App(opts = {}) {
                 });
             });
         },
+        _handleRequest(_req, _res) {
+            // HTTP/2 app does not support direct HTTP/1.1 request dispatch via _handleRequest.
+            // Use the HTTP/2 server's stream handler instead.
+            _res.writeHead(501, { 'Content-Type': 'application/json' });
+            _res.end(JSON.stringify({ error: 'HTTP/2 app: direct HTTP/1.1 dispatch not supported' }));
+        },
     };
 }
 //# sourceMappingURL=http2.js.map
