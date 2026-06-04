@@ -89,17 +89,24 @@ function buildAuthData(x, y, signCount = 0) {
     const coseKey = buildCoseEc2Key(x, y);
     return Buffer.concat([rpIdHash, flags, signCountBuf, aaguid, credIdLen, credId, coseKey]);
 }
+/** Encode a text string as CBOR (major type 3). */
+function cborText(s) {
+    const strBuf = Buffer.from(s, 'utf8');
+    const lenBuf = cborUint(strBuf.length);
+    lenBuf[0] = (lenBuf[0] & 0x1f) | 0x60; // major type 3
+    return Buffer.concat([lenBuf, strBuf]);
+}
 /** Build a minimal CBOR attestation object wrapping the authData. */
 function buildAttestationObject(authData) {
-    // { fmt: "none", attStmt: {}, authData: <bytes> }
-    const fmt = Buffer.concat([Buffer.from([0x63]), Buffer.from('fmt')]); // text "fmt"
-    const fmtVal = Buffer.concat([Buffer.from([0x64]), Buffer.from('none')]); // text "none"
-    const attStmt = Buffer.concat([Buffer.from([0x68]), Buffer.from('attStmt')]); // text "attStmt"
-    const attStmtVal = Buffer.from([0xa0]); // empty map
-    const authDataKey = Buffer.concat([Buffer.from([0x68]), Buffer.from('authData')]); // text "authData"
-    const authDataVal = cborBytes(authData);
-    // 3-entry map
+    // { "fmt": "none", "attStmt": {}, "authData": <bytes> }
+    // CBOR map with 3 entries
     const header = Buffer.from([0xa3]); // map(3)
+    const fmt = cborText('fmt');
+    const fmtVal = cborText('none');
+    const attStmt = cborText('attStmt');
+    const attStmtVal = Buffer.from([0xa0]); // empty map
+    const authDataKey = cborText('authData');
+    const authDataVal = cborBytes(authData);
     return Buffer.concat([header, fmt, fmtVal, attStmt, attStmtVal, authDataKey, authDataVal]);
 }
 // ── In-memory WebAuthn fakes ──────────────────────────────────────────────────
@@ -520,21 +527,23 @@ class ApiKeyMemPool {
             this.rows.push(row);
             return { rows: [row], rowCount: 1, command: 'INSERT' };
         }
-        if (s.startsWith('SELECT') && s.includes('KEY_HASH')) {
-            const hashParam = String(params?.[0] ?? '');
-            const found = this.rows.filter(r => r['key_hash'] === hashParam);
-            return { rows: found, rowCount: found.length, command: 'SELECT' };
-        }
-        if (s.startsWith('SELECT') && s.includes('WHERE ID')) {
-            const id = String(params?.[0] ?? '');
-            const found = this.rows.filter(r => r['id'] === id);
-            return { rows: found, rowCount: found.length, command: 'SELECT' };
-        }
         if (s.startsWith('DELETE')) {
             const id = String(params?.[0] ?? '');
             const before = this.rows.length;
             this.rows = this.rows.filter(r => r['id'] !== id);
             return { rows: [], rowCount: before - this.rows.length, command: 'DELETE' };
+        }
+        if (s.startsWith('SELECT')) {
+            // SELECT ... WHERE id = $1 (for revoke's pre-delete lookup)
+            if (s.includes('WHERE ID =') || (s.includes('WHERE') && !s.includes('KEY_HASH'))) {
+                const id = String(params?.[0] ?? '');
+                const found = this.rows.filter(r => r['id'] === id);
+                return { rows: found, rowCount: found.length, command: 'SELECT' };
+            }
+            // SELECT ... WHERE key_hash = $1 (for verify)
+            const hashParam = String(params?.[0] ?? '');
+            const found = this.rows.filter(r => r['key_hash'] === hashParam);
+            return { rows: found, rowCount: found.length, command: 'SELECT' };
         }
         return { rows: [], rowCount: 0, command: 'OK' };
     }
