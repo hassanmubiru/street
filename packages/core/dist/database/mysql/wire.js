@@ -362,10 +362,18 @@ export class MysqlConnection {
         this.sha2Seed = other.sha2Seed;
         this.seq = other.seq;
         this._inExec = other._inExec;
-        // Re-wire socket event listeners to this instance
+        // Re-wire socket event listeners to this instance. The original handlers
+        // (data/error/close) close over the discarded source connection, so they
+        // must be removed and re-bound to `this`, otherwise socket errors/closes
+        // would mutate the dead instance and leave this connection's pending
+        // operations hanging.
         if (this.socket) {
             this.socket.removeAllListeners('data');
+            this.socket.removeAllListeners('error');
+            this.socket.removeAllListeners('close');
             this.socket.on('data', (chunk) => this._onData(chunk));
+            this.socket.once('error', (err) => this._onSocketError(err));
+            this.socket.once('close', () => this._onSocketClose());
         }
     }
     _connect(opts) {
@@ -389,38 +397,42 @@ export class MysqlConnection {
                 // Server will send its greeting first; nothing to write yet
             });
             socket.on('data', (chunk) => this._onData(chunk));
-            socket.once('error', (err) => {
-                this.state = 'closed';
-                if (this.authReject) {
-                    this.authReject(err);
-                    this.authReject = null;
-                }
-                if (this.pendingQuery) {
-                    this.pendingQuery.reject(err);
-                    this.pendingQuery = null;
-                }
-                if (this.streamTarget) {
-                    this.streamTarget.finalize(err);
-                    this.streamTarget = null;
-                }
-            });
-            socket.once('close', () => {
-                this.state = 'closed';
-                const err = new Error('MySQL connection closed unexpectedly');
-                if (this.pendingQuery) {
-                    this.pendingQuery.reject(err);
-                    this.pendingQuery = null;
-                }
-                if (this.streamTarget) {
-                    this.streamTarget.finalize(err);
-                    this.streamTarget = null;
-                }
-            });
+            socket.once('error', (err) => this._onSocketError(err));
+            socket.once('close', () => this._onSocketClose());
         });
     }
     _onData(chunk) {
         this.buffer = Buffer.concat([this.buffer, chunk]);
         this._processBuffer();
+    }
+    /** Socket error handler — rejects any in-flight auth/query and closes state. */
+    _onSocketError(err) {
+        this.state = 'closed';
+        if (this.authReject) {
+            this.authReject(err);
+            this.authReject = null;
+        }
+        if (this.pendingQuery) {
+            this.pendingQuery.reject(err);
+            this.pendingQuery = null;
+        }
+        if (this.streamTarget) {
+            this.streamTarget.finalize(err);
+            this.streamTarget = null;
+        }
+    }
+    /** Socket close handler — rejects any in-flight query and closes state. */
+    _onSocketClose() {
+        this.state = 'closed';
+        const err = new Error('MySQL connection closed unexpectedly');
+        if (this.pendingQuery) {
+            this.pendingQuery.reject(err);
+            this.pendingQuery = null;
+        }
+        if (this.streamTarget) {
+            this.streamTarget.finalize(err);
+            this.streamTarget = null;
+        }
     }
     _processBuffer() {
         while (this.buffer.length >= 4) {

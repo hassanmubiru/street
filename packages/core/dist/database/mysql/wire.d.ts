@@ -63,6 +63,10 @@ export declare class MysqlConnection {
     static connect(opts: MysqlConnectOptions): Promise<MysqlConnection>;
     protected _connect(opts: MysqlConnectOptions): Promise<void>;
     private _onData;
+    /** Socket error handler — rejects any in-flight auth/query and closes state. */
+    private _onSocketError;
+    /** Socket close handler — rejects any in-flight query and closes state. */
+    private _onSocketClose;
     private _processBuffer;
     private _handlePacket;
     private _handleAuthPacket;
