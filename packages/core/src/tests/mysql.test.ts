@@ -22,16 +22,19 @@ import { MysqlPool } from '../database/mysql/pool.js';
 import { MariaDbConnection } from '../database/mysql/mariadb.js';
 
 // ─── Guard ────────────────────────────────────────────────────────────────────
+// When MYSQL_HOST is absent the whole suite is reported as skipped via the
+// node:test `skip` option — the runner prints `# skipped` and exits 0 without
+// running any hooks or tests (no real connection is ever attempted).
 const MYSQL_HOST = process.env['MYSQL_HOST'];
-
-if (!MYSQL_HOST) {
-  console.log('Skipping MySQL integration tests: MYSQL_HOST not set.');
-  process.exit(0);
-}
+const skip: boolean | string = MYSQL_HOST
+  ? false
+  : 'MYSQL_HOST not set — skipping MySQL integration tests';
 
 // ─── Connection options ───────────────────────────────────────────────────────
+// The host falls back to a placeholder only to satisfy the type when the suite
+// is skipped; it is never used because skipped suites do not run their hooks.
 const opts = {
-  host:     MYSQL_HOST,
+  host:     MYSQL_HOST ?? '127.0.0.1',
   port:     parseInt(process.env['MYSQL_PORT'] ?? '3306', 10),
   user:     process.env['MYSQL_USER']     ?? 'root',
   password: process.env['MYSQL_PASSWORD'] ?? '',
