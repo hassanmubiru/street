@@ -1,12 +1,12 @@
 // src/http/openapi.ts
 // Generates OpenAPI 3.1 spec from registered route metadata.
 export function generateOpenApi(routes) {
-    const paths = {};
+    const paths = Object.create(null);
     for (const route of routes) {
         // Convert :param to {param} style
         const openApiPath = route.path.replace(/:([a-zA-Z_][a-zA-Z0-9_]*)/g, '{$1}');
         if (!paths[openApiPath]) {
-            paths[openApiPath] = {};
+            paths[openApiPath] = Object.create(null);
         }
         const parameters = [];
         const paramMatches = route.path.matchAll(/:([a-zA-Z_][a-zA-Z0-9_]*)/g);
@@ -18,7 +18,7 @@ export function generateOpenApi(routes) {
                 schema: { type: 'string' },
             });
         }
-        const responseMap = {};
+        const responseMap = Object.create(null);
         if (route.responses) {
             for (const [code, resp] of Object.entries(route.responses)) {
                 responseMap[code] = {
