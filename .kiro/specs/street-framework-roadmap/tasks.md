@@ -47,7 +47,7 @@
   - [x] 6.1 Create `packages/core/src/database/mysql/wire.ts`: implement MySQL Client/Server Protocol v4.1 handshake over `node:net`; parse server greeting packet (capabilities, server version, auth plugin)
   - [x] 6.2 Implement `mysql_native_password` authentication: `SHA1(password) XOR SHA1(seed + SHA1(SHA1(password)))` using `node:crypto`
   - [x] 6.3 Implement `caching_sha2_password` authentication: full SHA-256 challenge-response using `node:crypto`
-  - [~] 6.4 Implement `MysqlConnection.query(sql, params)`: use parameterized COM_STMT_PREPARE + COM_STMT_EXECUTE; return `DbResult { rows, rowCount, command }`
+  - [-] 6.4 Implement `MysqlConnection.query(sql, params)`: use parameterized COM_STMT_PREPARE + COM_STMT_EXECUTE; return `DbResult { rows, rowCount, command }`
   - [~] 6.5 Implement `MysqlConnection.queryStream(sql)`: return a `Readable` that emits row objects with backpressure via `socket.pause()`/`socket.resume()`
   - [~] 6.6 Create `packages/core/src/database/mysql/pool.ts` with `MysqlPool`: same min/max/acquire/idle-sweep API as `PgPool`
   - [~] 6.7 Create `packages/core/src/database/mysql/mariadb.ts`: `MariaDbConnection` subclass handling MariaDB-specific capability flags; `MysqlConnection.connect()` detects server greeting and returns the appropriate subclass
