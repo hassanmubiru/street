@@ -78,7 +78,7 @@
   - [x] 9.5 Implement result caching: `Map<pool, { schema: DatabaseSchema; expiresAt: number }>` with 60-second default TTL; `invalidateCache(pool)` removes the entry
   - [x] 9.6 Write integration tests: inspect a known schema, verify all column types and nullable flags, verify 60s cache TTL, verify invalidation forces re-fetch
 
-- [ ] 10. v1.2 — Migration Diffing, Seeding, Query Profiling, and Connection Diagnostics
+- [x] 10. v1.2 — Migration Diffing, Seeding, Query Profiling, and Connection Diagnostics
   - [x] 10.1 Create `packages/core/src/database/migrations.ts` additions: `MigrationDiffer.diff(pool, entities)` reads live schema via `SchemaInspector`, compares to entity decorator metadata, returns `{ safe: string[], destructive: string[] }`
   - [x] 10.2 Add `street migrate:diff` CLI command: call `MigrationDiffer.diff()`, write generated SQL to timestamped file; require `--confirm-destructive` flag before writing any destructive statements
   - [x] 10.3 Create `packages/core/src/database/seeder.ts` with `StreetSeeder.run(pool, seedFile)`: wrap execution in `pool.transaction()`; track runs in `street_seed_runs` table using file content hash; skip already-applied seeds
@@ -86,11 +86,11 @@
   - [x] 10.5 Create `packages/core/src/database/profiler.ts` with `QueryProfiler`: ring buffer of 10,000 `QueryRecord` entries; `enable(pool)` wraps `pool.query()` with a timing decorator via composition (no prototype patching); `getSlowQueries(thresholdMs)` returns sorted results
   - [x] 10.6 Implement `ConnectionDiagnostics.ping(pool)`: send `SELECT 1` and measure round-trip; `poolStats(pool)` returns `{ total, idle, inUse, waiting, avgAcquireMs }`
   - [x] 10.7 Emit `pool:exhausted` event on `PgPool`'s internal `EventEmitter` before enqueueing a wait request when the pool is full
-  - [-] 10.8 Write tests: seed runs are idempotent (same hash → skip), diff detects added column, profiler records slow queries, `pool:exhausted` fires on pool saturation
+  - [x] 10.8 Write tests: seed runs are idempotent (same hash → skip), diff detects added column, profiler records slow queries, `pool:exhausted` fires on pool saturation
 
 
 - [ ] 11. v1.3 — OpenTelemetry Integration
-  - [~] 11.1 Create `packages/core/src/observability/otel.ts`: define `SpanContext`, `Span`, and `OtelTracer` interfaces; implement span lifecycle (`startSpan`, `end`) with `process.hrtime.bigint()` timing
+  - [-] 11.1 Create `packages/core/src/observability/otel.ts`: define `SpanContext`, `Span`, and `OtelTracer` interfaces; implement span lifecycle (`startSpan`, `end`) with `process.hrtime.bigint()` timing
   - [~] 11.2 Implement W3C `traceparent` header parsing in `OtelTracer.extractContext()` and injection in `OtelTracer.injectContext()` per the W3C Trace Context spec
   - [~] 11.3 Implement OTLP HTTP exporter in `OtelTracer`: serialize spans to OTLP JSON format, POST to `OTEL_EXPORTER_OTLP_ENDPOINT` using `node:https`; batch up to 1,000 spans; flush every 5 seconds
   - [~] 11.4 Implement retry with exponential backoff on OTLP export failure; emit a single `warn` log per drop event when the buffer overflows
