@@ -491,10 +491,18 @@ export class MysqlConnection {
     this.sha2Seed = other.sha2Seed;
     this.seq = other.seq;
     this._inExec = other._inExec;
-    // Re-wire socket event listeners to this instance
+    // Re-wire socket event listeners to this instance. The original handlers
+    // (data/error/close) close over the discarded source connection, so they
+    // must be removed and re-bound to `this`, otherwise socket errors/closes
+    // would mutate the dead instance and leave this connection's pending
+    // operations hanging.
     if (this.socket) {
       this.socket.removeAllListeners('data');
+      this.socket.removeAllListeners('error');
+      this.socket.removeAllListeners('close');
       this.socket.on('data', (chunk: Buffer) => this._onData(chunk));
+      this.socket.once('error', (err: Error) => this._onSocketError(err));
+      this.socket.once('close', () => this._onSocketClose());
     }
   }
 
