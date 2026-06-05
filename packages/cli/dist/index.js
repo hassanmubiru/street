@@ -115,6 +115,11 @@ Commands:
   migrate:run                     Run all pending migrations
   migrate:diff [--confirm-destructive]  Diff live schema vs entity metadata
   db:seed <file>                  Run a SQL seed file (idempotent)
+  info                            Print framework, runtime, and project info
+  doctor                          Check runtime, env vars, and DB connectivity
+  env validate                    Validate env vars against street.config
+  audit                           Scan dependencies for known vulnerabilities
+  diagnostics [--pid <pid>]       Live diagnostics dashboard for a running app
 
 Flags:
   --help, -h                      Show this help message
