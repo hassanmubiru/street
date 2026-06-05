@@ -2,7 +2,8 @@
 // Integration tests for MysqlConnection and MysqlPool.
 // Requires a running MySQL/MariaDB server.
 //
-// Guard: tests are skipped when MYSQL_HOST is not set.
+// Guard: the entire suite is skipped (node:test `skip` option) when MYSQL_HOST
+// is not set — the runner reports skipped suites and exits 0.
 //
 // Environment variables:
 //   MYSQL_HOST     — hostname (required to run tests)
@@ -195,7 +196,7 @@ describe('MysqlConnection — transaction rollback', { skip }, () => {
 
 
 // ─── 6. Concurrent queries via MysqlPool ─────────────────────────────────────
-describe('MysqlPool — concurrent queries', () => {
+describe('MysqlPool — concurrent queries', { skip }, () => {
   let pool: MysqlPool;
 
   before(async () => {
@@ -247,7 +248,7 @@ describe('MysqlPool — concurrent queries', () => {
 });
 
 // ─── 7. MysqlPool lifecycle ───────────────────────────────────────────────────
-describe('MysqlPool — lifecycle', () => {
+describe('MysqlPool — lifecycle', { skip }, () => {
   it('close() shuts down cleanly', async () => {
     const pool = new MysqlPool({ ...opts, minConnections: 1, maxConnections: 2 });
     await pool.query('SELECT 1');
