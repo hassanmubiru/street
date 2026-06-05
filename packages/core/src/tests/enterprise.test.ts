@@ -161,7 +161,7 @@ describe('FeatureFlagService', () => {
       async query(_sql: string): Promise<DbResult> {
         callCount++;
         return {
-          rows: [{ name: 'cached-flag', enabled: true, rules: '[]' }] as Record<string, string | null>[],
+          rows: [{ name: 'cached-flag', enabled: true, rules: '[]' }] as unknown as Record<string, string | null>[],
           rowCount: 1,
           command: 'SELECT',
         };
