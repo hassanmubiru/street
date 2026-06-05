@@ -141,6 +141,31 @@ describe('SchemaInspector — SQLite basic introspection', () => {
     assert.equal(idx.unique, true);
   });
 
+  it('reports the declared type for every column in every table', async () => {
+    const schema = await SchemaInspector.inspect(pool);
+
+    const typeOf = (table: string, col: string): string => {
+      const t = schema.tables.find((x) => x.name === table);
+      assert.ok(t, `table ${table} must exist`);
+      const c = t.columns.find((x) => x.name === col);
+      assert.ok(c, `column ${table}.${col} must exist`);
+      return c.type.toUpperCase();
+    };
+
+    // users
+    assert.equal(typeOf('users', 'id'), 'INTEGER');
+    assert.equal(typeOf('users', 'name'), 'TEXT');
+    assert.equal(typeOf('users', 'email'), 'TEXT');
+    // posts
+    assert.equal(typeOf('posts', 'id'), 'INTEGER');
+    assert.equal(typeOf('posts', 'user_id'), 'INTEGER');
+    assert.equal(typeOf('posts', 'title'), 'TEXT');
+    // memberships
+    assert.equal(typeOf('memberships', 'user_id'), 'INTEGER');
+    assert.equal(typeOf('memberships', 'group_id'), 'INTEGER');
+    assert.equal(typeOf('memberships', 'role'), 'TEXT');
+  });
+
   it('sets inspectedAt to a recent Date', async () => {
     const before = Date.now();
     const schema = await SchemaInspector.inspect(pool);
