@@ -1123,10 +1123,7 @@ export class MysqlConnection {
     this.colsReceived = 0;
     this.expectEof = false;
 
-    const stream = new MysqlResultStream();
-
-    // When the consumer is ready for more data, resume the socket
-    stream.on('drain', () => { this.socket?.resume(); });
+    const stream = new MysqlResultStream(() => { this.socket?.resume(); });
 
     this.streamTarget = stream;
     this.pendingQuery = { resolve: () => {}, reject: () => {}, rows: [], command: 'SELECT', affectedRows: 0, lastInsertId: 0 };
