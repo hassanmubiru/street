@@ -2,17 +2,21 @@
 /**
  * SQLite WASM binary download script.
  *
- * Downloads the official pre-built SQLite WASM binary from the sqlite.org
- * CDN and places it at packages/core/src/database/sqlite/sqlite3.wasm.
+ * Downloads the official pre-built SQLite WebAssembly binary (`sqlite3.wasm`)
+ * from the `@sqlite.org/sqlite-wasm` npm package, served via the jsDelivr CDN,
+ * and places it at packages/core/src/database/sqlite/sqlite3.wasm.
  *
  * Usage (run once before building):
  *   node packages/core/src/database/sqlite/download-wasm.mjs
  *
- * The downloaded binary is the official Emscripten-compiled build from:
- *   https://sqlite.org/wasm/doc/trunk/index.md
+ * Package: https://www.npmjs.com/package/@sqlite.org/sqlite-wasm
+ * Version: 3.47.2-build1 (SQLite 3.47.2)
+ * Source:  https://cdn.jsdelivr.net/npm/@sqlite.org/sqlite-wasm@3.47.2-build1/sqlite-wasm/jswasm/sqlite3.wasm
  *
- * Source: https://sqlite.org/2024/sqlite-wasm-3470200.zip
- * SHA-256 is printed during download for verification.
+ * Only `sqlite3.wasm` is downloaded here. The Emscripten JS glue
+ * (`sqlite3-node.mjs`) comes from the same package's `jswasm/` directory and is
+ * committed alongside this script. The SHA-256 of the downloaded binary is
+ * printed during download for verification.
  */
 import { createWriteStream, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
