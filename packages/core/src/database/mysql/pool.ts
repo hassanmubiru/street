@@ -42,6 +42,9 @@ export class MysqlPool {
   private readonly sweepTimer: NodeJS.Timeout;
   private closed = false;
 
+  /** Internal EventEmitter for pool lifecycle events (e.g. pool:exhausted). */
+  readonly events: EventEmitter = new EventEmitter();
+
   constructor(opts: MysqlPoolOptions) {
     this.opts = {
       minConnections:   opts.minConnections   ?? 2,
