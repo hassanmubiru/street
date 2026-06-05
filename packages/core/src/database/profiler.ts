@@ -158,21 +158,24 @@ export class ConnectionDiagnostics {
   /**
    * Return connection pool statistics.
    *
-   * For PgPool/ProfiledPool the `size` and `idle` getters are used.
-   * Other pool types return zeroes for fields that cannot be introspected.
+   * For PgPool/ProfiledPool the `size`, `idle`, `waiting`, and `avgAcquireMs`
+   * getters are used. Other pool types return zeroes for fields that cannot
+   * be introspected.
    */
   static poolStats(pool: ProfileablePool): PoolStats {
     // Unwrap ProfiledPool to reach the underlying pool
     const inner = (pool as ProfiledPool).inner ?? pool;
     const total = typeof inner.size === 'number' ? inner.size : 0;
     const idle  = typeof inner.idle === 'number' ? inner.idle : 0;
+    const waiting = typeof inner.waiting === 'number' ? inner.waiting : 0;
+    const avgAcquireMs = typeof inner.avgAcquireMs === 'number' ? inner.avgAcquireMs : 0;
 
     return {
       total,
       idle,
       inUse: total - idle,
-      waiting: 0,
-      avgAcquireMs: 0,
+      waiting,
+      avgAcquireMs,
     };
   }
 }
