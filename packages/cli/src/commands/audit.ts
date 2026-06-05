@@ -28,7 +28,9 @@ interface NpmAuditOutput {
   error?: { code?: string; summary?: string; detail?: string };
 }
 
-interface AuditResult {
+// `npm audit` exits non-zero when vulnerabilities are found; in that case the
+// child process rejects with this shape while still carrying the JSON payload.
+interface AuditFindings {
   output: string;
   code: number;
 }
@@ -55,25 +57,25 @@ export class AuditCommand {
   async execute(ctx: CliContext): Promise<void> {
     console.log('[street] Running npm audit...\n');
 
-    let result: AuditResult;
+    let jsonOutput: string;
     try {
-      result = await this.runNpmAudit(ctx.cwd);
+      jsonOutput = await this.runNpmAudit(ctx.cwd);
     } catch (err) {
-      // Spawn failure: npm is not installed or could not be launched.
-      console.error(`[street] Failed to run npm audit: ${(err as Error).message}`);
-      process.exitCode = 1;
-      return;
-    }
-
-    if (!result.output.trim()) {
-      console.error('[street] npm audit produced no output — unable to audit dependencies');
-      process.exitCode = 1;
-      return;
+      // A non-zero exit with captured stdout means vulnerabilities were found —
+      // that is expected. Parse the payload instead of treating it as an error.
+      if (this.isFindings(err)) {
+        jsonOutput = err.output;
+      } else {
+        // Genuine failure: npm could not be launched or produced no output.
+        console.error(`[street] Failed to run npm audit: ${(err as Error).message}`);
+        process.exitCode = 1;
+        return;
+      }
     }
 
     let audit: NpmAuditOutput;
     try {
-      audit = JSON.parse(result.output) as NpmAuditOutput;
+      audit = JSON.parse(jsonOutput) as NpmAuditOutput;
     } catch {
       console.error('[street] Failed to parse npm audit output');
       process.exitCode = 1;
@@ -91,15 +93,24 @@ export class AuditCommand {
     const vulns = Object.values(audit.vulnerabilities ?? {});
 
     if (vulns.length === 0) {
-      console.log('  ✓ No known vulnerabilities found\n');
+      console.log('  ✓ No vulnerabilities found\n');
       return;
     }
 
     this.printSummary(audit, vulns);
     this.printTable(vulns);
 
-    // Per task scope, findings do NOT fail the process here; CI gating is
-    // handled elsewhere. Print the report and return.
+    // Per task scope, findings do NOT fail the process here. CI gating is
+    // handled separately. Print the report and return.
+  }
+
+  private isFindings(err: unknown): err is AuditFindings {
+    return (
+      typeof err === 'object' &&
+      err !== null &&
+      'output' in err &&
+      typeof (err as { output: unknown }).output === 'string'
+    );
   }
 
   private printSummary(audit: NpmAuditOutput, vulns: VulnerabilityEntry[]): void {
@@ -158,7 +169,7 @@ export class AuditCommand {
     return `upgrade to ${fixAvailable.name}@${fixAvailable.version}${breaking}`;
   }
 
-  protected runNpmAudit(cwd: string): Promise<AuditResult> {
+  protected runNpmAudit(cwd: string): Promise<string> {
     return new Promise((resolve, reject) => {
       const child = spawn('npm', ['audit', '--json'], {
         cwd,
@@ -181,11 +192,15 @@ export class AuditCommand {
       });
 
       child.on('close', (code) => {
-        // `npm audit` exits non-zero when vulnerabilities are found. That is
-        // expected — resolve with whatever stdout we captured and let the
-        // caller parse it. Only surface an error when there is no output.
+        // `npm audit` exits non-zero when vulnerabilities are found. Carry the
+        // captured JSON payload through the rejection so the caller can parse
+        // it; only surface a hard error when there is no output at all.
         if (out.trim()) {
-          resolve({ output: out, code: code ?? 0 });
+          if (code && code !== 0) {
+            reject({ output: out, code });
+          } else {
+            resolve(out);
+          }
         } else {
           reject(new Error(err.trim() || 'npm audit produced no output'));
         }
