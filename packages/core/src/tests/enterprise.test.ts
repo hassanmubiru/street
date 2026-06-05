@@ -26,9 +26,9 @@ import type { DbResult } from '../database/types.js';
 
 // ── Mock pool ─────────────────────────────────────────────────────────────────
 
-type Row = Record<string, string | null | boolean | unknown>;
+type FlagRow = { name: string; enabled: boolean; rules: unknown[] };
 
-function makePool(flagRows: Row[] = []): {
+function makePool(flagRows: FlagRow[] = []): {
   query(sql: string, params?: unknown[]): Promise<DbResult>;
   _calls: Array<{ sql: string; params?: unknown[] }>;
 } {
@@ -38,7 +38,7 @@ function makePool(flagRows: Row[] = []): {
     async query(sql: string, params?: unknown[]): Promise<DbResult> {
       calls.push({ sql, params });
       return {
-        rows: flagRows as Record<string, string | null>[],
+        rows: flagRows as unknown as Record<string, string | null>[],
         rowCount: flagRows.length,
         command: sql.trim().split(' ')[0]?.toUpperCase() ?? 'UNKNOWN',
       };
