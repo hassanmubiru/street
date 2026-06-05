@@ -92,7 +92,7 @@ describe('MysqlConnection — connect', { skip }, () => {
 });
 
 // ─── 2. Simple query ──────────────────────────────────────────────────────────
-describe('MysqlConnection — simple query', () => {
+describe('MysqlConnection — simple query', { skip }, () => {
   let conn: MysqlConnection;
   before(async () => { conn = await MysqlConnection.connect(opts); });
   after(async ()  => { await conn.close(); });
@@ -118,7 +118,7 @@ describe('MysqlConnection — simple query', () => {
 
 
 // ─── 3. Parameterized query ───────────────────────────────────────────────────
-describe('MysqlConnection — parameterized query', () => {
+describe('MysqlConnection — parameterized query', { skip }, () => {
   let conn: MysqlConnection;
   before(async () => {
     conn = await MysqlConnection.connect(opts);
@@ -150,7 +150,7 @@ describe('MysqlConnection — parameterized query', () => {
 
 
 // ─── 4. Transaction commit ────────────────────────────────────────────────────
-describe('MysqlConnection — transaction commit', () => {
+describe('MysqlConnection — transaction commit', { skip }, () => {
   let conn: MysqlConnection;
   before(async () => {
     conn = await MysqlConnection.connect(opts);
@@ -172,7 +172,7 @@ describe('MysqlConnection — transaction commit', () => {
 });
 
 // ─── 5. Transaction rollback ──────────────────────────────────────────────────
-describe('MysqlConnection — transaction rollback', () => {
+describe('MysqlConnection — transaction rollback', { skip }, () => {
   let conn: MysqlConnection;
   before(async () => {
     conn = await MysqlConnection.connect(opts);
