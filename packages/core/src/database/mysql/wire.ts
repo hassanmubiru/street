@@ -612,11 +612,11 @@ export class MysqlConnection {
     if (firstByte === 0x01) {
       const subtype = body[1];
       if (subtype === 0x04) {
-        // Server requests full password in cleartext (RSA-encrypted or over TLS).
-        // Sending cleartext passwords over non-TLS connections is a security violation.
-        // We reject this auth path unless the connection was established with TLS.
-        // Since this driver uses node:net (plain TCP) and does not negotiate SSL/TLS,
-        // we MUST reject the request to prevent credential exposure.
+        // 0x04 = perform_full_authentication: the server's password cache missed,
+        // so it wants the full password. Over a non-TLS/unencrypted connection that
+        // means either RSA public-key encryption or cleartext transmission.
+        // This driver uses node:net (plain TCP) and does not negotiate SSL/TLS,
+        // so sending the password here would expose credentials. We MUST reject.
         const err = new Error(
           'MySQL caching_sha2_password: server requested cleartext password transmission. ' +
           'This is only safe over TLS, but this connection is not TLS-encrypted. ' +
@@ -630,8 +630,8 @@ export class MysqlConnection {
         this.socket?.destroy();
         return;
       }
-      // subtype 0x02 = fast-auth succeeded, wait for OK
-      // subtype 0x03 = full auth required
+      // 0x03 = fast_auth_success: the fast scramble matched the server's cache.
+      // No further data is required; the server follows up with an OK packet.
       return;
     }
 
