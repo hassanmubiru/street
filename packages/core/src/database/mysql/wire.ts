@@ -76,8 +76,9 @@ function wrapPacket(body: Buffer, seq: number): Buffer {
 /**
  * Compute mysql_native_password response:
  *   SHA1(password) XOR SHA1(seed + SHA1(SHA1(password)))
+ * @internal
  */
-function nativePasswordHash(password: string, seed: Buffer): Buffer {
+export function nativePasswordHash(password: string, seed: Buffer): Buffer {
   const sha1 = (data: Buffer | string): Buffer => {
     return createHash('sha1').update(data).digest();
   };
