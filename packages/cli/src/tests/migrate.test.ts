@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync } from 'node
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { randomBytes } from 'node:crypto';
-import { MigrateCommand } from '../commands/migrate.js';
+import { MigrateCommand, buildDiffSql } from '../commands/migrate.js';
 
 interface CapturedOutput {
   logs: string[];
