@@ -91,7 +91,7 @@ describe('FeatureFlagService', () => {
   });
 
   it('returns true when flag is enabled with no targeting rules', async () => {
-    const pool = makePool([{ name: 'open-flag', enabled: 'true', rules: '[]' }]);
+    const pool = makePool([{ name: 'open-flag', enabled: true, rules: '[]' }]);
     const svc = new FeatureFlagService(pool);
     const result = await svc.isEnabled('open-flag');
     assert.equal(result, true);
@@ -101,7 +101,7 @@ describe('FeatureFlagService', () => {
     const pool = makePool([{
       name: 'user-flag',
       enabled: true,
-      rules: JSON.stringify([{ type: 'user_id', value: 'user-42' }]),
+      rules: [{ type: 'user_id', value: 'user-42' }],
     }]);
     const svc = new FeatureFlagService(pool);
     const result = await svc.isEnabled('user-flag', { userId: 'user-42' });
@@ -112,7 +112,7 @@ describe('FeatureFlagService', () => {
     const pool = makePool([{
       name: 'user-flag',
       enabled: true,
-      rules: JSON.stringify([{ type: 'user_id', value: 'user-42' }]),
+      rules: [{ type: 'user_id', value: 'user-42' }],
     }]);
     const svc = new FeatureFlagService(pool);
     const result = await svc.isEnabled('user-flag', { userId: 'user-99' });
@@ -123,7 +123,7 @@ describe('FeatureFlagService', () => {
     const pool = makePool([{
       name: 'full-rollout',
       enabled: true,
-      rules: JSON.stringify([{ type: 'percentage', value: 100 }]),
+      rules: [{ type: 'percentage', value: 100 }],
     }]);
     const svc = new FeatureFlagService(pool);
     for (let i = 0; i < 5; i++) {
@@ -136,7 +136,7 @@ describe('FeatureFlagService', () => {
     const pool = makePool([{
       name: 'no-rollout',
       enabled: true,
-      rules: JSON.stringify([{ type: 'percentage', value: 0 }]),
+      rules: [{ type: 'percentage', value: 0 }],
     }]);
     const svc = new FeatureFlagService(pool);
     for (let i = 0; i < 5; i++) {
@@ -149,7 +149,7 @@ describe('FeatureFlagService', () => {
     const pool = makePool([{
       name: 'stable-flag',
       enabled: true,
-      rules: JSON.stringify([{ type: 'percentage', value: 50 }]),
+      rules: [{ type: 'percentage', value: 50 }],
     }]);
     const svc = new FeatureFlagService(pool);
     const results = await Promise.all(
