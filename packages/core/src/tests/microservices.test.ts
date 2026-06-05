@@ -283,7 +283,7 @@ describe('CommandBus', () => {
   it('dispatches to registered handler', async () => {
     const bus = new CommandBus();
     let received: string | null = null;
-    bus.register(CreateUserCommand, async (cmd) => { received = cmd.name; });
+    bus.register(CreateUserCommand as unknown as new (...args: unknown[]) => CreateUserCommand, async (cmd) => { received = (cmd as CreateUserCommand).name; });
     await bus.dispatch(new CreateUserCommand('Alice'));
     assert.equal(received, 'Alice');
   });
@@ -299,7 +299,7 @@ describe('CommandBus', () => {
 describe('QueryBus', () => {
   it('dispatches and returns result', async () => {
     const bus = new QueryBus();
-    bus.register(GetUserQuery, async (q) => ({ id: q.id, name: 'Alice' }));
+    bus.register(GetUserQuery as unknown as new (...args: unknown[]) => GetUserQuery, async (q) => ({ id: (q as GetUserQuery).id, name: 'Alice' }));
     const result = await bus.dispatch<GetUserQuery, { id: string; name: string }>(new GetUserQuery('u1'));
     assert.deepEqual(result, { id: 'u1', name: 'Alice' });
   });
