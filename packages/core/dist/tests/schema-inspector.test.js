@@ -113,6 +113,28 @@ describe('SchemaInspector — SQLite basic introspection', () => {
         assert.deepEqual(idx.columns, ['email']);
         assert.equal(idx.unique, true);
     });
+    it('reports the declared type for every column in every table', async () => {
+        const schema = await SchemaInspector.inspect(pool);
+        const typeOf = (table, col) => {
+            const t = schema.tables.find((x) => x.name === table);
+            assert.ok(t, `table ${table} must exist`);
+            const c = t.columns.find((x) => x.name === col);
+            assert.ok(c, `column ${table}.${col} must exist`);
+            return c.type.toUpperCase();
+        };
+        // users
+        assert.equal(typeOf('users', 'id'), 'INTEGER');
+        assert.equal(typeOf('users', 'name'), 'TEXT');
+        assert.equal(typeOf('users', 'email'), 'TEXT');
+        // posts
+        assert.equal(typeOf('posts', 'id'), 'INTEGER');
+        assert.equal(typeOf('posts', 'user_id'), 'INTEGER');
+        assert.equal(typeOf('posts', 'title'), 'TEXT');
+        // memberships
+        assert.equal(typeOf('memberships', 'user_id'), 'INTEGER');
+        assert.equal(typeOf('memberships', 'group_id'), 'INTEGER');
+        assert.equal(typeOf('memberships', 'role'), 'TEXT');
+    });
     it('sets inspectedAt to a recent Date', async () => {
         const before = Date.now();
         const schema = await SchemaInspector.inspect(pool);
@@ -145,6 +167,25 @@ describe('SchemaInspector — SQLite nullable columns', () => {
         const emailCol = users.columns.find((c) => c.name === 'email');
         assert.ok(emailCol, 'email column must exist');
         assert.equal(emailCol.nullable, true);
+    });
+    it('reports the nullable flag for every column across all tables', async () => {
+        const schema = await SchemaInspector.inspect(pool);
+        const nullableOf = (table, col) => {
+            const t = schema.tables.find((x) => x.name === table);
+            assert.ok(t, `table ${table} must exist`);
+            const c = t.columns.find((x) => x.name === col);
+            assert.ok(c, `column ${table}.${col} must exist`);
+            return c.nullable;
+        };
+        // NOT NULL columns → nullable=false
+        assert.equal(nullableOf('users', 'name'), false);
+        assert.equal(nullableOf('posts', 'user_id'), false);
+        assert.equal(nullableOf('posts', 'title'), false);
+        assert.equal(nullableOf('memberships', 'user_id'), false);
+        assert.equal(nullableOf('memberships', 'group_id'), false);
+        // Columns without a NOT NULL constraint → nullable=true
+        assert.equal(nullableOf('users', 'email'), true);
+        assert.equal(nullableOf('memberships', 'role'), true);
     });
 });
 // ─── 3. Cache behavior ───────────────────────────────────────────────────────
@@ -229,6 +270,96 @@ describe('SchemaInspector — empty database', () => {
             SchemaInspector.invalidateCache(pool);
             await pool.close();
         }
+    });
+});
+// ─── 6. TTL & invalidation verified via a counting QueryablePool ───────────────
+//
+// These tests use a real object that satisfies the `QueryablePool` interface and
+// counts how many times `query()` is invoked. It is a legitimate (fake) data
+// source — NOT a mock of the implementation under test. Because its constructor
+// name is neither "SqlitePool" nor "PgPool", SchemaInspector routes it through
+// the generic information_schema path, issuing a fixed number of queries per
+// fresh inspect(). Counting those calls lets us prove the cache is honoured
+// within the TTL and that invalidateCache() forces a real re-fetch.
+class CountingQueryablePool {
+    queryCount = 0;
+    async query(sql, _params) {
+        this.queryCount += 1;
+        // Columns catalogue → one "widgets" table with a PK and a nullable column.
+        if (/information_schema\.COLUMNS/i.test(sql)) {
+            return {
+                command: 'SELECT',
+                rowCount: 2,
+                rows: [
+                    {
+                        table_name: 'widgets',
+                        column_name: 'id',
+                        data_type: 'int',
+                        is_nullable: 'NO',
+                        column_default: null,
+                        column_key: 'PRI',
+                    },
+                    {
+                        table_name: 'widgets',
+                        column_name: 'label',
+                        data_type: 'varchar',
+                        is_nullable: 'YES',
+                        column_default: null,
+                        column_key: '',
+                    },
+                ],
+            };
+        }
+        // Foreign-key and index catalogues → empty for this fixture.
+        return { command: 'SELECT', rowCount: 0, rows: [] };
+    }
+}
+describe('SchemaInspector — TTL & invalidation (counting QueryablePool)', () => {
+    let pool;
+    beforeEach(() => { pool = new CountingQueryablePool(); });
+    afterEach(() => { SchemaInspector.invalidateCache(pool); });
+    it('builds the canned schema from the QueryablePool source', async () => {
+        const schema = await SchemaInspector.inspect(pool);
+        const widgets = schema.tables.find((t) => t.name === 'widgets');
+        assert.ok(widgets, 'widgets table must be built from the fake source');
+        assert.deepEqual(widgets.primaryKey, ['id']);
+        const id = widgets.columns.find((c) => c.name === 'id');
+        const label = widgets.columns.find((c) => c.name === 'label');
+        assert.ok(id, 'id column must exist');
+        assert.ok(label, 'label column must exist');
+        assert.equal(id.type, 'int');
+        assert.equal(id.nullable, false);
+        assert.equal(label.type, 'varchar');
+        assert.equal(label.nullable, true);
+    });
+    it('does NOT re-query within the 60s TTL (cache hit)', async () => {
+        const first = await SchemaInspector.inspect(pool); // default 60_000 ms TTL
+        const countAfterFirst = pool.queryCount;
+        assert.ok(countAfterFirst > 0, 'first inspect must query the data source');
+        const second = await SchemaInspector.inspect(pool);
+        // No additional queries — the result is served from the cache.
+        assert.equal(pool.queryCount, countAfterFirst, 'second inspect within TTL must not re-query');
+        // Same cached object with an identical inspectedAt timestamp.
+        assert.strictEqual(first, second);
+        assert.equal(first.inspectedAt.getTime(), second.inspectedAt.getTime());
+    });
+    it('honours an explicit 60s TTL across repeated inspects', async () => {
+        await SchemaInspector.inspect(pool, { ttlMs: 60_000 });
+        const countAfterFirst = pool.queryCount;
+        // Three more inspects, all within the 60s window → all cache hits.
+        await SchemaInspector.inspect(pool, { ttlMs: 60_000 });
+        await SchemaInspector.inspect(pool, { ttlMs: 60_000 });
+        await SchemaInspector.inspect(pool, { ttlMs: 60_000 });
+        assert.equal(pool.queryCount, countAfterFirst, 'repeated inspects within the 60s TTL must all be served from cache');
+    });
+    it('invalidateCache() forces a re-fetch (query count increments)', async () => {
+        const first = await SchemaInspector.inspect(pool);
+        const countAfterFirst = pool.queryCount;
+        SchemaInspector.invalidateCache(pool);
+        const second = await SchemaInspector.inspect(pool);
+        assert.ok(pool.queryCount > countAfterFirst, 'invalidation must trigger fresh queries against the data source');
+        assert.notStrictEqual(first, second, 'expected a fresh schema object after invalidation');
+        assert.ok(second.inspectedAt.getTime() >= first.inspectedAt.getTime(), 'inspectedAt must be refreshed (monotonic) after invalidation');
     });
 });
 //# sourceMappingURL=schema-inspector.test.js.map
