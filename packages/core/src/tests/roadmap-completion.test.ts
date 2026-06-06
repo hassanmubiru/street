@@ -39,3 +39,44 @@ describe('API Versioning decorators', () => {
     assert.equal(headers['Sunset'], sunset.toUTCString());
   });
 });
+
+// ── SDK Generator ─────────────────────────────────────────────────────────────
+
+import { generateTypescriptSdk, type OpenApiSpec } from '../sdk-gen/typescript.js';
+import { generatePythonSdk } from '../sdk-gen/python.js';
+
+describe('SDK Generator', () => {
+  let dir: string;
+  const spec: OpenApiSpec = {
+    paths: {
+      '/users/{id}': {
+        get: { operationId: 'getUser', summary: 'Fetch a user', parameters: [{ name: 'id', in: 'path', required: true }] },
+      },
+      '/users': {
+        post: { operationId: 'createUser', summary: 'Create a user' },
+      },
+    },
+  };
+
+  before(async () => { dir = await mkdtemp(join(tmpdir(), 'street-sdk-')); });
+  after(async () => { await rm(dir, { recursive: true, force: true }); });
+
+  it('generates a TypeScript SDK with types and client', async () => {
+    await generateTypescriptSdk(spec, dir);
+    const types = await readFile(join(dir, 'types.ts'), 'utf8');
+    const client = await readFile(join(dir, 'api-client.ts'), 'utf8');
+    assert.match(types, /GetUserParams/);
+    assert.match(client, /class ApiClient/);
+    assert.match(client, /getUser/);
+    assert.match(client, /createUser/);
+  });
+
+  it('generates a Python SDK with models and client', async () => {
+    await generatePythonSdk(spec, dir);
+    const models = await readFile(join(dir, 'models.py'), 'utf8');
+    const client = await readFile(join(dir, 'client.py'), 'utf8');
+    assert.match(models, /class GetUserParams/);
+    assert.match(client, /class ApiClient/);
+    assert.match(client, /def get_user/);
+  });
+});
