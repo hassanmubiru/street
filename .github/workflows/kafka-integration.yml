@@ -1,0 +1,65 @@
+name: Kafka Integration
+
+on:
+  push:
+    paths:
+      - 'packages/core/src/transports/kafka/**'
+      - 'packages/core/src/integration/kafka/**'
+      - '.github/workflows/kafka-integration.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  kafka-integration:
+    runs-on: ubuntu-latest
+
+    services:
+      kafka:
+        image: apache/kafka:3.7.1
+        ports:
+          - 9092:9092
+        env:
+          KAFKA_NODE_ID: 1
+          KAFKA_PROCESS_ROLES: broker,controller
+          KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092
+          KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+          KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+          KAFKA_CONTROLLER_QUORUM_VOTERS: 1@127.0.0.1:9093
+          KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+          KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+          KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+          KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+          KAFKA_NUM_PARTITIONS: 3
+        options: >-
+          --health-cmd "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092 >/dev/null 2>&1 || exit 1"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 24
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build core
+        run: npm run build -w packages/core
+
+      - name: Compile tests
+        run: npx tsc
+        working-directory: packages/core
+
+      - name: Run Kafka codec unit tests
+        run: node --test dist/src/tests/kafka-codec.test.js
+        working-directory: packages/core
+
+      - name: Run Kafka integration tests
+        env:
+          KAFKA_BROKERS: 127.0.0.1:9092
+        run: node --test --test-timeout=60000 dist/src/integration/kafka/*.integration.test.js
+        working-directory: packages/core
