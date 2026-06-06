@@ -47,6 +47,12 @@ function parseField(raw: string, min: number, max: number, label: string, expr: 
         if (isNaN(rangeMin)) throw new CronParseError(expr, `invalid range start in field "${raw}" (${label})`);
       }
     }
+    if (rangeMin < min || rangeMax > max || rangeMin > rangeMax) {
+      throw new CronParseError(
+        expr,
+        `range "${rangePart}" out of bounds [${min}-${max}] for field (${label})`,
+      );
+    }
     const result: number[] = [];
     for (let i = rangeMin; i <= rangeMax; i += step) result.push(i);
     return result;
