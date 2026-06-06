@@ -207,7 +207,7 @@ class ScriptedClient implements LlmClient {
     this.calls.push(opts);
     this.onComplete?.(opts);
     const content = this.replies[Math.min(this.i++, this.replies.length - 1)] ?? 'FINAL ANSWER: done';
-    return { content, model: opts.model, usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
+    return { content, tokens: 0 };
   }
   async *stream(): AsyncIterableIterator<string> { yield 'x'; }
 }
