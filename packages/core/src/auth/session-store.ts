@@ -49,16 +49,29 @@ export interface SessionStorePool {
   transaction<T>(fn: (conn: { query(sql: string, params?: unknown[]): Promise<{ rows: Record<string, string | null>[]; rowCount: number; command: string }> }) => Promise<T>): Promise<T>;
 }
 
+/** Optional configuration for {@link StreetSessionStore}. */
+export interface StreetSessionStoreOptions {
+  /**
+   * When provided, the store emits a `session_revoked` audit entry on every
+   * {@link StreetSessionStore.revoke} and {@link StreetSessionStore.revokeAll}
+   * call. Omitting it keeps the store's behaviour and dependencies unchanged.
+   */
+  auditWriter?: AuditWriterType;
+}
+
 // ── StreetSessionStore ────────────────────────────────────────────────────────
 
 export class StreetSessionStore {
   private readonly _pool: SessionStorePool;
   /** LRU cache: sessionId → true (revoked) */
   private readonly _revokedCache: LruCache<string, boolean>;
+  /** Optional audit writer used to record `session_revoked` events. */
+  private readonly _auditWriter?: AuditWriterType;
 
-  constructor(pool: SessionStorePool) {
+  constructor(pool: SessionStorePool, options?: StreetSessionStoreOptions) {
     this._pool = pool;
     this._revokedCache = new LruCache<string, boolean>({ maxEntries: 50_000, ttlMs: 5 * 60 * 1000 });
+    this._auditWriter = options?.auditWriter;
   }
 
   /** Create a new session. Returns the sessionId. */
