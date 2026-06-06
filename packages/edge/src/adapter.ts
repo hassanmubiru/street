@@ -113,8 +113,7 @@ export async function handleEdgeRequest(
         responseChunks.push(Buffer.isBuffer(data) ? data : Buffer.from(String(data), 'utf8'));
       }
       statusCode = serverResponse.statusCode;
-      serverResponse.writableEnded = true;
-      serverResponse.writableFinished = true;
+      resStream.end();
       resStream.emit('finish');
     },
     flushHeaders() { /* no-op for edge */ },
