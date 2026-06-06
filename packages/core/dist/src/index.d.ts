@@ -61,13 +61,13 @@ export { DiagnosticsReporter, diagnosticsReporter } from './diagnostics/reporter
 export type { DiagnosticEvent } from './diagnostics/reporter.js';
 export { CliKernel, parseArgv } from './cli/kernel.js';
 export type { ParsedArgs, CliKernelOptions } from './cli/kernel.js';
-export { OtelTracer, otelMiddleware } from './observability/otel.js';
-export type { SpanContext, Span } from './observability/otel.js';
+export { OtelTracer, otelMiddleware, OtelInstrumentedPool, instrumentPoolWithOtel } from './observability/otel.js';
+export type { SpanContext, Span, OtelInstrumentablePool, ActiveSpanResolver } from './observability/otel.js';
 export { HealthCheckRegistry, registerHealthRoutes } from './observability/health.js';
 export type { CheckResult, HealthResponse, CheckType, CheckStatus, CheckFn } from './observability/health.js';
 export { Logger, correlationMiddleware } from './observability/logger.js';
 export type { LogLevel, LogEntry } from './observability/logger.js';
-export { MetricsRegistry, Counter, Gauge, Histogram, MetricConflictError, prometheusMiddleware, metricsHandler } from './observability/prometheus.js';
+export { MetricsRegistry, Counter, Gauge, Histogram, MetricConflictError, prometheusMiddleware, metricsHandler, registerMetricsRoute, PROMETHEUS_CONTENT_TYPE } from './observability/prometheus.js';
 export { RouteProfiler } from './diagnostics/route-profiler.js';
 export type { LatencySample, RouteStats } from './diagnostics/route-profiler.js';
 export { DiagnosticsServer, isStaleSocket } from './diagnostics/socket-server.js';
