@@ -10,6 +10,18 @@ import { UnauthorizedException } from '../http/exceptions.js';
 // consumers (and index.ts) keep importing it from session-store unchanged.
 export { AuditWriter, AUDIT_LOG_MIGRATION_SQL } from './audit-writer.js';
 export type { AuditEvent, AuditRecord, AuditPool } from './audit-writer.js';
+export {
+  auditAuthEvent,
+  auditLoginSuccess,
+  auditLoginFailure,
+  auditLogout,
+  auditTokenRefresh,
+  auditSessionRevoked,
+  auditPermissionDenied,
+} from './audit-writer.js';
+export type { AuditEventDetails } from './audit-writer.js';
+
+import type { AuditWriter as AuditWriterType } from './audit-writer.js';
 
 // ── Migration SQL ─────────────────────────────────────────────────────────────
 
