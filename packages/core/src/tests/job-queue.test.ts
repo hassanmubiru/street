@@ -65,6 +65,36 @@ describe('JobQueue — Migration SQL', () => {
   });
 });
 
+// ── Tests: WorkflowEngine Migration SQL ───────────────────────────────────────
+
+describe('WorkflowEngine — Migration SQL', () => {
+  it('STREET_WORKFLOWS_MIGRATION_SQL creates the street_workflows table with all required columns', () => {
+    assert.ok(
+      STREET_WORKFLOWS_MIGRATION_SQL.includes('street_workflows'),
+      'Should reference street_workflows table',
+    );
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /id\s+UUID/i, 'id UUID');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /name\s+TEXT/i, 'name TEXT');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /status\s+TEXT/i, 'status TEXT');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /current_step\s+INT/i, 'current_step INT');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /step_outputs\s+JSONB/i, 'step_outputs JSONB');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /input\s+JSONB/i, 'input JSONB');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /error\s+TEXT/i, 'error TEXT');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /created_at\s+TIMESTAMPTZ/i, 'created_at TIMESTAMPTZ');
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /updated_at\s+TIMESTAMPTZ/i, 'updated_at TIMESTAMPTZ');
+  });
+
+  it('STREET_WORKFLOWS_MIGRATION_SQL declares id as the primary key', () => {
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /id\s+UUID\s+PRIMARY KEY/i, 'id UUID PRIMARY KEY');
+  });
+
+  it('STREET_WORKFLOWS_MIGRATION_SQL is idempotent (uses IF NOT EXISTS)', () => {
+    assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /CREATE TABLE IF NOT EXISTS/i);
+  });
+});
+
+// ── Mock pool helpers ─────────────────────────────────────────────────────────
+
 type QueryResult = { rows: Record<string, string | null>[]; rowCount: number; command: string };
 
 /** Build a simple mock pool that records calls and returns configured responses. */
