@@ -234,6 +234,16 @@ export { generateManifest } from './cloud/deployment.js';
 export type { CloudPlatform, DeployConfig } from './cloud/deployment.js';
 export { VaultSecretProvider, AwsSecretsManagerProvider, GcpSecretManagerProvider } from './cloud/secret-providers.js';
 export type { SecretProvider } from './cloud/secret-providers.js';
+export {
+  registerShutdownHook,
+  isRunningInServiceMesh,
+  buildAutoscaleMetrics,
+  registerAutoscaleRoute,
+} from './cloud/runtime.js';
+export type {
+  Closeable, ShutdownHookOptions, AutoscaleMetrics, AutoscaleSource,
+  ExternalMetricValue,
+} from './cloud/runtime.js';
 
 // ── Enterprise: Feature Flags ──────────────────────────────────────────────────
 export { FeatureFlagService, FEATURE_FLAGS_MIGRATION_SQL } from './enterprise/feature-flags.js';
