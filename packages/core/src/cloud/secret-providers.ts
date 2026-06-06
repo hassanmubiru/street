@@ -277,14 +277,6 @@ export class AwsSecretsManagerProvider implements SecretProvider {
     return createHmac('sha256', kService).update('aws4_request').digest();
   }
 
-  private _httpsPost(
-    url: string,
-    body: string,
-    headers: Record<string, string>,
-  ): Promise<{ status: number; body: string }> {
-    return httpRequestRaw('POST', url, headers, Buffer.from(body, 'utf8'), this._tls);
-  }
-
   private async _fetchWithRetry(key: string): Promise<string> {
     const delays = [1000, 2000, 4000, 8000, 10000];
     const deadline = Date.now() + 60_000;
