@@ -1,0 +1,33 @@
+# docker-compose.kafka.yml
+# Reproducible single-broker Kafka (KRaft mode, no ZooKeeper) for running the
+# Street Kafka integration tests.
+#
+#   docker compose -f docker-compose.kafka.yml up -d
+#   # wait for the broker to report healthy, then:
+#   KAFKA_BROKERS=127.0.0.1:9092 node --test packages/core/dist/src/integration/kafka/*.integration.test.js
+#   docker compose -f docker-compose.kafka.yml down
+services:
+  kafka:
+    image: apache/kafka:3.7.1
+    container_name: street-kafka
+    ports:
+      - "9092:9092"     # external (host) listener
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://127.0.0.1:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@127.0.0.1:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_NUM_PARTITIONS: 3
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server 127.0.0.1:9092 >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 10s
+      retries: 24
