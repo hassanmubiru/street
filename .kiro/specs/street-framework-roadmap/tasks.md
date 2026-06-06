@@ -220,7 +220,7 @@
   - [x] 25.1 Write `street_job_history` migration SQL: `id, job_id, type, status, duration_ms, created_at`; add nightly pruning via `CronScheduler` (keep last 1,000 per type)
   - [x] 25.2 Implement worker heartbeat: each `JobQueue` worker writes its `worker_id` and updates `locked_at` every 30 seconds on in-flight jobs; a background scanner re-enqueues jobs where `locked_at < NOW() - interval '2 minutes'`
   - [x] 25.3 Register `GET /api/jobs/metrics` route: return `{ pending, inFlight, failed, succeeded, byType: { [type]: { avgDurationMs } } }` via SQL aggregation against `street_jobs` and `street_job_history`
-  - [~] 25.4 Extend the `DiagnosticsServer` (from task 15.3) to include job queue metrics in its snapshot payload so `street jobs:dashboard` CLI command can display them
+  - [-] 25.4 Extend the `DiagnosticsServer` (from task 15.3) to include job queue metrics in its snapshot payload so `street jobs:dashboard` CLI command can display them
   - [~] 25.5 Create `packages/cli/src/commands/jobs-dashboard.ts`: connect to the diagnostics socket, render live terminal table showing queue depth, worker count, last 50 job history entries, DLQ depth; refresh every 2 seconds
   - [~] 25.6 Write tests: crashed-worker job recovery re-enqueues after heartbeat timeout, metrics endpoint returns correct counts, history pruning keeps last 1,000 entries per type
 
