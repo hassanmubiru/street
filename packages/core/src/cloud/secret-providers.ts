@@ -491,7 +491,7 @@ export class AzureKeyVaultProvider implements SecretProvider {
     const url = `${this._vaultUrl}/secrets/${encodeURIComponent(name)}?api-version=${this._apiVersion}`;
     const { status, body } = await httpsGet(url, { Authorization: `Bearer ${token}` }, this._tls);
     if (status !== 200) {
-      throw new Error(`AzureKeyVaultProvider: HTTP ${status} for secret "${name}". Value: [REDACTED]`);
+      throw new SecretFetchError(`AzureKeyVaultProvider: HTTP ${status} for secret "${name}". Value: [REDACTED]`, status >= 500 || status === 429);
     }
     const parsed = JSON.parse(body) as { value?: string };
     if (parsed.value === undefined) {
