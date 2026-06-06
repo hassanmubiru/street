@@ -81,3 +81,125 @@ export class RabbitMqConnectionManager {
     this.conn = null;
   }
 }
+
+// ── Publisher ─────────────────────────────────────────────────────────────────
+
+export class RabbitMqPublisher {
+  private exchangeReady = false;
+  constructor(
+    private readonly manager: RabbitMqConnectionManager,
+    private readonly exchange: string,
+  ) {}
+
+  /** Publish a message to `routingKey` on the topic exchange, awaiting confirm. */
+  async publish(routingKey: string, body: Buffer | string, opts: { persistent?: boolean; contentType?: string } = {}): Promise<void> {
+    const conn = await this.manager.get();
+    if (!this.exchangeReady) {
+      await conn.declareExchange(this.exchange, 'topic', { durable: true });
+      await conn.enableConfirms();
+      this.exchangeReady = true;
+    }
+    const buf = Buffer.isBuffer(body) ? body : Buffer.from(body, 'utf8');
+    await conn.publish(this.exchange, routingKey, buf, { persistent: opts.persistent ?? true, contentType: opts.contentType ?? 'application/json' });
+  }
+}
+
+// ── Consumer ──────────────────────────────────────────────────────────────────
+
+export interface ConsumerOptions {
+  queue: string;
+  routingKeys: string[];
+  /** Dead-letter exchange for messages that exhaust retries. */
+  deadLetterExchange?: string;
+  prefetch?: number;
+}
+
+export class RabbitMqConsumer {
+  private consuming = false;
+  constructor(
+    private readonly manager: RabbitMqConnectionManager,
+    private readonly exchange: string,
+    private readonly options: ConsumerOptions,
+  ) {}
+
+  /**
+   * Begin consuming. The handler is awaited; success → ack, throw → nack.
+   * When `deadLetterExchange` is set, a failed message is nacked without
+   * requeue so the broker routes it to the DLX.
+   */
+  async consume(handler: (msg: DeliveredMessage) => Promise<void>): Promise<void> {
+    const start = async (conn: AmqpConnection): Promise<void> => {
+      await conn.declareExchange(this.exchange, 'topic', { durable: true });
+      if (this.options.deadLetterExchange) {
+        await conn.declareExchange(this.options.deadLetterExchange, 'fanout', { durable: true });
+      }
+      await conn.declareQueue(this.options.queue, {
+        durable: true,
+        ...(this.options.deadLetterExchange ? { deadLetterExchange: this.options.deadLetterExchange } : {}),
+      });
+      for (const rk of this.options.routingKeys) {
+        await conn.bindQueue(this.options.queue, this.exchange, rk);
+      }
+      await conn.setQos(this.options.prefetch ?? 50);
+      await conn.consume(this.options.queue, (msg) => {
+        void (async () => {
+          try {
+            await handler(msg);
+            conn.ack(msg.deliveryTag);
+          } catch {
+            // No requeue → routed to DLX if configured, otherwise dropped.
+            conn.nack(msg.deliveryTag, false);
+          }
+        })();
+      });
+    };
+
+    const conn = await this.manager.get();
+    await start(conn);
+    this.consuming = true;
+    // Re-establish the consumer after a reconnect.
+    this.manager.onReconnect((c) => { if (this.consuming) void start(c).catch(() => undefined); });
+  }
+}
+
+// ── EventBus adapter ──────────────────────────────────────────────────────────
+
+/**
+ * RabbitMQ-backed EventBusTransport. Topics map to routing keys on a shared
+ * durable topic exchange; each subscription gets its own durable queue.
+ */
+export class RabbitMqTransport implements EventBusTransport {
+  private readonly manager: RabbitMqConnectionManager;
+  private readonly exchange: string;
+  private readonly publisher: RabbitMqPublisher;
+
+  constructor(opts: RabbitMqOptions = {}) {
+    this.manager = new RabbitMqConnectionManager(opts);
+    this.exchange = opts.exchange ?? 'street.events';
+    this.publisher = new RabbitMqPublisher(this.manager, this.exchange);
+  }
+
+  async publish(topic: string, envelope: EventEnvelope): Promise<void> {
+    await this.publisher.publish(topic, JSON.stringify(envelope));
+  }
+
+  subscribe(topic: string, handler: (env: EventEnvelope) => Promise<void>): () => void {
+    const queue = `street.${topic}.${process.pid}`;
+    const consumer = new RabbitMqConsumer(this.manager, this.exchange, {
+      queue,
+      routingKeys: [topic],
+      deadLetterExchange: `${this.exchange}.dlx`,
+    });
+    let stopped = false;
+    void consumer.consume(async (msg) => {
+      if (stopped) return;
+      const env = JSON.parse(msg.body.toString('utf8')) as EventEnvelope;
+      await handler(env);
+    }).catch(() => undefined);
+    return () => { stopped = true; };
+  }
+
+  async close(): Promise<void> {
+    await this.manager.close();
+  }
+}

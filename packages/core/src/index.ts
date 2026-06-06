@@ -224,6 +224,10 @@ export type { CircuitState, CircuitBreakerOptions } from './microservices/circui
 export { EventBus, InProcessTransport } from './microservices/event-bus.js';
 export type { EventEnvelope, EventBusTransport } from './microservices/event-bus.js';
 export { RedisEventBusTransport } from './microservices/transports/redis.js';
+export {
+  RabbitMqTransport, RabbitMqConnectionManager, RabbitMqPublisher, RabbitMqConsumer, AmqpConnection,
+} from './transports/rabbitmq/index.js';
+export type { RabbitMqOptions, ConsumerOptions, AmqpConnectionOptions, DeliveredMessage } from './transports/rabbitmq/index.js';
 export { SagaOrchestrator } from './microservices/saga.js';
 export type { SagaStep } from './microservices/saga.js';
 export { DistributedLock } from './microservices/distributed-lock.js';
