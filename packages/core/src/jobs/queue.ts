@@ -33,6 +33,18 @@ CREATE TABLE IF NOT EXISTS street_dead_letter_queue (
 );
 `;
 
+export const STREET_JOB_HISTORY_MIGRATION_SQL = `
+CREATE TABLE IF NOT EXISTS street_job_history (
+  id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  job_id       TEXT,
+  type         TEXT NOT NULL,
+  status       TEXT NOT NULL,
+  duration_ms  INT,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS street_job_history_type_created_at ON street_job_history (type, created_at);
+`;
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface JobContext {
