@@ -155,7 +155,7 @@ export class WebhookDispatcher {
         const timeoutMs = target.timeoutMs ?? 10_000;
         const maxRetries = target.maxRetries ?? 3;
         try {
-            const statusCode = await sendRequest(target.url, body, sig, timeoutMs);
+            const statusCode = await sendRequest(target.url, body, sig, timeoutMs, target.tls);
             if (statusCode >= 200 && statusCode < 300) {
                 return; // success
             }
@@ -186,7 +186,7 @@ export class WebhookDispatcher {
 function signPayload(body, secret) {
     return 'sha256=' + createHmac('sha256', secret).update(body).digest('hex');
 }
-function sendRequest(url, body, signature, timeoutMs) {
+function sendRequest(url, body, signature, timeoutMs, tls) {
     return new Promise((resolve, reject) => {
         const parsed = new URL(url);
         // Only HTTPS is permitted (enforced by validateWebhookUrl, but double-check here)
@@ -208,6 +208,8 @@ function sendRequest(url, body, signature, timeoutMs) {
                 'User-Agent': 'Street-Webhook/1.0',
             },
             timeout: timeoutMs,
+            ...(tls?.ca ? { ca: tls.ca } : {}),
+            ...(tls?.rejectUnauthorized === false ? { rejectUnauthorized: false } : {}),
         }, (res) => {
             // Drain response to free socket
             res.resume();
