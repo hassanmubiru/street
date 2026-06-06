@@ -1931,6 +1931,34 @@ describe('ApiKeyService — additional coverage', () => {
     );
   });
 
+  it('apiKeyMiddleware throws UnauthorizedException (401) for an expired key', async () => {
+    const pool = new ApiKeyMemPool();
+    const svc = new ApiKeyService(pool);
+    // Generate a key that is already expired.
+    const { key } = await svc.generate({
+      ownerId: 'expired-owner',
+      name: 'expiredViaMiddleware',
+      expiresAt: new Date(Date.now() - 1000),
+    });
+    const mw = apiKeyMiddleware(svc);
+    const ctx = {
+      headers: { authorization: `Bearer ${key}` },
+      user: undefined,
+      state: {},
+    };
+    let nextCalled = false;
+    await assert.rejects(
+      () => mw(ctx as unknown as Parameters<typeof mw>[0], async () => { nextCalled = true; }),
+      (err: unknown) => {
+        assert.ok(err instanceof UnauthorizedException);
+        assert.equal((err as { status?: number }).status, 401);
+        return true;
+      },
+    );
+    assert.equal(nextCalled, false, 'next() must not run for an expired key');
+    assert.equal(ctx.user, undefined, 'ctx.user must not be set for an expired key');
+  });
+
   it('apiKeyMiddleware sets ctx.user.id to ownerId on success', async () => {
     const pool = new ApiKeyMemPool();
     const svc = new ApiKeyService(pool);
