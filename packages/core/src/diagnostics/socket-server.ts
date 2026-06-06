@@ -47,7 +47,7 @@ export class DiagnosticsServer {
       socket.on('close', () => this._clients.delete(socket));
       socket.on('error', () => this._clients.delete(socket));
       // Send an immediate snapshot when a client connects
-      this._pushSnapshot(socket);
+      void this._pushSnapshot(socket);
     });
 
     this._server = server;
@@ -90,16 +90,29 @@ export class DiagnosticsServer {
 
   // ── Private helpers ─────────────────────────────────────────────────────────
 
-  private _snapshot(): string {
+  private async _snapshot(): Promise<string> {
     const allStats: Record<string, unknown> = {};
     for (const [key, stats] of this._profiler.allStats()) {
       allStats[key] = stats;
+    }
+
+    // Job queue metrics are optional and backward compatible: when no job-metrics
+    // source is configured the `jobs` field is null. Failures to read metrics are
+    // swallowed (jobs: null) so diagnostics never crash the snapshot loop.
+    let jobs: JobQueueMetrics | null = null;
+    if (this._jobQueue) {
+      try {
+        jobs = await this._jobQueue.metrics();
+      } catch {
+        jobs = null;
+      }
     }
 
     const mem = process.memoryUsage();
     const payload = {
       ts: new Date().toISOString(),
       routes: allStats,
+      jobs,
       memory: {
         heapUsed: mem.heapUsed,
         heapTotal: mem.heapTotal,
@@ -111,14 +124,15 @@ export class DiagnosticsServer {
     return JSON.stringify(payload) + '\n';
   }
 
-  private _pushSnapshot(socket: Socket): void {
+  private async _pushSnapshot(socket: Socket): Promise<void> {
     try {
-      if (!socket.destroyed) socket.write(this._snapshot());
+      const snapshot = await this._snapshot();
+      if (!socket.destroyed) socket.write(snapshot);
     } catch { /* ignore write errors */ }
   }
 
-  private _broadcastSnapshot(): void {
-    const snapshot = this._snapshot();
+  private async _broadcastSnapshot(): Promise<void> {
+    const snapshot = await this._snapshot();
     for (const client of this._clients) {
       try {
         if (!client.destroyed) client.write(snapshot);
