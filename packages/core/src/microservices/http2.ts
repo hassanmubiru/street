@@ -164,8 +164,8 @@ export function streetHttp2App(opts: {
       }
     }
 
-    const fakeReq = buildFakeIncomingMessage(headers, stream, body);
-    const fakeRes = buildFakeServerResponse(stream);
+    const fakeReq = buildFakeIncomingMessage(headers, stream as ServerHttp2Stream, body);
+    const fakeRes = buildFakeServerResponse(stream as ServerHttp2Stream);
 
     const ctx = createContext(fakeReq, fakeRes, path, query);
 
