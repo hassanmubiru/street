@@ -9,6 +9,11 @@ export interface AuditEntry {
     afterState?: unknown;
     ip?: string;
     userAgent?: string;
+    /**
+     * Optional entity constructor whose `@Sensitive()` fields should be redacted
+     * in `beforeState` / `afterState` before persistence.
+     */
+    entityClass?: new (...args: never[]) => unknown;
 }
 /**
  * Property decorator that marks a field as sensitive, causing it to be
@@ -31,6 +36,8 @@ export declare class AuditLogger {
         signingKey: string;
     });
     log(opts: AuditEntry): Promise<void>;
+    /** Force-flush any pending entries to the database. */
+    flush(): Promise<void>;
     private _flush;
     /**
      * Stream audit log entries between two dates as JSONL or CSV.
