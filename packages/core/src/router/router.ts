@@ -111,8 +111,9 @@ export class Router {
     ctx.state['_requiredRoles'] = route.requiredRoles;
     ctx.state['_requiredPermissions'] = route.requiredPermissions;
 
-    // Build pipeline: route middlewares + validation + handler
+    // Build pipeline: rate limit + route middlewares + validation + handler
     const pipeline: MiddlewareFn[] = [
+      ...(route.rateLimitMw ? [route.rateLimitMw] : []),
       ...route.middlewares,
       ...(route.validate ? [createValidationMiddleware(route.validate)] : []),
       async (c: StreetContext) => {
