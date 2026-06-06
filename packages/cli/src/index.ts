@@ -15,6 +15,7 @@ import { DoctorCommand, EnvValidateCommand } from './commands/doctor.js';
 import { AuditCommand } from './commands/audit.js';
 import { SeedCommand } from './commands/seed.js';
 import { DiagnosticsCommand } from './commands/diagnostics.js';
+import { JobsDashboardCommand } from './commands/jobs-dashboard.js';
 
 const VERSION = '1.0.3';
 const APP_NAME = 'street';
@@ -111,6 +112,10 @@ export async function runCli(argv: string[]): Promise<void> {
         await new DiagnosticsCommand().execute(ctx);
         break;
 
+      case 'jobs:dashboard':
+        await new JobsDashboardCommand().execute(ctx);
+        break;
+
       default:
         console.error(`[street] Unknown command: "${args.command}"`);
         console.error(`Run "${APP_NAME} --help" to see available commands.`);
@@ -146,6 +151,7 @@ Commands:
   env validate                    Validate env vars against street.config
   audit                           Scan dependencies for known vulnerabilities
   diagnostics [--pid <pid>]       Live diagnostics dashboard for a running app
+  jobs:dashboard [--pid <pid>]    Live job-queue dashboard for a running app
 
 Flags:
   --help, -h                      Show this help message
