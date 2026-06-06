@@ -19,15 +19,16 @@ const VALID_TYPES: GenerateType[] = ['controller', 'service', 'repository', 'mid
 
 export class GenerateCommand {
   async execute(ctx: CliContext): Promise<void> {
-    const genType = ctx.args.positional[0]?.toLowerCase() as GenerateType | undefined;
+    const rawType = ctx.args.positional[0]?.toLowerCase();
+    const genType = rawType as GenerateType | undefined;
     const name = ctx.args.positional[1];
 
     // ── Flag-driven generators (no <name> positional) ──────────────────────
-    if (genType === 'sdk') {
+    if (rawType === 'sdk') {
       await this.generateSdk(ctx);
       return;
     }
-    if (genType === 'grpc') {
+    if (rawType === 'grpc') {
       await this.generateGrpc(ctx);
       return;
     }
