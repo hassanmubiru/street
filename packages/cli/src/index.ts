@@ -131,6 +131,27 @@ export async function runCli(argv: string[]): Promise<void> {
         await new PluginListCommand().execute(ctx);
         break;
 
+      case 'analytics':
+        if (ctx.args.positional[0] === 'report') {
+          await new AnalyticsReportCommand().execute(ctx);
+        } else {
+          console.error('[street] Usage: street analytics report --from <date> --to <date>');
+          process.exitCode = 1;
+        }
+        break;
+
+      case 'audit:export':
+        await new AuditExportCommand().execute(ctx);
+        break;
+
+      case 'compliance:report':
+        await new ComplianceReportCommand().execute(ctx);
+        break;
+
+      case 'restore':
+        await new RestoreCommand().execute(ctx);
+        break;
+
       default:
         console.error(`[street] Unknown command: "${args.command}"`);
         console.error(`Run "${APP_NAME} --help" to see available commands.`);
