@@ -295,7 +295,7 @@ export type { RedisClientOptions, RespValue } from './transports/resp.js';
 
 // ── Platform: Event Streaming ─────────────────────────────────────────────────
 export { EventStreamPublisher, EventStreamConsumer, InProcessStreamTransport, RealtimeAggregator } from './platform/event-streaming.js';
-export type { StreamTransport } from './platform/event-streaming.js';
+export type { StreamTransport, LagEvent, LagMonitorOptions } from './platform/event-streaming.js';
 export { KinesisStreamTransport } from './platform/transports/kinesis.js';
 export type { KinesisOptions } from './platform/transports/kinesis.js';
 
