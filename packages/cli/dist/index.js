@@ -16,6 +16,7 @@ import { DiagnosticsCommand } from './commands/diagnostics.js';
 import { JobsDashboardCommand } from './commands/jobs-dashboard.js';
 import { DeployInitCommand } from './commands/deploy.js';
 import { PluginInstallCommand, PluginListCommand } from './commands/plugin.js';
+import { AnalyticsReportCommand, AuditExportCommand, ComplianceReportCommand, RestoreCommand } from './commands/data-commands.js';
 const VERSION = '1.0.3';
 const APP_NAME = 'street';
 /**
@@ -99,6 +100,24 @@ export async function runCli(argv) {
                 break;
             case 'plugin:list':
                 await new PluginListCommand().execute(ctx);
+                break;
+            case 'analytics':
+                if (ctx.args.positional[0] === 'report') {
+                    await new AnalyticsReportCommand().execute(ctx);
+                }
+                else {
+                    console.error('[street] Usage: street analytics report --from <date> --to <date>');
+                    process.exitCode = 1;
+                }
+                break;
+            case 'audit:export':
+                await new AuditExportCommand().execute(ctx);
+                break;
+            case 'compliance:report':
+                await new ComplianceReportCommand().execute(ctx);
+                break;
+            case 'restore':
+                await new RestoreCommand().execute(ctx);
                 break;
             default:
                 console.error(`[street] Unknown command: "${args.command}"`);
