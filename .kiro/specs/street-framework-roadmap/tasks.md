@@ -359,12 +359,12 @@ Status markers used in this plan:
   - [~] 39.6 Implement secret rotation: emit `rotate` event when TTL expires; connect to `PgPool` via a `onRotate` callback that recycles connections when the secret is a DB password
   - [ ] 39.7 Write tests: cached secret returned without network call within TTL, expired cache triggers re-fetch, `[REDACTED]` appears in all log output, startup retry exhaustion exits with code 1
 
-- [ ] 40. v2.1 — Service Mesh and Auto-Scaling Metrics
-  - [~] 40.1 Register `GET /metrics/autoscale` route in `StreetApp`: return JSON in Kubernetes External Metrics API format with `http_requests_per_second`, `active_connections`, and `queue_depth` values computed from `TelemetryTracker` and `JobQueue`
-  - [~] 40.2 Implement service mesh detection: check `ISTIO_META_MESH_ID` and `LINKERD_PROXY_INJECTION_ENABLED` env vars on startup; when detected, set `RetryPolicy.enabled = false` for all `CircuitBreaker` instances to avoid conflicting with mesh retries
-  - [~] 40.3 Implement `STREET_READINESS_DELAY_MS` startup delay: `HealthCheckRegistry` readiness probe returns `down` until the delay has elapsed after `app.listen()` completes
-  - [~] 40.4 Export `/metrics/autoscale` response shape as `AutoscaleMetrics` type from `packages/core/src/index.ts`
-  - [~] 40.5 Write tests: `/metrics/autoscale` response matches Kubernetes External Metrics API format, service mesh env var disables retries, readiness delay holds probe in `down` state
+- [~] 40. v2.1 — Service Mesh and Auto-Scaling Metrics
+  - [ ] 40.1 Register `GET /metrics/autoscale` route in `StreetApp`: return JSON in Kubernetes External Metrics API format with `http_requests_per_second`, `active_connections`, and `queue_depth` values computed from `TelemetryTracker` and `JobQueue`
+  - [ ] 40.2 Implement service mesh detection: check `ISTIO_META_MESH_ID` and `LINKERD_PROXY_INJECTION_ENABLED` env vars on startup; when detected, set `RetryPolicy.enabled = false` for all `CircuitBreaker` instances to avoid conflicting with mesh retries
+  - [x] 40.3 Implement `STREET_READINESS_DELAY_MS` startup delay: `HealthCheckRegistry` readiness probe returns `down` until the delay has elapsed after `app.listen()` completes
+  - [ ] 40.4 Export `/metrics/autoscale` response shape as `AutoscaleMetrics` type from `packages/core/src/index.ts`
+  - [ ] 40.5 Write tests: `/metrics/autoscale` response matches Kubernetes External Metrics API format, service mesh env var disables retries, readiness delay holds probe in `down` state
 
 - [ ] 41. v2.1 — Edge Runtime Adapter
   - [~] 41.1 Create `packages/edge/` workspace package with its own `package.json` (`@streetjs/edge`) and `tsconfig.json`; configure `"browser"` export condition
