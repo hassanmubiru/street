@@ -325,12 +325,12 @@ Status markers used in this plan:
   - [x] 35.6 Emit `circuitbreaker:open` event with service name, failure count, and timestamp on Closed→Open transition
   - [x] 35.7 Write tests: failure threshold opens the circuit, probe failure returns to Open, probe success closes the circuit, `CircuitOpenError` thrown on Open state, invalid state transitions are unreachable
 
-- [ ] 36. v2.0 — Message Queues and Event Bus
-  - [~] 36.1 Create `packages/core/src/microservices/event-bus.ts`: `EventBusTransport` interface, `EventEnvelope` type, `EventBus` class; default in-process transport backed by `EventEmitter`
-  - [~] 36.2 Implement `EventBus.publish(topic, payload)`: wrap payload in envelope `{ id: randomBytes(16).hex, topic, timestamp, version: 1, payload }`; call `transport.publish()`
-  - [~] 36.3 Implement `EventBus.subscribe(topic, handler)`: call `transport.subscribe()`; return unsubscribe function that cleans up all listeners
-  - [~] 36.4 Create `RedisTransport` in `packages/core/src/microservices/transports/redis.ts`: use Redis Pub/Sub via `node:net` (raw RESP protocol, no redis npm package); ACK only after handler resolves; NACK on handler exception
-  - [~] 36.5 Create `RabbitMQTransport` in `packages/core/src/microservices/transports/rabbitmq.ts`: AMQP 0-9-1 basic framing over `node:net`; support dead letter exchange routing
+- [~] 36. v2.0 — Message Queues and Event Bus
+  - [x] 36.1 Create `packages/core/src/microservices/event-bus.ts`: `EventBusTransport` interface, `EventEnvelope` type, `EventBus` class; default in-process transport backed by `EventEmitter`
+  - [x] 36.2 Implement `EventBus.publish(topic, payload)`: wrap payload in envelope `{ id: randomBytes(16).hex, topic, timestamp, version: 1, payload }`; call `transport.publish()`
+  - [x] 36.3 Implement `EventBus.subscribe(topic, handler)`: call `transport.subscribe()`; return unsubscribe function that cleans up all listeners
+  - [ ] 36.4 Create `RedisTransport` in `packages/core/src/microservices/transports/redis.ts`: use Redis Pub/Sub via `node:net` (raw RESP protocol, no redis npm package); ACK only after handler resolves; NACK on handler exception
+  - [ ] 36.5 Create `RabbitMQTransport` in `packages/core/src/microservices/transports/rabbitmq.ts`: AMQP 0-9-1 basic framing over `node:net`; support dead letter exchange routing
   - [~] 36.6 Write tests: in-process publish and subscribe, message envelope structure is correct, at-least-once delivery (message re-delivered after NACK), dead letter routing on exhausted retries
 
 - [ ] 37. v2.0 — Saga, Distributed Locks, CQRS, and Event Sourcing
