@@ -4,17 +4,30 @@
 import { createServer, type Server, type Socket } from 'node:net';
 import { unlink, access } from 'node:fs/promises';
 import type { RouteProfiler } from './route-profiler.js';
+import type { JobQueueMetrics } from '../jobs/queue.js';
+
+/**
+ * Minimal structural view of a job-metrics provider (e.g. a `JobQueue`).
+ * Declared structurally — rather than importing the concrete `JobQueue` class —
+ * so the diagnostics server stays loosely coupled and free of import cycles.
+ */
+export interface JobMetricsSource {
+  metrics(): Promise<JobQueueMetrics>;
+}
 
 export interface DiagnosticsServerOptions {
   /** Path to the Unix domain socket (default: /tmp/street-<pid>.sock) */
   socketPath?: string;
   /** RouteProfiler instance to snapshot */
   profiler: RouteProfiler;
+  /** Optional job-metrics source (e.g. a JobQueue) to include in snapshots. */
+  jobQueue?: JobMetricsSource;
 }
 
 export class DiagnosticsServer {
   private readonly _socketPath: string;
   private readonly _profiler: RouteProfiler;
+  private readonly _jobQueue: JobMetricsSource | null;
   private _server: Server | null = null;
   private readonly _clients = new Set<Socket>();
   private _pushTimer: NodeJS.Timeout | null = null;
@@ -22,6 +35,7 @@ export class DiagnosticsServer {
   constructor(opts: DiagnosticsServerOptions) {
     this._socketPath = opts.socketPath ?? `/tmp/street-${process.pid}.sock`;
     this._profiler = opts.profiler;
+    this._jobQueue = opts.jobQueue ?? null;
   }
 
   /** Start listening on the Unix domain socket and push snapshots every second. */
