@@ -88,6 +88,7 @@ function normalizePath(p) {
 export function streetHttp2App(opts = {}) {
     const router = new Router();
     const globalMiddlewares = [];
+    const pluginMiddlewares = new Map();
     const registeredRoutes = [];
     const server = createSecureServer({
         key: opts.key,
@@ -148,6 +149,32 @@ export function streetHttp2App(opts = {}) {
     return {
         use(mw) {
             globalMiddlewares.push(mw);
+        },
+        async loadPlugin(plugin) {
+            const added = [];
+            const sandbox = {
+                use(mw) { globalMiddlewares.push(mw); added.push(mw); },
+                on() { },
+            };
+            pluginMiddlewares.set(plugin, added);
+            if (plugin.onLoad)
+                await plugin.onLoad(sandbox);
+        },
+        async unloadPlugin(plugin) {
+            const added = pluginMiddlewares.get(plugin);
+            if (!added)
+                return;
+            const sandbox = {
+                use() { }, on() { },
+            };
+            if (plugin.onUnload)
+                await plugin.onUnload(sandbox);
+            for (const mw of added) {
+                const idx = globalMiddlewares.indexOf(mw);
+                if (idx !== -1)
+                    globalMiddlewares.splice(idx, 1);
+            }
+            pluginMiddlewares.delete(plugin);
         },
         registerController(ctor) {
             const controllerMeta = getControllerMeta(ctor);
