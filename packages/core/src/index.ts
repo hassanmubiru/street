@@ -223,6 +223,7 @@ export { CircuitBreaker, CircuitOpenError } from './microservices/circuit-breake
 export type { CircuitState, CircuitBreakerOptions } from './microservices/circuit-breaker.js';
 export { EventBus, InProcessTransport } from './microservices/event-bus.js';
 export type { EventEnvelope, EventBusTransport } from './microservices/event-bus.js';
+export { RedisEventBusTransport } from './microservices/transports/redis.js';
 export { SagaOrchestrator } from './microservices/saga.js';
 export type { SagaStep } from './microservices/saga.js';
 export { DistributedLock } from './microservices/distributed-lock.js';
