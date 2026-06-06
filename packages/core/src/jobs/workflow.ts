@@ -215,15 +215,25 @@ export class WorkflowEngine {
       return step.run(input, ctx);
     }
 
-    return Promise.race([
-      step.run(input, ctx),
-      new Promise<never>((_, reject) =>
-        setTimeout(
-          () => reject(new Error(`Step "${step.name}" timed out after ${step.timeoutMs}ms`)),
-          step.timeoutMs,
-        ).unref?.(),
-      ),
-    ]);
+    const timeoutMs = step.timeoutMs;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    try {
+      return await Promise.race([
+        step.run(input, ctx),
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new WorkflowStepTimeoutError(step.name, timeoutMs)),
+            timeoutMs,
+          );
+          // Don't keep the event loop alive solely for this timer.
+          timer.unref?.();
+        }),
+      ]);
+    } finally {
+      // Clear the timer if the step settled first, preventing a leaked timer.
+      if (timer) clearTimeout(timer);
+    }
   }
 
   private async _compensate(
