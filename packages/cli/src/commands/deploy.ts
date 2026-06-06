@@ -24,14 +24,14 @@ export class DeployInitCommand {
     }
 
     const core = await import('@streetjs/core');
-    const config = {
+    const config: DeployConfig = {
       name: 'street-app',
       image: 'street-app:latest',
       port: Number(process.env['PORT'] ?? 3000),
       replicas: 2,
-      env: ['NODE_ENV', 'PG_HOST', 'PG_PORT', 'PG_DATABASE'],
+      env: { NODE_ENV: 'production' },
     };
-    const manifest = core.generateManifest(platform as CloudPlatform, config as DeployConfig);
+    const manifest = core.generateManifest(platform as CloudPlatform, config);
 
     const dir = resolve(ctx.cwd, 'deploy');
     await mkdir(dir, { recursive: true });
