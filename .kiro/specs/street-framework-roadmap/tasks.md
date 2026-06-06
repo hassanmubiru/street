@@ -121,13 +121,13 @@
   - [x] 13.7 Export `MetricsRegistry`, `prometheusMiddleware`, `MetricConflictError` from `packages/core/src/index.ts`
   - [x] 13.8 Write tests: Prometheus text format is valid, concurrent scrapes produce consistent snapshots, conflict detection, default metrics are present
 
-- [ ] 14. v1.3 — Health Check DSL
+- [x] 14. v1.3 — Health Check DSL
   - [x] 14.1 Create `packages/core/src/observability/health.ts`: `HealthCheckRegistry`, `CheckFn`, `CheckResult`, `HealthResponse`, `CheckType` types
   - [x] 14.2 Implement `HealthCheckRegistry.addCheck(name, fn, opts)`: store checks in a `Map<string, { fn, type, timeoutMs }>`
   - [x] 14.3 Implement `HealthCheckRegistry.runLiveness()` and `runReadiness()`: execute all matching checks in parallel with `Promise.allSettled()`; wrap each in `Promise.race([fn(), timeoutPromise])`; mark any that reject or time out as `down`; return `HealthResponse`
   - [x] 14.4 Create `registerHealthRoutes(app, registry)`: register `GET /health/live` and `GET /health/ready` on `StreetApp`; respond 200 on all `up`, 503 on any `down`
-  - [~] 14.5 Export `HealthCheckRegistry`, `registerHealthRoutes`, `CheckResult` from `packages/core/src/index.ts`
-  - [~] 14.6 Write tests: all-up returns 200, one-down returns 503 with body listing the failed check, timed-out check marked `down`, thrown exception caught and marked `down`
+  - [x] 14.5 Export `HealthCheckRegistry`, `registerHealthRoutes`, `CheckResult` from `packages/core/src/index.ts`
+  - [x] 14.6 Write tests: all-up returns 200, one-down returns 503 with body listing the failed check, timed-out check marked `down`, thrown exception caught and marked `down`
 
 - [ ] 15. v1.3 — Request Profiler and Diagnostics Dashboard
   - [~] 15.1 Create `packages/core/src/diagnostics/route-profiler.ts` with `RouteProfiler`: `Map<routeKey, CircularBuffer<LatencySample>>` capped at 10,000 samples per route; `record(method, pattern, latencyNs, isError)` and `stats(method, pattern)` returning `RouteStats` with P50/P95/P99
