@@ -32,4 +32,35 @@ export declare class TenantMetricsRegistry {
      */
     forTenant(tenantId: string): TenantMetricsView;
 }
+interface AggregationPool {
+    query(sql: string, params?: unknown[]): Promise<{
+        rows: Record<string, unknown>[];
+        rowCount: number;
+        command: string;
+    }>;
+}
+interface CronLike {
+    register(expression: string, name: string, fn: () => Promise<void>): void;
+}
+/**
+ * Aggregates per-metric `street_tenant_usage` rows for a given day into a single
+ * JSONB summary row per tenant in `street_tenant_daily_stats`. Designed to run
+ * nightly via `CronScheduler`.
+ */
+export declare class TenantUsageAggregator {
+    private readonly pool;
+    constructor(pool: AggregationPool);
+    /**
+     * Aggregate usage for `period` (a DATE) into `street_tenant_daily_stats`.
+     * Sums all `value`s per (tenant_id, metric_key) and upserts a JSONB map.
+     * Returns the number of tenant rows written.
+     */
+    aggregate(period: Date): Promise<number>;
+    /**
+     * Register a nightly aggregation job (default 00:10 every day) on a
+     * `CronScheduler`. Aggregates the previous day's usage.
+     */
+    scheduleNightly(scheduler: CronLike, name?: string, expression?: string): void;
+}
+export {};
 //# sourceMappingURL=metrics.d.ts.map

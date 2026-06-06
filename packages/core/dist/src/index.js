@@ -90,7 +90,7 @@ export { tenantMiddleware, TENANTS_MIGRATION_SQL } from './tenancy/context.js';
 export { TenantPoolRegistry } from './tenancy/pool-registry.js';
 export { TenantScopedRepository, TenantScoped } from './tenancy/tenant-scoped.js';
 export { TenantServiceImpl, QuotaEnforcer, registerTenantMetricsRoute, TENANT_USAGE_MIGRATION_SQL } from './tenancy/provisioner.js';
-export { TenantMetricsRegistry, TenantMetricsView, TENANT_DAILY_STATS_MIGRATION_SQL } from './tenancy/metrics.js';
+export { TenantMetricsRegistry, TenantMetricsView, TenantUsageAggregator, TENANT_DAILY_STATS_MIGRATION_SQL } from './tenancy/metrics.js';
 export { InMemoryBillingAdapter } from './tenancy/billing.js';
 // ── Microservices ─────────────────────────────────────────────────────────────
 export { streetHttp2App } from './microservices/http2.js';

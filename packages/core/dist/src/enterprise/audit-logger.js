@@ -43,6 +43,8 @@ export class AuditLogger {
     async log(opts) {
         const entry = {
             ...opts,
+            beforeState: _redactSensitive(opts.beforeState, opts.entityClass),
+            afterState: _redactSensitive(opts.afterState, opts.entityClass),
             id: _uuid(),
             batchId: '', // assigned at flush time
             createdAt: new Date(),
@@ -58,6 +60,10 @@ export class AuditLogger {
             }, 5_000);
             this.flushTimer.unref();
         }
+    }
+    /** Force-flush any pending entries to the database. */
+    async flush() {
+        await this._flush();
     }
     async _flush() {
         if (this.flushTimer) {
@@ -146,6 +152,19 @@ export class AuditLogger {
         });
         return readable;
     }
+}
+function _redactSensitive(state, entityClass) {
+    if (!entityClass || state === null || typeof state !== 'object')
+        return state;
+    const sensitive = Reflect.getMetadata('street:sensitive', entityClass) ?? [];
+    if (sensitive.length === 0)
+        return state;
+    const out = { ...state };
+    for (const field of sensitive) {
+        if (field in out)
+            out[field] = '[REDACTED]';
+    }
+    return out;
 }
 function _uuid() {
     // Generate a v4 UUID using crypto.randomUUID if available, else fallback
