@@ -280,7 +280,7 @@ export type {
 } from './graphql/schema.js';
 
 // ── GraphQL: Execution Engine ─────────────────────────────────────────────────
-export { GraphQlEngine, graphqlMiddleware } from './graphql/engine.js';
+export { GraphQlEngine, graphqlMiddleware, registerGraphqlRoute, DEFAULT_GRAPHQL_PATH } from './graphql/engine.js';
 export type { GraphQlEngineOptions, ExecutionResult, SubscriptionSource } from './graphql/engine.js';
 
 // ── GraphQL: Subscriptions (graphql-ws) ───────────────────────────────────────
