@@ -31,7 +31,6 @@ export declare class GrpcServer {
     registerService(serviceName: string, methods: Record<string, MethodRegistration>): void;
     start(): Promise<void>;
     stop(): Promise<void>;
-    private _respondTrailers;
     private _handleStream;
     private _readFrames;
 }
