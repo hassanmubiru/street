@@ -32,6 +32,11 @@ export interface AuditEntry {
   afterState?: unknown;
   ip?: string;
   userAgent?: string;
+  /**
+   * Optional entity constructor whose `@Sensitive()` fields should be redacted
+   * in `beforeState` / `afterState` before persistence.
+   */
+  entityClass?: new (...args: never[]) => unknown;
 }
 
 interface BatchEntry extends AuditEntry {
