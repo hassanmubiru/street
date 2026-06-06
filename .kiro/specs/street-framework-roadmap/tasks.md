@@ -344,7 +344,7 @@ Status markers used in this plan:
 
 - [~] 38. v2.1 — Container Orchestration and Cloud Runtime Adapters
   - [x] 38.1 Create `packages/core/src/cloud/deployment.ts` with `generateManifest(platform, config)`: produce Kubernetes `Deployment` + `Service` + `HPA` YAML, Cloud Run `service.yaml`, ECS task definition JSON, or Nomad job HCL; each includes liveness/readiness probe paths, resource limits, and env var references
-  - [ ] 38.2 Add `street deploy:init --platform <kubernetes|cloudrun|ecs|nomad>` CLI command: import the project's `street.config.ts`, call `generateManifest()`, write files to `deploy/` directory
+  - [x] 38.2 Add `street deploy:init --platform <kubernetes|cloudrun|ecs|nomad>` CLI command: import the project's `street.config.ts`, call `generateManifest()`, write files to `deploy/` directory
   - [x] 38.3 Extract `registerShutdownHook(app, pool, opts?)` from `main.ts` as a standalone exportable function: `SIGTERM` → drain HTTP → close DB connections → exit 0; configurable `graceMs` (default 30,000)
   - [~] 38.4 Implement Cloud Run auto-detection: check `K_SERVICE` and `K_REVISION` env vars; when detected, switch `Logger` to GCP structured JSON format with `severity`, `message`, `timestamp`, and `httpRequest` fields
   - [x] 38.5 Implement `STREET_READINESS_DELAY_MS` env var: delay the readiness probe returning `up` by the configured milliseconds after startup completes
@@ -368,11 +368,11 @@ Status markers used in this plan:
 
 - [~] 41. v2.1 — Edge Runtime Adapter
   - [x] 41.1 Create `packages/edge/` workspace package with its own `package.json` (`@streetjs/edge`) and `tsconfig.json`; configure `"browser"` export condition
-  - [~] 41.2 Create `packages/edge/src/adapter.ts` with `handleEdgeRequest(request: Request, app: StreetApp): Promise<Response>`: map Web Fetch `Request` → `StreetContext` using a synthetic `IncomingMessage`-like object; run the middleware pipeline; build a `Response` from the context's JSON/text/html output
-  - [~] 41.3 Create `packages/edge/src/stubs.ts`: stub modules that replace `node:net`, `node:cluster`, `node:fs`, and `node:http` when bundled for edge targets; each stub's methods throw `FeatureUnavailableInEdgeRuntimeError` when called
-  - [~] 41.4 Add `"browser"` export conditions in `packages/core/package.json` to map `node:net` imports to edge stubs for tree-shaking
+  - [x] 41.2 Create `packages/edge/src/adapter.ts` with `handleEdgeRequest(request: Request, app: StreetApp): Promise<Response>`: map Web Fetch `Request` → `StreetContext` using a synthetic `IncomingMessage`-like object; run the middleware pipeline; build a `Response` from the context's JSON/text/html output
+  - [x] 41.3 Create `packages/edge/src/stubs.ts`: stub modules that replace `node:net`, `node:cluster`, `node:fs`, and `node:http` when bundled for edge targets; each stub's methods throw `FeatureUnavailableInEdgeRuntimeError` when called
+  - [ ] 41.4 Add `"browser"` export conditions in `packages/core/package.json` to map `node:net` imports to edge stubs for tree-shaking
   - [x] 41.5 Create `FeatureUnavailableInEdgeRuntimeError` in `packages/core/src/http/exceptions.ts`
-  - [ ] 41.6 Write tests: `handleEdgeRequest` routes to the correct handler, edge-incompatible features throw `FeatureUnavailableInEdgeRuntimeError` when initialized, routing/middleware/DI/JWT verify all work in edge mode
+  - [x] 41.6 Write tests: `handleEdgeRequest` routes to the correct handler, edge-incompatible features throw `FeatureUnavailableInEdgeRuntimeError` when initialized, routing/middleware/DI/JWT verify all work in edge mode
 
 
 - [x] 42. v2.2 — Feature Flags
@@ -389,7 +389,7 @@ Status markers used in this plan:
   - [x] 43.3 Implement `AuditLogger.log(opts)`: write to `street_audit_log`; batch every 100 entries; sign each batch with `HMAC-SHA256(previousSignature + batchJSON)` to create a hash chain
   - [x] 43.4 Implement `@Sensitive()` property decorator: marks entity fields; `AuditLogger.log()` reads metadata and replaces sensitive field values with `"[REDACTED]"` in `before_state` and `after_state`
   - [~] 43.5 Implement `AuditLogger.export(from, to, format)`: `SELECT` from `street_audit_log` ordered by `created_at`; stream output as JSONL or CSV via a `Readable` stream
-  - [ ] 43.6 Add `street audit:export --from <date> --to <date> --format <jsonl|csv>` CLI command
+  - [x] 43.6 Add `street audit:export --from <date> --to <date> --format <jsonl|csv>` CLI command
   - [ ] 43.7 Write tests: append-only trigger prevents DELETE and UPDATE, batch signature chain is verifiable, `@Sensitive` fields are redacted in audit output, JSONL export contains all entries in time range
 
 - [~] 44. v2.2 — Data Retention, Encryption Policies, and Data Classification
