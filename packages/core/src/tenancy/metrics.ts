@@ -142,3 +142,55 @@ export class TenantMetricsRegistry {
     return view;
   }
 }
+
+// ── Daily usage aggregation (nightly cron job) ──────────────────────────────────
+
+interface AggregationPool {
+  query(sql: string, params?: unknown[]): Promise<{ rows: Record<string, unknown>[]; rowCount: number; command: string }>;
+}
+
+interface CronLike {
+  register(expression: string, name: string, fn: () => Promise<void>): void;
+}
+
+/**
+ * Aggregates per-metric `street_tenant_usage` rows for a given day into a single
+ * JSONB summary row per tenant in `street_tenant_daily_stats`. Designed to run
+ * nightly via `CronScheduler`.
+ */
+export class TenantUsageAggregator {
+  constructor(private readonly pool: AggregationPool) {}
+
+  /**
+   * Aggregate usage for `period` (a DATE) into `street_tenant_daily_stats`.
+   * Sums all `value`s per (tenant_id, metric_key) and upserts a JSONB map.
+   * Returns the number of tenant rows written.
+   */
+  async aggregate(period: Date): Promise<number> {
+    const day = period.toISOString().slice(0, 10);
+    const result = await this.pool.query(
+      `INSERT INTO street_tenant_daily_stats (tenant_id, date, metrics, created_at)
+       SELECT tenant_id, period AS date,
+              jsonb_object_agg(metric_key, value) AS metrics,
+              NOW() AS created_at
+         FROM street_tenant_usage
+        WHERE period = $1
+        GROUP BY tenant_id, period
+       ON CONFLICT (tenant_id, date)
+       DO UPDATE SET metrics = EXCLUDED.metrics, created_at = NOW()`,
+      [day],
+    );
+    return result.rowCount;
+  }
+
+  /**
+   * Register a nightly aggregation job (default 00:10 every day) on a
+   * `CronScheduler`. Aggregates the previous day's usage.
+   */
+  scheduleNightly(scheduler: CronLike, name = 'tenant-usage-daily-aggregation', expression = '10 0 * * *'): void {
+    scheduler.register(expression, name, async () => {
+      const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      await this.aggregate(yesterday);
+    });
+  }
+}
