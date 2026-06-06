@@ -333,22 +333,22 @@ Status markers used in this plan:
   - [ ] 36.5 Create `RabbitMQTransport` in `packages/core/src/microservices/transports/rabbitmq.ts`: AMQP 0-9-1 basic framing over `node:net`; support dead letter exchange routing
   - [~] 36.6 Write tests: in-process publish and subscribe, message envelope structure is correct, at-least-once delivery (message re-delivered after NACK), dead letter routing on exhausted retries
 
-- [ ] 37. v2.0 — Saga, Distributed Locks, CQRS, and Event Sourcing
-  - [~] 37.1 Create `packages/core/src/microservices/saga.ts` with `SagaOrchestrator.execute(steps)`: run each `{ action, compensate }` step in sequence; on failure, run `compensate()` functions in reverse order; log compensation errors without re-throwing
-  - [~] 37.2 Create `packages/core/src/microservices/distributed-lock.ts` with `DistributedLock` using `pg_try_advisory_lock`: `acquire(key, ttlMs?)` returns a `LockHandle`; `LockHandle.release()` calls `pg_advisory_unlock`; TTL timer auto-calls `release()` if not manually released
-  - [~] 37.3 Create `packages/core/src/microservices/cqrs.ts` with `CommandBus` and `QueryBus`: typed `register(commandType, handler)` and `dispatch(command)` methods; handler lookup by constructor identity
-  - [~] 37.4 Write `street_events` migration SQL: `id UUID, aggregate_id TEXT, version INT, type TEXT, payload JSONB, created_at`; add `UNIQUE (aggregate_id, version)` constraint
-  - [~] 37.5 Create `packages/core/src/microservices/event-store.ts` with `EventStore`: `append(aggregateId, events, expectedVersion?)` validates optimistic concurrency then inserts; `load(aggregateId, fromVersion?)` reads events in version order
-  - [~] 37.6 Write tests: saga compensation runs in reverse order on failure, distributed lock prevents concurrent acquisition, released lock allows next acquisition, event store append-order invariant (events read back in insertion order), optimistic concurrency conflict throws
+- [x] 37. v2.0 — Saga, Distributed Locks, CQRS, and Event Sourcing
+  - [x] 37.1 Create `packages/core/src/microservices/saga.ts` with `SagaOrchestrator.execute(steps)`: run each `{ action, compensate }` step in sequence; on failure, run `compensate()` functions in reverse order; log compensation errors without re-throwing
+  - [x] 37.2 Create `packages/core/src/microservices/distributed-lock.ts` with `DistributedLock` using `pg_try_advisory_lock`: `acquire(key, ttlMs?)` returns a `LockHandle`; `LockHandle.release()` calls `pg_advisory_unlock`; TTL timer auto-calls `release()` if not manually released
+  - [x] 37.3 Create `packages/core/src/microservices/cqrs.ts` with `CommandBus` and `QueryBus`: typed `register(commandType, handler)` and `dispatch(command)` methods; handler lookup by constructor identity
+  - [x] 37.4 Write `street_events` migration SQL: `id UUID, aggregate_id TEXT, version INT, type TEXT, payload JSONB, created_at`; add `UNIQUE (aggregate_id, version)` constraint
+  - [x] 37.5 Create `packages/core/src/microservices/event-store.ts` with `EventStore`: `append(aggregateId, events, expectedVersion?)` validates optimistic concurrency then inserts; `load(aggregateId, fromVersion?)` reads events in version order
+  - [x] 37.6 Write tests: saga compensation runs in reverse order on failure, distributed lock prevents concurrent acquisition, released lock allows next acquisition, event store append-order invariant (events read back in insertion order), optimistic concurrency conflict throws
 
 
-- [ ] 38. v2.1 — Container Orchestration and Cloud Runtime Adapters
-  - [~] 38.1 Create `packages/core/src/cloud/deployment.ts` with `generateManifest(platform, config)`: produce Kubernetes `Deployment` + `Service` + `HPA` YAML, Cloud Run `service.yaml`, ECS task definition JSON, or Nomad job HCL; each includes liveness/readiness probe paths, resource limits, and env var references
-  - [~] 38.2 Add `street deploy:init --platform <kubernetes|cloudrun|ecs|nomad>` CLI command: import the project's `street.config.ts`, call `generateManifest()`, write files to `deploy/` directory
-  - [~] 38.3 Extract `registerShutdownHook(app, pool, opts?)` from `main.ts` as a standalone exportable function: `SIGTERM` → drain HTTP → close DB connections → exit 0; configurable `graceMs` (default 30,000)
+- [~] 38. v2.1 — Container Orchestration and Cloud Runtime Adapters
+  - [x] 38.1 Create `packages/core/src/cloud/deployment.ts` with `generateManifest(platform, config)`: produce Kubernetes `Deployment` + `Service` + `HPA` YAML, Cloud Run `service.yaml`, ECS task definition JSON, or Nomad job HCL; each includes liveness/readiness probe paths, resource limits, and env var references
+  - [ ] 38.2 Add `street deploy:init --platform <kubernetes|cloudrun|ecs|nomad>` CLI command: import the project's `street.config.ts`, call `generateManifest()`, write files to `deploy/` directory
+  - [ ] 38.3 Extract `registerShutdownHook(app, pool, opts?)` from `main.ts` as a standalone exportable function: `SIGTERM` → drain HTTP → close DB connections → exit 0; configurable `graceMs` (default 30,000)
   - [~] 38.4 Implement Cloud Run auto-detection: check `K_SERVICE` and `K_REVISION` env vars; when detected, switch `Logger` to GCP structured JSON format with `severity`, `message`, `timestamp`, and `httpRequest` fields
-  - [~] 38.5 Implement `STREET_READINESS_DELAY_MS` env var: delay the readiness probe returning `up` by the configured milliseconds after startup completes
-  - [~] 38.6 Write tests: generated Kubernetes YAML is valid YAML with correct health probe paths, Cloud Run format detection switches log format, shutdown drains in-flight requests before pool close
+  - [x] 38.5 Implement `STREET_READINESS_DELAY_MS` env var: delay the readiness probe returning `up` by the configured milliseconds after startup completes
+  - [ ] 38.6 Write tests: generated Kubernetes YAML is valid YAML with correct health probe paths, Cloud Run format detection switches log format, shutdown drains in-flight requests before pool close
 
 - [ ] 39. v2.1 — Secret Providers
   - [~] 39.1 Create `packages/core/src/cloud/secret-providers.ts`: `SecretProvider` interface with `get(key): Promise<string>`; shared in-memory cache `Map<key, { value, expiresAt }>`
