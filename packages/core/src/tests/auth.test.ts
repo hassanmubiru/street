@@ -238,7 +238,7 @@ describe('WebAuthnService.finishAuthentication — signature verification', () =
   async function setupCred(pool: MemoryPool, session: MemorySession, userId: string, challenge: string) {
     // Generate a real EC P-256 key pair for testing
     const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
-    const jwk = publicKey.export({ format: 'jwk' }) as crypto.JsonWebKey;
+    const jwk = publicKey.export({ format: 'jwk' }) as crypto.webcrypto.JsonWebKey;
     const credId = 'test-cred-123';
 
     await session.setChallenge(userId, challenge, Date.now() + 60_000);
@@ -1003,7 +1003,7 @@ describe('WebAuthnService.finishAuthentication — additional error cases', () =
     );
 
     const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', { namedCurve: 'P-256' });
-    const jwk = publicKey.export({ format: 'jwk' }) as crypto.JsonWebKey;
+    const jwk = publicKey.export({ format: 'jwk' }) as crypto.webcrypto.JsonWebKey;
     const credId = 'replay-cred';
     const storedSignCount = 5;
 
