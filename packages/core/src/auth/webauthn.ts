@@ -301,7 +301,7 @@ export class WebAuthnService {
     const storedPublicKey = cred['public_key'];
     if (!storedPublicKey) throw new Error('Stored credential has no public key');
 
-    const jwk = JSON.parse(storedPublicKey) as crypto.JsonWebKey;
+    const jwk = JSON.parse(storedPublicKey) as crypto.webcrypto.JsonWebKey;
     const pubKey = crypto.createPublicKey({ key: jwk, format: 'jwk' });
 
     const verifier = crypto.createVerify('SHA256');
