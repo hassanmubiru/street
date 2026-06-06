@@ -212,6 +212,8 @@ export { TenantScopedRepository, TenantScoped } from './tenancy/tenant-scoped.js
 export { TenantServiceImpl, QuotaEnforcer, registerTenantMetricsRoute, TENANT_USAGE_MIGRATION_SQL } from './tenancy/provisioner.js';
 export type { QuotaStatus, QuotaConfig, TenantService } from './tenancy/provisioner.js';
 export { TenantMetricsRegistry, TenantMetricsView, TENANT_DAILY_STATS_MIGRATION_SQL } from './tenancy/metrics.js';
+export { InMemoryBillingAdapter } from './tenancy/billing.js';
+export type { TenantBillingAdapter, UsageMetrics, BillingPeriod } from './tenancy/billing.js';
 
 // ── Microservices ─────────────────────────────────────────────────────────────
 export { streetHttp2App } from './microservices/http2.js';
