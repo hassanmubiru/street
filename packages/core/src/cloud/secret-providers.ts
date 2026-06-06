@@ -1,9 +1,15 @@
 // src/cloud/secret-providers.ts
-// Secret providers for Vault, AWS Secrets Manager, and GCP Secret Manager.
-// All providers share an in-memory cache with TTL.
+// Secret providers for HashiCorp Vault, AWS Secrets Manager, Azure Key Vault,
+// and GCP Secret Manager. All providers share an in-memory cache with TTL, an
+// exponential-backoff startup retry, and never log raw secret values.
+//
+// All network access is over node:https (or node:http for plain-HTTP dev/test
+// endpoints such as a local Vault or LocalStack), with no cloud SDK dependency.
 
 import { createHmac } from 'node:crypto';
 import { request as httpsRequest } from 'node:https';
+import { request as httpRequest } from 'node:http';
+import { EventEmitter } from 'node:events';
 
 // ── SecretProvider interface ──────────────────────────────────────────────────
 
@@ -20,37 +26,58 @@ interface CacheEntry {
 
 const DEFAULT_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
-// ── HTTPS helper ──────────────────────────────────────────────────────────────
+// ── HTTP(S) helper ────────────────────────────────────────────────────────────
+// Chooses node:http for `http:` URLs (dev/test endpoints) and node:https
+// otherwise. A custom CA bundle can be supplied for private TLS endpoints.
+
+export interface HttpClientOptions {
+  /** Custom CA certificate(s) for private TLS endpoints. */
+  ca?: string | Buffer | Array<string | Buffer>;
+  /** Set false only for trusted self-signed dev endpoints. Default true. */
+  rejectUnauthorized?: boolean;
+}
+
+function httpRequestRaw(
+  method: 'GET' | 'POST',
+  url: string,
+  extraHeaders: Record<string, string>,
+  body: Buffer | null,
+  tls: HttpClientOptions,
+): Promise<{ status: number; body: string }> {
+  return new Promise((resolve, reject) => {
+    const parsed = new URL(url);
+    const isHttp = parsed.protocol === 'http:';
+    const options: Record<string, unknown> = {
+      hostname: parsed.hostname,
+      port: parsed.port || (isHttp ? 80 : 443),
+      path: parsed.pathname + parsed.search,
+      method,
+      headers: { ...extraHeaders, ...(body ? { 'Content-Length': String(body.length) } : {}) },
+    };
+    if (!isHttp) {
+      options['rejectUnauthorized'] = tls.rejectUnauthorized ?? true;
+      if (tls.ca) options['ca'] = tls.ca;
+    }
+    const requestFn = isHttp ? httpRequest : httpsRequest;
+    const req = requestFn(options, (res) => {
+      const chunks: Buffer[] = [];
+      res.on('data', (d: Buffer) => chunks.push(d));
+      res.on('end', () => {
+        resolve({ status: res.statusCode ?? 0, body: Buffer.concat(chunks).toString('utf8') });
+      });
+    });
+    req.on('error', reject);
+    if (body) req.write(body);
+    req.end();
+  });
+}
 
 function httpsGet(
   url: string,
   extraHeaders: Record<string, string> = {},
+  tls: HttpClientOptions = {},
 ): Promise<{ status: number; body: string }> {
-  return new Promise((resolve, reject) => {
-    const parsed = new URL(url);
-    const options = {
-      hostname: parsed.hostname,
-      port: parsed.port || 443,
-      path: parsed.pathname + parsed.search,
-      method: 'GET',
-      headers: extraHeaders,
-      rejectUnauthorized: true,
-    };
-
-    const req = httpsRequest(options, (res) => {
-      const chunks: Buffer[] = [];
-      res.on('data', (d: Buffer) => chunks.push(d));
-      res.on('end', () => {
-        resolve({
-          status: res.statusCode ?? 0,
-          body: Buffer.concat(chunks).toString('utf8'),
-        });
-      });
-    });
-
-    req.on('error', reject);
-    req.end();
-  });
+  return httpRequestRaw('GET', url, extraHeaders, null, tls);
 }
 
 // ── VaultSecretProvider ───────────────────────────────────────────────────────
