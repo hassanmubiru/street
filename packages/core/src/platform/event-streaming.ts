@@ -1,6 +1,8 @@
 // src/platform/event-streaming.ts
 // Event streaming primitives: transport abstraction, consumer, and realtime aggregator.
 
+import { EventEmitter } from 'node:events';
+
 // ---------------------------------------------------------------------------
 // StreamTransport interface
 // ---------------------------------------------------------------------------
