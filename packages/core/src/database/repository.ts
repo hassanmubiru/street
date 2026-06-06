@@ -45,6 +45,25 @@ export abstract class StreetPostgresRepository<T extends object>
 
   protected abstract mapRow(row: Record<string, string | null>): T;
 
+  /**
+   * Optional transparent field-level encryption. Subclasses that set both
+   * `encryptor` and `encryptedEntity` get automatic AES-256-GCM encryption of
+   * `@Encrypt()`-annotated fields on `create()`/`update()` and decryption on
+   * `findById()`/`findAll()`. Defaults to undefined (no encryption).
+   */
+  protected readonly encryptor?: FieldEncryptor;
+  protected readonly encryptedEntity?: new (...a: never[]) => unknown;
+
+  private _encrypt(data: Partial<T>): Partial<T> {
+    if (!this.encryptor || !this.encryptedEntity) return data;
+    return this.encryptor.encryptEntity(this.encryptedEntity, data as Record<string, unknown>) as Partial<T>;
+  }
+
+  private _decrypt(entity: T): T {
+    if (!this.encryptor || !this.encryptedEntity) return entity;
+    return this.encryptor.decryptEntity(this.encryptedEntity, entity as Record<string, unknown>) as T;
+  }
+
   async findById(id: string): Promise<T | null> {
     this._assertSafeTableName();
     const result = await this.pool.query(
