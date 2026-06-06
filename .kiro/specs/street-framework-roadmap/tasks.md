@@ -375,13 +375,13 @@ Status markers used in this plan:
   - [ ] 41.6 Write tests: `handleEdgeRequest` routes to the correct handler, edge-incompatible features throw `FeatureUnavailableInEdgeRuntimeError` when initialized, routing/middleware/DI/JWT verify all work in edge mode
 
 
-- [ ] 42. v2.2 — Feature Flags
-  - [~] 42.1 Write `street_feature_flags` migration SQL: `name TEXT PRIMARY KEY, enabled BOOLEAN, rules JSONB, updated_at`
-  - [~] 42.2 Create `packages/core/src/enterprise/feature-flags.ts` with `FeatureFlagService`: `isEnabled(flagName, context?)` reads from DB with `LruCache` (default 30s TTL); returns `false` and logs a `warn` entry if flag is not found
-  - [~] 42.3 Implement targeting rules evaluation: `user_id` exact match, `role` membership check, `environment` match; `percentage` rule uses `SHA256(flagName + userId)[0:8] % 100` for stable per-user assignment
-  - [~] 42.4 Implement `FeatureFlagService.invalidateCache(flagName)`: remove the flag entry from `LruCache`
-  - [~] 42.5 Register `PATCH /admin/feature-flags/:name` route: update the DB record, call `invalidateCache()`; protect with `requireRoles('admin')`
-  - [~] 42.6 Write tests: flag not found returns `false` without throwing, percentage rollout is stable for same user, targeting rule evaluation order, cache invalidation forces DB re-read
+- [~] 42. v2.2 — Feature Flags
+  - [x] 42.1 Write `street_feature_flags` migration SQL: `name TEXT PRIMARY KEY, enabled BOOLEAN, rules JSONB, updated_at`
+  - [x] 42.2 Create `packages/core/src/enterprise/feature-flags.ts` with `FeatureFlagService`: `isEnabled(flagName, context?)` reads from DB with `LruCache` (default 30s TTL); returns `false` and logs a `warn` entry if flag is not found
+  - [x] 42.3 Implement targeting rules evaluation: `user_id` exact match, `role` membership check, `environment` match; `percentage` rule uses `SHA256(flagName + userId)[0:8] % 100` for stable per-user assignment
+  - [x] 42.4 Implement `FeatureFlagService.invalidateCache(flagName)`: remove the flag entry from `LruCache`
+  - [ ] 42.5 Register `PATCH /admin/feature-flags/:name` route: update the DB record, call `invalidateCache()`; protect with `requireRoles('admin')`
+  - [ ] 42.6 Write tests: flag not found returns `false` without throwing, percentage rollout is stable for same user, targeting rule evaluation order, cache invalidation forces DB re-read
 
 - [ ] 43. v2.2 — Audit Logging
   - [~] 43.1 Write `street_audit_log` migration SQL: `id UUID, category TEXT, actor_id TEXT, action TEXT, resource TEXT, before_state JSONB, after_state JSONB, ip TEXT, user_agent TEXT, batch_id UUID, signature TEXT, created_at`; create append-only trigger that blocks `UPDATE` and `DELETE`
