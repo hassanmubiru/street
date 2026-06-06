@@ -81,6 +81,24 @@ export class ReplicationCoordinator extends EventEmitter {
             this.healthTimer = null;
         }
     }
+    /**
+     * Query `pg_stat_replication` on the primary and report per-replica lag (in
+     * seconds) into a Prometheus-style gauge. The gauge receives a value plus
+     * `{ region, replica_id }` labels for each replica row.
+     */
+    async reportReplicationLag(gauge) {
+        const primary = this.regions.find((r) => r.isPrimary && r.healthy);
+        if (!primary)
+            return;
+        const result = await primary.config.pool.query(`SELECT application_name AS replica_id,
+              COALESCE(EXTRACT(EPOCH FROM (now() - replay_lsn::text::timestamptz)), 0) AS lag_seconds
+       FROM pg_stat_replication`).catch(() => ({ rows: [] }));
+        for (const row of result.rows) {
+            const replicaId = String(row['replica_id'] ?? 'unknown');
+            const lag = Number(row['lag_seconds'] ?? 0);
+            gauge.set(Number.isFinite(lag) ? lag : 0, { region: primary.config.name, replica_id: replicaId });
+        }
+    }
     async _checkHealth() {
         for (const region of this.regions) {
             try {
