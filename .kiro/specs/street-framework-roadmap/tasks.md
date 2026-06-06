@@ -191,14 +191,14 @@
   - [x] 21.6 Write tests: revoked session returns 401 on next request, audit log entry written for each of the 6 event types, failed audit write causes transaction rollback, audit log cannot be deleted via public API
 
 
-- [ ] 22. v1.5 — Job Queue and Cron Scheduler
+- [x] 22. v1.5 — Job Queue and Cron Scheduler
   - [x] 22.1 Write `street_jobs` migration SQL: `id UUID, type TEXT, payload JSONB, status TEXT, attempt_count INT, run_at TIMESTAMPTZ, created_at TIMESTAMPTZ, worker_id TEXT, locked_at TIMESTAMPTZ, error TEXT`; add index on `(status, run_at)` for polling efficiency
   - [x] 22.2 Create `packages/core/src/jobs/queue.ts` with `JobQueue` class: `enqueue(opts)` inserts a row; `register(type, handler)` stores handler in a `Map`; `start()` starts the polling loop; `stop()` clears the interval
   - [x] 22.3 Implement polling loop: `setInterval` runs `SELECT ... FOR UPDATE SKIP LOCKED LIMIT $concurrency`, dispatches each job to its handler, marks success (`DELETE` or `status=completed`) or failure (`UPDATE attempt_count, error`)
   - [x] 22.4 Implement `@Job('type')` class decorator: marks a class as a job handler, stores type in metadata; `JobQueue.registerClass(ctor)` reads metadata and registers the `execute(payload, ctx)` method
   - [x] 22.5 Write `CronParseError` class and a 5-field cron expression parser in `packages/core/src/jobs/scheduler.ts`: validate field ranges (minute 0-59, hour 0-23, day 1-31, month 1-12, weekday 0-7); throw `CronParseError` with invalid expression and reason at registration time
   - [x] 22.6 Implement `CronScheduler`: `register(expression, name, fn)` parses and stores the cron config; `start()` computes next fire time and schedules via `setTimeout`; single-instance guard per job name prevents overlapping execution
-  - [-] 22.7 Write tests: job enqueued and executed, delayed job not executed before `runAt`, cron fires on correct tick, single-instance guard prevents overlap, invalid cron expression throws at registration
+  - [x] 22.7 Write tests: job enqueued and executed, delayed job not executed before `runAt`, cron fires on correct tick, single-instance guard prevents overlap, invalid cron expression throws at registration
 
 - [ ] 23. v1.5 — Delayed Jobs, Retry Policies, and Dead Letter Queues
   - [~] 23.1 Write `street_dead_letter_queue` migration SQL: `id, job_id, type, payload JSONB, error TEXT, exhausted_at TIMESTAMPTZ, created_at`
