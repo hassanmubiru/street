@@ -71,7 +71,7 @@ export abstract class StreetPostgresRepository<T extends object>
       [id]
     );
     if (result.rows.length === 0) return null;
-    return this.mapRow(result.rows[0] as Record<string, string | null>);
+    return this._decrypt(this.mapRow(result.rows[0] as Record<string, string | null>));
   }
 
   async findAll(limit = 20, offset = 0): Promise<T[]> {
@@ -82,7 +82,7 @@ export abstract class StreetPostgresRepository<T extends object>
       `SELECT * FROM ${this.tableName} ORDER BY created_at DESC LIMIT $1 OFFSET $2`,
       [safeLimit, safeOffset]
     );
-    return result.rows.map((r) => this.mapRow(r as Record<string, string | null>));
+    return result.rows.map((r) => this._decrypt(this.mapRow(r as Record<string, string | null>)));
   }
 
   async count(): Promise<number> {
