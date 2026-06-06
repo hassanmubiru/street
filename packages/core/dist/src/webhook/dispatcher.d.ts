@@ -9,6 +9,15 @@ export interface WebhookTarget {
     secret: string;
     timeoutMs?: number;
     maxRetries?: number;
+    /**
+     * Optional TLS settings for endpoints served by a private/corporate CA.
+     * `ca` supplies trusted certificate(s); `rejectUnauthorized` should remain
+     * true in production (default).
+     */
+    tls?: {
+        ca?: string | Buffer | Array<string | Buffer>;
+        rejectUnauthorized?: boolean;
+    };
 }
 export interface WebhookJob {
     target: WebhookTarget;

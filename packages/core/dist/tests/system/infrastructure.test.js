@@ -291,8 +291,8 @@ describe('Webhook Dispatcher — real HTTPS delivery', () => {
         // pipeline validation while HTTPS reachability is already covered above.
         const beforeCount = received.length;
         try {
-            dispatcher.enqueue({ url: `http://127.0.0.1:${port}/webhook`, secret, maxRetries: 0, timeoutMs: 5000 }, 'user.created', { id: 'u1', name: 'Alice' });
-            dispatcher.enqueue({ url: `http://127.0.0.1:${port}/webhook`, secret, maxRetries: 0, timeoutMs: 5000 }, 'user.updated', { id: 'u1', name: 'Alice Updated' });
+            dispatcher.enqueue({ url: `https://127.0.0.1:${port}/webhook`, secret, maxRetries: 0, timeoutMs: 5000, tls: { ca: caCert } }, 'user.created', { id: 'u1', name: 'Alice' });
+            dispatcher.enqueue({ url: `https://127.0.0.1:${port}/webhook`, secret, maxRetries: 0, timeoutMs: 5000, tls: { ca: caCert } }, 'user.updated', { id: 'u1', name: 'Alice Updated' });
             // Wait for async validation + dispatch (127.0.0.1 is in allowedHosts, no DNS lookup)
             await new Promise((r) => setTimeout(r, 2000));
         }
