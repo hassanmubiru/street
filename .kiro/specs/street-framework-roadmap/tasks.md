@@ -182,13 +182,13 @@
   - [x] 20.6 Implement `WebAuthnService.finishAuthentication(userId, assertion)`: verify challenge, verify assertion signature against stored public key using `node:crypto`'s `createVerify()`; enforce `signCount > stored` (replay protection); update stored `signCount`
   - [x] 20.7 Write tests: expired challenge returns 400 with `challenge_expired`, signature verification rejects tampered assertion, sign count replay protection, round-trip registration + authentication
 
-- [ ] 21. v1.4 — Session Revocation and Audit Trails
+- [x] 21. v1.4 — Session Revocation and Audit Trails
   - [x] 21.1 Create `packages/core/src/auth/session-store.ts` with `StreetSessionStore`: backed by `street_sessions` DB table; `create(data)`, `find(sessionId)`, `revoke(sessionId)`, `revokeAll(userId)` methods; write migration SQL
   - [x] 21.2 Implement revocation check middleware: on every authenticated request, check session ID against a `LruCache<string, boolean>` revocation set (DB fallback on cache miss); throw `UnauthorizedException` if revoked
   - [x] 21.3 Create `packages/core/src/auth/audit-writer.ts` with `AuditWriter` class; write `street_audit_log` migration SQL with `append-only` database trigger or rule
   - [x] 21.4 Implement `AuditWriter.write(record)`: inside a transaction, write the audit entry; if the write fails, re-throw so the calling transaction rolls back
   - [x] 21.5 Integrate `AuditWriter` into auth flows: call `write()` after login success, login failure, logout, token refresh, session revocation, and permission denial
-  - [-] 21.6 Write tests: revoked session returns 401 on next request, audit log entry written for each of the 6 event types, failed audit write causes transaction rollback, audit log cannot be deleted via public API
+  - [x] 21.6 Write tests: revoked session returns 401 on next request, audit log entry written for each of the 6 event types, failed audit write causes transaction rollback, audit log cannot be deleted via public API
 
 
 - [ ] 22. v1.5 — Job Queue and Cron Scheduler
