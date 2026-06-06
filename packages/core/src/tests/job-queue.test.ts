@@ -71,6 +71,40 @@ describe('JobQueue — Migration SQL', () => {
   });
 });
 
+// ── Tests: Job History Migration SQL ──────────────────────────────────────────
+
+describe('JobQueue — Job History Migration SQL', () => {
+  it('STREET_JOB_HISTORY_MIGRATION_SQL creates the street_job_history table with all required columns', () => {
+    assert.ok(
+      STREET_JOB_HISTORY_MIGRATION_SQL.includes('street_job_history'),
+      'Should reference street_job_history table',
+    );
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /id\s+UUID/i, 'id UUID');
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /job_id\s+TEXT/i, 'job_id TEXT');
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /type\s+TEXT/i, 'type TEXT');
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /status\s+TEXT/i, 'status TEXT');
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /duration_ms\s+INT/i, 'duration_ms INT');
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /created_at\s+TIMESTAMPTZ/i, 'created_at TIMESTAMPTZ');
+  });
+
+  it('STREET_JOB_HISTORY_MIGRATION_SQL declares id as the primary key', () => {
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /id\s+UUID\s+PRIMARY KEY/i, 'id UUID PRIMARY KEY');
+  });
+
+  it('STREET_JOB_HISTORY_MIGRATION_SQL adds a (type, created_at) index for per-type pruning', () => {
+    assert.match(
+      STREET_JOB_HISTORY_MIGRATION_SQL,
+      /CREATE INDEX[\s\S]*street_job_history\s*\(type,\s*created_at\)/i,
+      'Should create an index on (type, created_at)',
+    );
+  });
+
+  it('STREET_JOB_HISTORY_MIGRATION_SQL is idempotent (uses IF NOT EXISTS)', () => {
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /CREATE TABLE IF NOT EXISTS/i);
+    assert.match(STREET_JOB_HISTORY_MIGRATION_SQL, /CREATE INDEX IF NOT EXISTS/i);
+  });
+});
+
 // ── Tests: WorkflowEngine Migration SQL ───────────────────────────────────────
 
 describe('WorkflowEngine — Migration SQL', () => {
