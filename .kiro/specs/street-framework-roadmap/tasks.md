@@ -392,14 +392,14 @@ Status markers used in this plan:
   - [ ] 43.6 Add `street audit:export --from <date> --to <date> --format <jsonl|csv>` CLI command
   - [ ] 43.7 Write tests: append-only trigger prevents DELETE and UPDATE, batch signature chain is verifiable, `@Sensitive` fields are redacted in audit output, JSONL export contains all entries in time range
 
-- [ ] 44. v2.2 — Data Retention, Encryption Policies, and Data Classification
-  - [~] 44.1 Create `packages/core/src/enterprise/data-policy.ts`: `@RetainFor(duration)`, `@Encrypt()`, `@Classify(level)` property decorators; store metadata under `street:retention`, `street:encrypt`, `street:classify` keys
+- [~] 44. v2.2 — Data Retention, Encryption Policies, and Data Classification
+  - [x] 44.1 Create `packages/core/src/enterprise/data-policy.ts`: `@RetainFor(duration)`, `@Encrypt()`, `@Classify(level)` property decorators; store metadata under `street:retention`, `street:encrypt`, `street:classify` keys
   - [~] 44.2 Implement field-level transparent encryption in repository layer: when `@Encrypt()` is present on a field, intercept `create()` and `update()` to encrypt with `AES-256-GCM` using the vault key; intercept `findById()` and `findAll()` to decrypt on retrieval
   - [~] 44.3 Integrate `@Classify(level)` with `Logger`: when a log entry includes entity fields, check their classification level against `LOG_CLASSIFICATION_THRESHOLD` env var; redact fields above the threshold
-  - [~] 44.4 Create `RetentionJob` class: read all entity `@RetainFor` metadata, generate `DELETE FROM <table> WHERE created_at < NOW() - INTERVAL $1` queries, execute in batches of configurable size (default 1,000 rows)
-  - [~] 44.5 Create `ComplianceReporter.report(entities)`: iterate entity decorator metadata, produce `ComplianceReport[]` with field name, classification level, encrypted status, and retention period
-  - [~] 44.6 Add `street compliance:report` CLI command: call `ComplianceReporter.report()`, print formatted table
-  - [~] 44.7 Write tests: encrypted fields round-trip (encrypt on write, decrypt on read), classified fields redacted in logs, retention job deletes rows older than period, compliance report lists all annotated fields
+  - [x] 44.4 Create `RetentionJob` class: read all entity `@RetainFor` metadata, generate `DELETE FROM <table> WHERE created_at < NOW() - INTERVAL $1` queries, execute in batches of configurable size (default 1,000 rows)
+  - [x] 44.5 Create `ComplianceReporter.report(entities)`: iterate entity decorator metadata, produce `ComplianceReport[]` with field name, classification level, encrypted status, and retention period
+  - [ ] 44.6 Add `street compliance:report` CLI command: call `ComplianceReporter.report()`, print formatted table
+  - [x] 44.7 Write tests: encrypted fields round-trip (encrypt on write, decrypt on read), classified fields redacted in logs, retention job deletes rows older than period, compliance report lists all annotated fields
 
 - [ ] 45. v2.2 — Backup Framework and Disaster Recovery
   - [~] 45.1 Write `street_backups` migration SQL: `id UUID, size_bytes BIGINT, duration_ms INT, checksum TEXT, storage_key TEXT, created_at`
