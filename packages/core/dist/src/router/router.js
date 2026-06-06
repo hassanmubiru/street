@@ -3,6 +3,7 @@
 import 'reflect-metadata';
 import { BadRequestException, NotFoundException, isStreetException } from '../http/exceptions.js';
 import { diagnosticsReporter } from '../diagnostics/reporter.js';
+import { RateLimiter, getRateLimitMeta } from '../security/ratelimit.js';
 // Metadata keys must match rbac.ts
 const ROLES_KEY = 'street:roles';
 const PERMISSIONS_KEY = 'street:permissions';
@@ -23,11 +24,26 @@ export class Router {
         // dispatch() doesn't need prototype chain traversal at request time.
         let requiredRoles = [];
         let requiredPermissions = [];
+        let rateLimitMw;
         if (handlerTarget && handlerMethodName) {
             requiredRoles =
                 Reflect.getMetadata(ROLES_KEY, handlerTarget, handlerMethodName) ?? [];
             requiredPermissions =
                 Reflect.getMetadata(PERMISSIONS_KEY, handlerTarget, handlerMethodName) ?? [];
+            // Bake a route-scoped rate limiter from @RateLimit metadata, if present.
+            const rl = getRateLimitMeta(handlerTarget, handlerMethodName);
+            if (rl) {
+                const limiter = new RateLimiter({
+                    windowMs: rl.window,
+                    maxRequests: rl.requests,
+                    ...(rl.key === 'user'
+                        ? { keyFn: (c) => c.user?.id ?? c.req.socket.remoteAddress ?? 'unknown' }
+                        : rl.key === 'apiKey'
+                            ? { keyFn: (c) => (typeof c.state?.['apiKeyId'] === 'string' ? c.state['apiKeyId'] : c.req.socket.remoteAddress ?? 'unknown') }
+                            : {}),
+                });
+                rateLimitMw = limiter.middleware();
+            }
         }
         this.routes.push({
             method: method.toUpperCase(),
@@ -39,6 +55,7 @@ export class Router {
             pathTemplate: path,
             requiredRoles,
             requiredPermissions,
+            rateLimitMw,
         });
     }
     /** Match a request and execute the middleware pipeline */
@@ -54,8 +71,9 @@ export class Router {
             ctx['state'] = {};
         ctx.state['_requiredRoles'] = route.requiredRoles;
         ctx.state['_requiredPermissions'] = route.requiredPermissions;
-        // Build pipeline: route middlewares + validation + handler
+        // Build pipeline: rate limit + route middlewares + validation + handler
         const pipeline = [
+            ...(route.rateLimitMw ? [route.rateLimitMw] : []),
             ...route.middlewares,
             ...(route.validate ? [createValidationMiddleware(route.validate)] : []),
             async (c) => {

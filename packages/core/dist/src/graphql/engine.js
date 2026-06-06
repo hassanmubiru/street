@@ -2,6 +2,8 @@
 // Street GraphQL execution engine — no external runtime dependencies.
 // Parses a query document, validates against the schema, resolves fields.
 'use strict';
+/** Default HTTP path the GraphQL endpoint is served from. */
+export const DEFAULT_GRAPHQL_PATH = '/graphql';
 /** Minimalist GraphQL query document parser. */
 function parseDocument(query) {
     // Strip comments
@@ -169,7 +171,9 @@ function getComplexity(ss) {
     return count;
 }
 // ─── Introspection Guard ──────────────────────────────────────────────────────
-const INTROSPECTION_FIELDS = new Set(['__schema', '__type', '__typename']);
+// `__typename` is a meta-field that is always available per the GraphQL spec
+// and is NOT considered introspection, so it is intentionally excluded here.
+const INTROSPECTION_FIELDS = new Set(['__schema', '__type']);
 function usesIntrospection(ss) {
     for (const f of ss.fields) {
         if (INTROSPECTION_FIELDS.has(f.name))
@@ -387,12 +391,17 @@ function toAsyncIterable(source) {
 }
 // ─── Middleware Factory ───────────────────────────────────────────────────────
 /**
- * Create a Street middleware that handles POST requests as GraphQL operations.
- * Reads body (already parsed by streetApp), calls engine.execute(), returns JSON.
+ * Create a Street middleware that handles POST requests to the GraphQL
+ * endpoint path as GraphQL operations. Requests using another method, or
+ * POSTs to a different path, fall through to `next()`.
+ *
+ * Reads body (already parsed by streetApp), calls engine.execute(), returns
+ * JSON. Pass `path` to serve the endpoint from somewhere other than
+ * `/graphql`.
  */
-export function graphqlMiddleware(engine) {
+export function graphqlMiddleware(engine, path = DEFAULT_GRAPHQL_PATH) {
     return async (ctx, next) => {
-        if (ctx.method !== 'POST') {
+        if (ctx.method !== 'POST' || ctx.path !== path) {
             await next();
             return;
         }
@@ -405,5 +414,19 @@ export function graphqlMiddleware(engine) {
         const statusCode = result.errors ? 400 : 200;
         ctx.json(result, statusCode);
     };
+}
+/**
+ * Wire a GraphQL endpoint into a StreetApp in a single call, mirroring the
+ * `registerHealthRoutes(app, registry)` / `registerMetricsRoute(app, registry)`
+ * pattern. Installs `graphqlMiddleware(engine, path)` so that only POST
+ * requests to the configured `path` (default `/graphql`) are handled as
+ * GraphQL operations; all other requests fall through.
+ *
+ * @param app    - The StreetApp to register the middleware on.
+ * @param engine - The GraphQlEngine that executes incoming operations.
+ * @param path   - The path to serve the GraphQL endpoint from (default `/graphql`).
+ */
+export function registerGraphqlRoute(app, engine, path = DEFAULT_GRAPHQL_PATH) {
+    app.use(graphqlMiddleware(engine, path));
 }
 //# sourceMappingURL=engine.js.map
