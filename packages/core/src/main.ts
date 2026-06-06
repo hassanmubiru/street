@@ -23,6 +23,7 @@ import { MigrateCommand, UserCommand } from './cli/commands.js';
 import { securityHeaders, corsMiddleware, csrfMiddleware } from './http/auth.middleware.js';
 import { xssMiddleware } from './security/xss.js';
 import { telemetryMiddleware } from './telemetry/tracker.js';
+import { OtelTracer, otelMiddleware } from './observability/otel.js';
 import { JwtService } from './security/jwt.js';
 import { SessionManager } from './security/session.js';
 import { WebhookDispatcher } from './webhook/dispatcher.js';
@@ -87,6 +88,13 @@ async function bootstrap(): Promise<void> {
   // ─── HTTP server mode ─────────────────────────────────────────────────────────
   const rateLimiter = new RateLimiter({ windowMs: 60_000, maxRequests: 300 });
 
+  // OpenTelemetry tracer: endpoint from OTEL_EXPORTER_OTLP_ENDPOINT (falls back
+  // to the constructor default when unset). Flushed before pool close on shutdown.
+  const tracer = new OtelTracer({
+    serviceName: 'street',
+    endpoint: process.env['OTEL_EXPORTER_OTLP_ENDPOINT'],
+  });
+
   const app = streetApp({
     port: config.httpPort,
     host: config.host,
@@ -102,6 +110,7 @@ async function bootstrap(): Promise<void> {
   // In development/test, falls back to ['*'] automatically.
   app.use(corsMiddleware(config.corsOrigins));
   app.use(xssMiddleware);
+  app.use(otelMiddleware(tracer));
   app.use(telemetryMiddleware(telemetry));
   app.use(rateLimiter.middleware());
   // Finding C fix: wire CSRF protection for all state-changing requests.
@@ -143,6 +152,9 @@ async function bootstrap(): Promise<void> {
     try {
       await app.close();
       await wsServer.close();
+      // Drain buffered spans before connections drop, then stop the flush timer.
+      await tracer.flush();
+      tracer.shutdown();
       await pool.close();
       telemetry.destroy();
       rateLimiter.destroy();
