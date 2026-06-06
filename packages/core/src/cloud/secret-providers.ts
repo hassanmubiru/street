@@ -170,19 +170,26 @@ export class AwsSecretsManagerProvider implements SecretProvider {
   private readonly _region: string;
   private readonly _accessKeyId: string;
   private readonly _secretAccessKey: string;
+  private readonly _endpoint: string | undefined;
   private readonly _cache = new Map<string, CacheEntry>();
   private readonly _ttlMs: number;
+  private readonly _tls: HttpClientOptions;
 
   constructor(opts: {
     region: string;
     accessKeyId: string;
     secretAccessKey: string;
     cacheTtlMs?: number;
+    /** Override the service endpoint (VPC endpoint, LocalStack, or test server). */
+    endpoint?: string;
+    tls?: HttpClientOptions;
   }) {
     this._region = opts.region;
     this._accessKeyId = opts.accessKeyId;
     this._secretAccessKey = opts.secretAccessKey;
+    this._endpoint = opts.endpoint;
     this._ttlMs = opts.cacheTtlMs ?? DEFAULT_CACHE_TTL_MS;
+    this._tls = opts.tls ?? {};
   }
 
   async get(key: string): Promise<string> {
