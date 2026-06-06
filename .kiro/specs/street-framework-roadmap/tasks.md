@@ -247,13 +247,13 @@ Status markers used in this plan:
   - [x] 26.8 Write tests: simple query resolves, mutation executes and returns data, depth limit rejects deep queries, introspection blocked in production mode, response round-trip (serialize→parse→equals original)
 
 - [~] 27. v1.6 — API Versioning
-  - [~] 27.1 Create `packages/core/src/versioning/strategy.ts`: `@ApiVersion(version)` class decorator that stores version string under `street:apiVersion` metadata; `VersioningOptions` interface; `VersionStrategy` union type
+  - [x] 27.1 Create `packages/core/src/versioning/strategy.ts`: `@ApiVersion(version)` class decorator that stores version string under `street:apiVersion` metadata; `VersioningOptions` interface; `VersionStrategy` union type
   - [~] 27.2 Implement URL versioning in `enableVersioning(app, { strategy: 'url' })`: read `street:apiVersion` metadata from each controller during `registerController()`; prefix the controller's routes with `/<version>/`
-  - [~] 27.3 Implement header versioning in `enableVersioning(app, { strategy: 'header', headerName? })`: middleware reads `Accept: application/vnd.street.v2+json`, extracts version, rewrites internal route key for dispatch
+  - [x] 27.3 Implement header versioning in `enableVersioning(app, { strategy: 'header', headerName? })`: middleware reads `Accept: application/vnd.street.v2+json`, extracts version, rewrites internal route key for dispatch
   - [ ] 27.4 Return HTTP 404 with available versions list when a request targets an unregistered version: `{ error: 'version_not_found', available: ['v1', 'v2'] }`
   - [ ] 27.5 Generate separate OpenAPI spec files per version: `app.openApiSpec('v1')` returns only v1 routes; register `GET /v1/openapi.json` and `GET /v2/openapi.json`
-  - [ ] 27.6 Implement `@Deprecated({ sunset: Date })` decorator: post-dispatch middleware reads metadata and adds `Sunset` and `Deprecation` headers
-  - [ ] 27.7 Write tests: URL-versioned route dispatches correctly, header-versioned route dispatches correctly, unregistered version returns 404 with versions list, `@Deprecated` adds response headers
+  - [x] 27.6 Implement `@Deprecated({ sunset: Date })` decorator: post-dispatch middleware reads metadata and adds `Sunset` and `Deprecation` headers
+  - [x] 27.7 Write tests: URL-versioned route dispatches correctly, header-versioned route dispatches correctly, unregistered version returns 404 with versions list, `@Deprecated` adds response headers
 
 - [~] 28. v1.6 — SDK Generator
   - [x] 28.1 Create `packages/core/src/sdk-gen/typescript.ts`: `generateTypescriptSdk(spec, outputDir)` iterates `spec.paths`, generates `types.ts` with typed request/response interfaces using mapped types from the OpenAPI schema objects
@@ -375,13 +375,13 @@ Status markers used in this plan:
   - [ ] 41.6 Write tests: `handleEdgeRequest` routes to the correct handler, edge-incompatible features throw `FeatureUnavailableInEdgeRuntimeError` when initialized, routing/middleware/DI/JWT verify all work in edge mode
 
 
-- [~] 42. v2.2 — Feature Flags
+- [x] 42. v2.2 — Feature Flags
   - [x] 42.1 Write `street_feature_flags` migration SQL: `name TEXT PRIMARY KEY, enabled BOOLEAN, rules JSONB, updated_at`
   - [x] 42.2 Create `packages/core/src/enterprise/feature-flags.ts` with `FeatureFlagService`: `isEnabled(flagName, context?)` reads from DB with `LruCache` (default 30s TTL); returns `false` and logs a `warn` entry if flag is not found
   - [x] 42.3 Implement targeting rules evaluation: `user_id` exact match, `role` membership check, `environment` match; `percentage` rule uses `SHA256(flagName + userId)[0:8] % 100` for stable per-user assignment
   - [x] 42.4 Implement `FeatureFlagService.invalidateCache(flagName)`: remove the flag entry from `LruCache`
-  - [ ] 42.5 Register `PATCH /admin/feature-flags/:name` route: update the DB record, call `invalidateCache()`; protect with `requireRoles('admin')`
-  - [ ] 42.6 Write tests: flag not found returns `false` without throwing, percentage rollout is stable for same user, targeting rule evaluation order, cache invalidation forces DB re-read
+  - [x] 42.5 Register `PATCH /admin/feature-flags/:name` route: update the DB record, call `invalidateCache()`; protect with `requireRoles('admin')`
+  - [x] 42.6 Write tests: flag not found returns `false` without throwing, percentage rollout is stable for same user, targeting rule evaluation order, cache invalidation forces DB re-read
 
 - [~] 43. v2.2 — Audit Logging
   - [x] 43.1 Write `street_audit_log` migration SQL: `id UUID, category TEXT, actor_id TEXT, action TEXT, resource TEXT, before_state JSONB, after_state JSONB, ip TEXT, user_agent TEXT, batch_id UUID, signature TEXT, created_at`; create append-only trigger that blocks `UPDATE` and `DELETE`
