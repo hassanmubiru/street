@@ -233,7 +233,6 @@ describe('Plugin load/unload round-trip', () => {
         await app.unloadPlugin(plugin);
         assert.equal(plugin.loaded, false);
         // No assertion error means the middleware stack was restored cleanly.
-        await app.close();
     });
 });
 // ── Replication coordinator ───────────────────────────────────────────────────
