@@ -249,12 +249,12 @@ export class AwsSecretsManagerProvider implements SecretProvider {
       `SignedHeaders=${signedHeaders}, Signature=${signature}`;
 
     // Make the request
-    const { status, body: respBody } = await this._httpsPost(endpoint, body, {
+    const { status, body: respBody } = await httpRequestRaw('POST', endpoint, {
       'Content-Type': 'application/x-amz-json-1.1',
       'X-Amz-Date': amzDate,
       'X-Amz-Target': 'secretsmanager.GetSecretValue',
       Authorization: authorizationHeader,
-    });
+    }, Buffer.from(body, 'utf8'), this._tls);
 
     if (status !== 200) {
       throw new Error(
