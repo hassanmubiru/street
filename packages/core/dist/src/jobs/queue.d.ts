@@ -33,6 +33,12 @@ export interface JobQueueOptions {
     concurrency?: number;
     pollIntervalMs?: number;
     workerId?: string;
+    /** How often this worker refreshes `locked_at` on its in-flight jobs. Default: 30s. */
+    heartbeatIntervalMs?: number;
+    /** How often the background reaper scans for stale jobs. Default: 60s. */
+    reaperIntervalMs?: number;
+    /** A running job whose `locked_at` is older than this is considered stale and re-enqueued. Default: 2 minutes. */
+    staleJobThresholdMs?: number;
 }
 /**
  * Structural view of the cron scheduler used for DLQ pruning. Kept as a minimal
@@ -52,9 +58,16 @@ export declare class JobQueue {
     private readonly concurrency;
     private readonly pollIntervalMs;
     private readonly workerId;
+    private readonly heartbeatIntervalMs;
+    private readonly reaperIntervalMs;
+    private readonly staleJobThresholdMs;
     private readonly handlers;
     private readonly retryPolicies;
+    /** Ids of jobs this worker is currently executing; targeted by the heartbeat. */
+    private readonly inFlight;
     private timer;
+    private heartbeatTimer;
+    private reaperTimer;
     constructor(pool: JobQueuePool, opts?: JobQueueOptions);
     /** Enqueue a new job, returning the generated job id. */
     enqueue(opts: JobEnqueueOpts): Promise<string>;
@@ -102,12 +115,28 @@ export declare class JobQueue {
      * The scheduler must be started separately via `scheduler.start()`.
      */
     registerJobHistoryPruning(scheduler: DlqPruneScheduler, maxPerType?: number, cronExpression?: string): void;
-    /** Start the polling loop. */
+    /** Start the polling loop, the worker heartbeat, and the stale-job reaper. */
     start(): void;
-    /** Stop the polling loop. */
+    /** Stop the polling loop, heartbeat, and reaper. */
     stop(): void;
     private _poll;
     private _dispatch;
+    private _execute;
+    /**
+     * Refresh `locked_at` to NOW() for every job this worker is currently
+     * executing. This keeps the lock fresh so other workers' reapers don't
+     * reclaim a job that is still being processed. Targets only the tracked
+     * in-flight ids and re-checks ownership (`worker_id`) and state in SQL.
+     */
+    private _heartbeat;
+    /**
+     * Re-enqueue jobs whose `locked_at` is older than the configured stale
+     * threshold (default 2 minutes). A running job that hasn't been heartbeated
+     * within the threshold is assumed to belong to a crashed/hung worker, so it
+     * is reset to `pending` with its lock cleared for another worker to pick up.
+     * Returns the number of jobs re-enqueued.
+     */
+    private _reapStaleJobs;
     private _handleFailure;
     private _moveToDlq;
 }

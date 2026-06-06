@@ -56,14 +56,24 @@ export class JobQueue {
     concurrency;
     pollIntervalMs;
     workerId;
+    heartbeatIntervalMs;
+    reaperIntervalMs;
+    staleJobThresholdMs;
     handlers = new Map();
     retryPolicies = new Map();
+    /** Ids of jobs this worker is currently executing; targeted by the heartbeat. */
+    inFlight = new Set();
     timer = null;
+    heartbeatTimer = null;
+    reaperTimer = null;
     constructor(pool, opts) {
         this.pool = pool;
         this.concurrency = opts?.concurrency ?? 5;
         this.pollIntervalMs = opts?.pollIntervalMs ?? 1_000;
         this.workerId = opts?.workerId ?? `worker-${process.pid}`;
+        this.heartbeatIntervalMs = opts?.heartbeatIntervalMs ?? 30_000;
+        this.reaperIntervalMs = opts?.reaperIntervalMs ?? 60_000;
+        this.staleJobThresholdMs = opts?.staleJobThresholdMs ?? 120_000;
     }
     /** Enqueue a new job, returning the generated job id. */
     async enqueue(opts) {
@@ -164,7 +174,7 @@ export class JobQueue {
             await this.pruneJobHistory(maxPerType);
         });
     }
-    /** Start the polling loop. */
+    /** Start the polling loop, the worker heartbeat, and the stale-job reaper. */
     start() {
         if (this.timer !== null)
             return;
@@ -173,12 +183,32 @@ export class JobQueue {
         }, this.pollIntervalMs);
         // Allow Node.js to exit even if the interval is still active
         this.timer.unref();
+        // Heartbeat: refresh locked_at on this worker's in-flight jobs so other
+        // workers' reapers don't reclaim jobs that are still being processed.
+        this.heartbeatTimer = setInterval(() => {
+            void this._heartbeat();
+        }, this.heartbeatIntervalMs);
+        this.heartbeatTimer.unref();
+        // Reaper: re-enqueue jobs whose owning worker has gone silent (crashed
+        // worker recovery).
+        this.reaperTimer = setInterval(() => {
+            void this._reapStaleJobs();
+        }, this.reaperIntervalMs);
+        this.reaperTimer.unref();
     }
-    /** Stop the polling loop. */
+    /** Stop the polling loop, heartbeat, and reaper. */
     stop() {
         if (this.timer !== null) {
             clearInterval(this.timer);
             this.timer = null;
+        }
+        if (this.heartbeatTimer !== null) {
+            clearInterval(this.heartbeatTimer);
+            this.heartbeatTimer = null;
+        }
+        if (this.reaperTimer !== null) {
+            clearInterval(this.reaperTimer);
+            this.reaperTimer = null;
         }
     }
     // ── Internal ────────────────────────────────────────────────────────────────
@@ -210,6 +240,16 @@ export class JobQueue {
         catch {
             return;
         }
+        // Track as in-flight so the heartbeat refreshes its lock while it runs.
+        this.inFlight.add(jobId);
+        try {
+            await this._execute(jobId, type, row, attempt);
+        }
+        finally {
+            this.inFlight.delete(jobId);
+        }
+    }
+    async _execute(jobId, type, row, attempt) {
         const handler = this.handlers.get(type);
         if (!handler) {
             // No handler registered — move straight to DLQ behaviour (treat as permanent failure)
@@ -230,6 +270,44 @@ export class JobQueue {
         }
         catch (err) {
             await this._handleFailure(jobId, type, row, attempt, err instanceof Error ? err : new Error(String(err)));
+        }
+    }
+    /**
+     * Refresh `locked_at` to NOW() for every job this worker is currently
+     * executing. This keeps the lock fresh so other workers' reapers don't
+     * reclaim a job that is still being processed. Targets only the tracked
+     * in-flight ids and re-checks ownership (`worker_id`) and state in SQL.
+     */
+    async _heartbeat() {
+        if (this.inFlight.size === 0)
+            return;
+        const ids = [...this.inFlight];
+        try {
+            await this.pool.query(`UPDATE street_jobs
+         SET locked_at = NOW()
+         WHERE status = 'running' AND worker_id = $1 AND id = ANY($2)`, [this.workerId, ids]);
+        }
+        catch {
+            // DB unavailable — skip this beat; the job will simply be heartbeated next tick.
+        }
+    }
+    /**
+     * Re-enqueue jobs whose `locked_at` is older than the configured stale
+     * threshold (default 2 minutes). A running job that hasn't been heartbeated
+     * within the threshold is assumed to belong to a crashed/hung worker, so it
+     * is reset to `pending` with its lock cleared for another worker to pick up.
+     * Returns the number of jobs re-enqueued.
+     */
+    async _reapStaleJobs() {
+        try {
+            const result = await this.pool.query(`UPDATE street_jobs
+         SET status='pending', worker_id=NULL, locked_at=NULL
+         WHERE status='running' AND locked_at < NOW() - ($1 || ' milliseconds')::interval`, [String(this.staleJobThresholdMs)]);
+            return result.rowCount;
+        }
+        catch {
+            // DB unavailable — skip this scan
+            return 0;
         }
     }
     async _handleFailure(jobId, type, row, attempt, err) {
