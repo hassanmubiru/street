@@ -209,7 +209,7 @@ class ScriptedClient implements LlmClient {
     const content = this.replies[Math.min(this.i++, this.replies.length - 1)] ?? 'FINAL ANSWER: done';
     return { content, model: opts.model, usage: { promptTokens: 0, completionTokens: 0, totalTokens: 0 } };
   }
-  async *stream(): AsyncIterator<string> { yield 'x'; }
+  async *stream(): AsyncIterableIterator<string> { yield 'x'; }
 }
 
 describe('AgentExecutor (49.8)', () => {
