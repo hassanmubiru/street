@@ -166,3 +166,80 @@ export class AmqpConnection extends EventEmitter {
       })
       .catch((e: Error) => this.emit('_handshakeError', e));
   }
+
+  private _startHeartbeat(): void {
+    if (this.opts.heartbeatSeconds <= 0) return;
+    const intervalMs = (this.opts.heartbeatSeconds * 1000) / 2;
+    this.heartbeatTimer = setInterval(() => {
+      if (this.socket && !this.socket.destroyed) this.socket.write(buildHeartbeat());
+    }, intervalMs);
+    this.heartbeatTimer.unref();
+  }
+
+  private _handleServerClose(reader: import('./codec.js').AmqpReader): void {
+    const code = reader.shortUint();
+    const text = reader.shortStr();
+    this._send(buildMethodFrame(0, 10, 51, Buffer.alloc(0))); // Connection.Close-Ok
+    this.emit('error', new Error(`AMQP server closed connection: ${code} ${text}`));
+  }
+
+  private _onClose(): void {
+    if (this.heartbeatTimer) { clearInterval(this.heartbeatTimer); this.heartbeatTimer = null; }
+    if (!this.closing) this.emit('disconnect');
+    this.emit('close');
+  }
+
+  // ── Declarations ──────────────────────────────────────────────────────────
+
+  /** Declare an exchange. Types: 'direct' | 'fanout' | 'topic'. */
+  async declareExchange(name: string, type: 'direct' | 'fanout' | 'topic', opts: { durable?: boolean } = {}): Promise<void> {
+    const args = new AmqpWriter()
+      .shortUint(0)            // reserved-1
+      .shortStr(name)
+      .shortStr(type)
+      .bits(false, opts.durable ?? true, false, false, false) // passive, durable, auto-delete, internal, no-wait
+      .table({})
+      .build();
+    await this._rpc(buildMethodFrame(CH, 40, 10, args), 40, 11); // Exchange.Declare-Ok
+  }
+
+  /** Declare a queue. Returns the queue name (server-generated if empty). */
+  async declareQueue(name: string, opts: { durable?: boolean; deadLetterExchange?: string; messageTtlMs?: number } = {}): Promise<string> {
+    const tableArgs: Record<string, unknown> = {};
+    if (opts.deadLetterExchange) tableArgs['x-dead-letter-exchange'] = opts.deadLetterExchange;
+    if (typeof opts.messageTtlMs === 'number') tableArgs['x-message-ttl'] = opts.messageTtlMs;
+    const args = new AmqpWriter()
+      .shortUint(0)
+      .shortStr(name)
+      .bits(false, opts.durable ?? true, false, false, false) // passive, durable, exclusive, auto-delete, no-wait
+      .table(tableArgs)
+      .build();
+    const { reader } = await this._rpc(buildMethodFrame(CH, 50, 10, args), 50, 11); // Queue.Declare-Ok
+    return reader.shortStr();
+  }
+
+  /** Bind a queue to an exchange with a routing key. */
+  async bindQueue(queue: string, exchange: string, routingKey: string): Promise<void> {
+    const args = new AmqpWriter()
+      .shortUint(0)
+      .shortStr(queue)
+      .shortStr(exchange)
+      .shortStr(routingKey)
+      .octet(0)   // no-wait
+      .table({})
+      .build();
+    await this._rpc(buildMethodFrame(CH, 50, 20, args), 50, 21); // Queue.Bind-Ok
+  }
+
+  /** Enable publisher confirms on the channel. */
+  async enableConfirms(): Promise<void> {
+    if (this.confirmEnabled) return;
+    await this._rpc(buildMethodFrame(CH, 85, 10, new AmqpWriter().octet(0).build()), 85, 11); // Confirm.Select-Ok
+    this.confirmEnabled = true;
+  }
+
+  /** Set prefetch (QoS) so consumers don't get flooded. */
+  async setQos(prefetchCount: number): Promise<void> {
+    const args = new AmqpWriter().longUint(0).shortUint(prefetchCount).octet(0).build();
+    await this._rpc(buildMethodFrame(CH, 60, 10, args), 60, 11); // Basic.Qos-Ok
+  }
