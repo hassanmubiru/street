@@ -25,6 +25,22 @@ import {
   type UpdateUserDto,
   type LoginDto,
 } from '../domain/user.js';
+import type { AuditEventDetails } from '../auth/audit-writer.js';
+
+/**
+ * Derive audit context (originating IP and user agent) from a request so
+ * authentication audit entries carry request metadata. The IP is taken from
+ * the `x-forwarded-for` header when present, falling back to the socket's
+ * remote address.
+ */
+function requestAuditContext(ctx: StreetContext): AuditEventDetails {
+  const forwarded = ctx.headers['x-forwarded-for'];
+  const ip = (forwarded ? forwarded.split(',')[0]?.trim() : undefined)
+    ?? ctx.req.socket.remoteAddress
+    ?? undefined;
+  const userAgent = ctx.headers['user-agent'];
+  return { ...(ip ? { ip } : {}), ...(userAgent ? { userAgent } : {}) };
+}
 
 @Injectable()
 @Controller('/api/users')
@@ -69,8 +85,19 @@ export class UserController {
   @ApiOperation({ summary: 'Login and obtain JWT', tags: ['auth'] })
   async login(ctx: StreetContext): Promise<void> {
     const dto = ctx.body as LoginDto;
-    const tokens = await this.userService.login(dto);
+    // Forward request context so login_success / login_failure audit entries
+    // capture the originating IP and user agent.
+    const tokens = await this.userService.login(dto, requestAuditContext(ctx));
     ctx.json(tokens);
+  }
+
+  @Post('/logout')
+  @ApiOperation({ summary: 'Log out the authenticated user', tags: ['auth'] })
+  async logout(ctx: StreetContext): Promise<void> {
+    const userId = ctx.user?.id;
+    if (!userId) throw new BadRequestException('Not authenticated');
+    await this.userService.logout(userId, requestAuditContext(ctx));
+    ctx.send(204);
   }
 
   @Put('/:id')
