@@ -65,3 +65,68 @@ export function registerShutdownHook(app: StreetApp, opts: ShutdownHookOptions =
     process.removeListener('SIGINT', onInt);
   };
 }
+
+// ── Service-mesh detection ────────────────────────────────────────────────────
+
+/**
+ * Detect whether the process is running inside an Istio or Linkerd mesh by
+ * inspecting well-known injected environment variables.
+ */
+export function isRunningInServiceMesh(env: NodeJS.ProcessEnv = process.env): boolean {
+  return Boolean(env['ISTIO_META_MESH_ID']) || Boolean(env['LINKERD_PROXY_INJECTION_ENABLED']);
+}
+
+// ── Autoscale metrics ─────────────────────────────────────────────────────────
+
+/** A single metric value in the Kubernetes External Metrics API shape. */
+export interface ExternalMetricValue {
+  metricName: string;
+  value: string;
+}
+
+/** Kubernetes External Metrics API response envelope. */
+export interface AutoscaleMetrics {
+  kind: 'ExternalMetricValueList';
+  apiVersion: 'external.metrics.k8s.io/v1beta1';
+  items: ExternalMetricValue[];
+}
+
+export interface AutoscaleSource {
+  telemetry?: TelemetryTracker;
+  /** Returns the current number of active connections. */
+  activeConnections?: () => number;
+  /** Returns the current background queue depth. */
+  queueDepth?: () => number;
+}
+
+/**
+ * Build a Kubernetes External Metrics API payload from runtime sources.
+ * `requestsPerSecond` is derived from the telemetry request counter delta.
+ */
+export function buildAutoscaleMetrics(source: AutoscaleSource, windowSeconds = 60): AutoscaleMetrics {
+  let rps = 0;
+  if (source.telemetry) {
+    const snap = source.telemetry.snapshot();
+    rps = windowSeconds > 0 ? snap.requestCount / windowSeconds : snap.requestCount;
+  }
+  const items: ExternalMetricValue[] = [
+    { metricName: 'http_requests_per_second', value: String(Math.round(rps * 100) / 100) },
+    { metricName: 'active_connections', value: String(source.activeConnections?.() ?? 0) },
+    { metricName: 'queue_depth', value: String(source.queueDepth?.() ?? 0) },
+  ];
+  return { kind: 'ExternalMetricValueList', apiVersion: 'external.metrics.k8s.io/v1beta1', items };
+}
+
+/**
+ * Register `GET /metrics/autoscale` on the app, returning the External Metrics
+ * API payload as JSON.
+ */
+export function registerAutoscaleRoute(app: StreetApp, source: AutoscaleSource, windowSeconds = 60): void {
+  app.use(async (ctx, next) => {
+    if (ctx.method === 'GET' && ctx.path === '/metrics/autoscale') {
+      ctx.json(buildAutoscaleMetrics(source, windowSeconds));
+      return;
+    }
+    await next();
+  });
+}
