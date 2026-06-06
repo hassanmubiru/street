@@ -19,7 +19,33 @@ export declare class FeatureFlagService {
         environment?: string;
     }): Promise<boolean>;
     invalidateCache(flagName: string): void;
+    /**
+     * Upsert a flag's enabled state (and optionally its rules) and invalidate the
+     * cache so the next read reflects the change immediately.
+     */
+    setFlag(flagName: string, enabled: boolean, rules?: FeatureFlagRule[]): Promise<void>;
     private _loadFlag;
     private _evaluateRule;
 }
+interface FlagAdminApp {
+    use(mw: (ctx: FlagAdminCtx, next: () => Promise<void>) => Promise<void>): void;
+}
+interface FlagAdminCtx {
+    method: string;
+    path: string;
+    body: unknown;
+    user: {
+        roles: string[];
+    } | null;
+    json(data: unknown, status?: number): void;
+}
+/**
+ * Register `PATCH /admin/feature-flags/:name` to toggle a flag and invalidate
+ * its cache. The caller supplies the admin role required (default `admin`).
+ * The route is matched via a path prefix so it works on any StreetApp.
+ */
+export declare function registerFeatureFlagAdminRoute(app: FlagAdminApp, service: FeatureFlagService, opts?: {
+    adminRole?: string;
+}): void;
+export {};
 //# sourceMappingURL=feature-flags.d.ts.map

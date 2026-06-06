@@ -8,6 +8,7 @@ import { container } from '../core/container.js';
 import { getControllerMeta, getRoutesMeta } from '../core/decorators.js';
 import { MultipartParser } from '../multipart/parser.js';
 import { generateOpenApi } from './openapi.js';
+import { EventEmitter } from 'node:events';
 const MAX_BODY_BYTES = 1024 * 1024; // 1 MB JSON body limit
 const REQUEST_TIMEOUT_MS = 30_000;
 export function streetApp(options = {}) {
@@ -17,6 +18,8 @@ export function streetApp(options = {}) {
     const maxBodyBytes = options.maxBodyBytes ?? MAX_BODY_BYTES;
     const requestTimeoutMs = options.requestTimeoutMs ?? REQUEST_TIMEOUT_MS;
     const uploadsDir = options.uploadsDir ?? './uploads';
+    const pluginEvents = new EventEmitter();
+    const pluginMiddlewares = new Map();
     /** The core per-request handler extracted for direct in-process dispatch. */
     async function handleRequest(req, res) {
         // Per-request timeout
@@ -136,6 +139,42 @@ export function streetApp(options = {}) {
     return {
         use(mw) {
             globalMiddlewares.push(mw);
+        },
+        async loadPlugin(plugin) {
+            if (pluginMiddlewares.has(plugin)) {
+                throw new Error(`Plugin "${plugin.name}" is already loaded`);
+            }
+            const added = [];
+            const sandbox = {
+                use(mw) {
+                    globalMiddlewares.push(mw);
+                    added.push(mw);
+                },
+                on(event, handler) {
+                    pluginEvents.on(event, handler);
+                },
+            };
+            pluginMiddlewares.set(plugin, added);
+            if (plugin.onLoad)
+                await plugin.onLoad(sandbox);
+        },
+        async unloadPlugin(plugin) {
+            const added = pluginMiddlewares.get(plugin);
+            if (!added)
+                return;
+            const sandbox = {
+                use() { },
+                on() { },
+            };
+            if (plugin.onUnload)
+                await plugin.onUnload(sandbox);
+            // Restore the middleware stack to its pre-load state.
+            for (const mw of added) {
+                const idx = globalMiddlewares.indexOf(mw);
+                if (idx !== -1)
+                    globalMiddlewares.splice(idx, 1);
+            }
+            pluginMiddlewares.delete(plugin);
         },
         _handleRequest(req, res) {
             void handleRequest(req, res);
