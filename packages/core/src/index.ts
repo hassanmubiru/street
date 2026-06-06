@@ -271,3 +271,10 @@ export type { PluginInstallerOptions } from './platform/plugins/registry.js';
 
 // ── HTTP: Edge Runtime ────────────────────────────────────────────────────────
 export { FeatureUnavailableInEdgeRuntimeError } from './http/exceptions.js';
+
+// ── GraphQL: SDL Schema Parser ────────────────────────────────────────────────
+export { parseSchema, typeRefToString, namedType, SchemaParseError } from './graphql/schema.js';
+export type {
+  SchemaAst, ServiceDefinition, TypeDef, TypeDefKind, FieldDef, ArgDef,
+  TypeRef, DirectiveNode, DirectiveArg, DirectiveDef, EnumValueDef,
+} from './graphql/schema.js';
