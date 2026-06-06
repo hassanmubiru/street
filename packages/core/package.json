@@ -7,88 +7,114 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "browser": "./dist/browser.js",
       "import": "./dist/index.js",
       "types": "./dist/index.d.ts"
     },
     "./http": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/http/server.js",
       "types": "./dist/http/server.d.ts"
     },
     "./router": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/router/router.js",
       "types": "./dist/router/router.d.ts"
     },
     "./database": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/database/wire.js",
       "types": "./dist/database/wire.d.ts"
     },
     "./pool": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/database/pool.js",
       "types": "./dist/database/pool.d.ts"
     },
     "./repository": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/database/repository.js",
       "types": "./dist/database/repository.d.ts"
     },
     "./migrations": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/database/migrations.js",
       "types": "./dist/database/migrations.d.ts"
     },
     "./security": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/security/jwt.js",
       "types": "./dist/security/jwt.d.ts"
     },
     "./session": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/security/session.js",
       "types": "./dist/security/session.d.ts"
     },
     "./vault": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/security/vault.js",
       "types": "./dist/security/vault.d.ts"
     },
     "./ratelimit": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/security/ratelimit.js",
       "types": "./dist/security/ratelimit.d.ts"
     },
     "./xss": {
+      "browser": "./dist/security/xss.js",
       "import": "./dist/security/xss.js",
       "types": "./dist/security/xss.d.ts"
     },
     "./websocket": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/websocket/server.js",
       "types": "./dist/websocket/server.d.ts"
     },
     "./sse": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/websocket/sse.js",
       "types": "./dist/websocket/sse.d.ts"
     },
     "./cache": {
+      "browser": "./dist/cache/lru.js",
       "import": "./dist/cache/lru.js",
       "types": "./dist/cache/lru.d.ts"
     },
     "./telemetry": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/telemetry/tracker.js",
       "types": "./dist/telemetry/tracker.d.ts"
     },
     "./cluster": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/cluster/coordinator.js",
       "types": "./dist/cluster/coordinator.d.ts"
     },
     "./cli": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/cli/kernel.js",
       "types": "./dist/cli/kernel.d.ts"
     },
     "./multipart": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/multipart/parser.js",
       "types": "./dist/multipart/parser.d.ts"
     },
     "./webhook": {
+      "browser": "./dist/browser-stub.js",
       "import": "./dist/webhook/dispatcher.js",
       "types": "./dist/webhook/dispatcher.d.ts"
     },
     "./exceptions": {
+      "browser": "./dist/http/exceptions.js",
       "import": "./dist/http/exceptions.js",
       "types": "./dist/http/exceptions.d.ts"
+    },
+    "./browser": {
+      "browser": "./dist/browser.js",
+      "import": "./dist/browser.js",
+      "types": "./dist/browser.d.ts"
     }
   },
   "files": [
@@ -146,6 +172,14 @@
     "dist/index.js.map",
     "dist/index.d.ts",
     "dist/index.d.ts.map",
+    "dist/browser.js",
+    "dist/browser.js.map",
+    "dist/browser.d.ts",
+    "dist/browser.d.ts.map",
+    "dist/browser-stub.js",
+    "dist/browser-stub.js.map",
+    "dist/browser-stub.d.ts",
+    "dist/browser-stub.d.ts.map",
     "migrations/",
     "README.md",
     "LICENSE",
