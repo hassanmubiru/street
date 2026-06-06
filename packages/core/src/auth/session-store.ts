@@ -110,8 +110,23 @@ export class StreetSessionStore {
 
   /** Revoke a session by ID. */
   async revoke(sessionId: string): Promise<void> {
+    // Capture the owning user before deletion so the audit entry has an actor.
+    let actorId: string | undefined;
+    if (this._auditWriter) {
+      const existing = await this.find(sessionId);
+      actorId = existing?.userId;
+    }
+
     await this._pool.query('DELETE FROM street_sessions WHERE session_id = $1', [sessionId]);
     this._revokedCache.set(sessionId, true);
+
+    if (this._auditWriter) {
+      await this._auditWriter.write({
+        event: 'session_revoked',
+        actorId,
+        details: { sessionId, scope: 'single' },
+      });
+    }
   }
 
   /** Revoke all sessions for a user. */
@@ -127,6 +142,14 @@ export class StreetSessionStore {
       if (row['session_id']) {
         this._revokedCache.set(row['session_id'], true);
       }
+    }
+
+    if (this._auditWriter) {
+      await this._auditWriter.write({
+        event: 'session_revoked',
+        actorId: userId,
+        details: { scope: 'all', count: sessions.rows.length },
+      });
     }
   }
 
