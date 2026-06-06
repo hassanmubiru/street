@@ -130,7 +130,7 @@
   - [x] 14.6 Write tests: all-up returns 200, one-down returns 503 with body listing the failed check, timed-out check marked `down`, thrown exception caught and marked `down`
 
 - [ ] 15. v1.3 — Request Profiler and Diagnostics Dashboard
-  - [~] 15.1 Create `packages/core/src/diagnostics/route-profiler.ts` with `RouteProfiler`: `Map<routeKey, CircularBuffer<LatencySample>>` capped at 10,000 samples per route; `record(method, pattern, latencyNs, isError)` and `stats(method, pattern)` returning `RouteStats` with P50/P95/P99
+  - [-] 15.1 Create `packages/core/src/diagnostics/route-profiler.ts` with `RouteProfiler`: `Map<routeKey, CircularBuffer<LatencySample>>` capped at 10,000 samples per route; `record(method, pattern, latencyNs, isError)` and `stats(method, pattern)` returning `RouteStats` with P50/P95/P99
   - [~] 15.2 Integrate `RouteProfiler` into the `Router.dispatch()` path: record latency after every dispatched request
   - [~] 15.3 Create `packages/core/src/diagnostics/socket-server.ts` with `DiagnosticsServer`: listen on Unix domain socket `/tmp/street-<pid>.sock`; accept connections; push JSON snapshots from `RouteProfiler` and `process.memoryUsage()` every 1 second
   - [~] 15.4 Create `packages/cli/src/commands/diagnostics.ts`: connect to the running process's Unix socket (detect PID from `--pid` flag or environment); render live terminal table with ANSI escape sequences; refresh every 1 second
