@@ -1300,6 +1300,17 @@ function makeWorkflowPool(opts: { workflow?: Partial<StoredWorkflow> } = {}): Jo
         return { rows: [], rowCount: 1, command: 'UPDATE' };
       }
 
+      // UPDATE ... SET status=$1, error=$2 ... WHERE id=$3
+      // (parameterized terminal status: 'failed' or 'timed_out')
+      if (sql.includes('UPDATE street_workflows SET status=$1, error=$2')) {
+        const wf = workflows.get(args[2] as string);
+        if (wf) {
+          wf.status = args[0] as string;
+          wf.error = args[1] as string;
+        }
+        return { rows: [], rowCount: 1, command: 'UPDATE' };
+      }
+
       return { rows: [], rowCount: 0, command: 'SELECT' };
     },
     async transaction<T>(
