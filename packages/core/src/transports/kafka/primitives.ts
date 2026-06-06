@@ -104,3 +104,27 @@ export class KafkaReader {
   get offset(): number { return this.off; }
   get hasMore(): boolean { return this.off < this.buf.length; }
 }
+
+// ── CRC32C (Castagnoli) ───────────────────────────────────────────────────────
+// Software table implementation; polynomial 0x82F63B78 (reflected).
+
+const CRC32C_TABLE: Uint32Array = (() => {
+  const table = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) {
+      c = (c & 1) ? (0x82f63b78 ^ (c >>> 1)) : (c >>> 1);
+    }
+    table[n] = c >>> 0;
+  }
+  return table;
+})();
+
+/** Compute CRC32C of a buffer. Returns an unsigned 32-bit value. */
+export function crc32c(buf: Buffer): number {
+  let crc = 0xffffffff;
+  for (let i = 0; i < buf.length; i++) {
+    crc = (CRC32C_TABLE[(crc ^ buf[i]!) & 0xff]! ^ (crc >>> 8)) >>> 0;
+  }
+  return (crc ^ 0xffffffff) >>> 0;
+}
