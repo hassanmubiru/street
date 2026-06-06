@@ -11,6 +11,7 @@ import assert from 'node:assert/strict';
 import 'reflect-metadata';
 import { JobQueue, Job, STREET_JOBS_MIGRATION_SQL, STREET_DLQ_MIGRATION_SQL, } from '../jobs/queue.js';
 import { CronScheduler, CronParseError } from '../jobs/scheduler.js';
+import { STREET_WORKFLOWS_MIGRATION_SQL } from '../jobs/workflow.js';
 // ── Tests: Migration SQL ──────────────────────────────────────────────────────
 describe('JobQueue — Migration SQL', () => {
     it('STREET_JOBS_MIGRATION_SQL creates the street_jobs table with all required columns', () => {
@@ -45,6 +46,27 @@ describe('JobQueue — Migration SQL', () => {
     });
     it('STREET_DLQ_MIGRATION_SQL is idempotent (uses IF NOT EXISTS)', () => {
         assert.match(STREET_DLQ_MIGRATION_SQL, /CREATE TABLE IF NOT EXISTS/i);
+    });
+});
+// ── Tests: WorkflowEngine Migration SQL ───────────────────────────────────────
+describe('WorkflowEngine — Migration SQL', () => {
+    it('STREET_WORKFLOWS_MIGRATION_SQL creates the street_workflows table with all required columns', () => {
+        assert.ok(STREET_WORKFLOWS_MIGRATION_SQL.includes('street_workflows'), 'Should reference street_workflows table');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /id\s+UUID/i, 'id UUID');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /name\s+TEXT/i, 'name TEXT');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /status\s+TEXT/i, 'status TEXT');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /current_step\s+INT/i, 'current_step INT');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /step_outputs\s+JSONB/i, 'step_outputs JSONB');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /input\s+JSONB/i, 'input JSONB');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /error\s+TEXT/i, 'error TEXT');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /created_at\s+TIMESTAMPTZ/i, 'created_at TIMESTAMPTZ');
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /updated_at\s+TIMESTAMPTZ/i, 'updated_at TIMESTAMPTZ');
+    });
+    it('STREET_WORKFLOWS_MIGRATION_SQL declares id as the primary key', () => {
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /id\s+UUID\s+PRIMARY KEY/i, 'id UUID PRIMARY KEY');
+    });
+    it('STREET_WORKFLOWS_MIGRATION_SQL is idempotent (uses IF NOT EXISTS)', () => {
+        assert.match(STREET_WORKFLOWS_MIGRATION_SQL, /CREATE TABLE IF NOT EXISTS/i);
     });
 });
 /** Build a simple mock pool that records calls and returns configured responses. */
@@ -603,6 +625,15 @@ describe('JobQueue polling loop — geometric backoff on failure', () => {
         assert.equal(after2.attempt_count, 2, 'attempt_count should increment to 2');
         const expectedDelay2 = Math.min(policy.initialDelayMs * Math.pow(policy.backoffMultiplier, 1), policy.maxDelayMs);
         assert.equal(after2.run_at.getTime(), Date.now() + expectedDelay2, 'run_at should be NOW() + 2000ms after the second failure');
+        // Advance to when the second retry becomes due (2000ms later) for the third failure.
+        // attempt 2 -> delay = 1000 * 2^2 = 4000ms, proving the exponent grows with the attempt.
+        await advancePolls(t.mock.timers, 2_000, 100);
+        const after3 = pool.jobs.get(id);
+        assert.ok(after3, 'Job should still be retained after the third failure');
+        assert.equal(after3.attempt_count, 3, 'attempt_count should increment to 3');
+        const expectedDelay3 = Math.min(policy.initialDelayMs * Math.pow(policy.backoffMultiplier, 2), policy.maxDelayMs);
+        assert.equal(expectedDelay3, 4000, 'Sanity: third backoff is 1000 * 2^2 = 4000ms (uncapped)');
+        assert.equal(after3.run_at.getTime(), Date.now() + expectedDelay3, 'run_at should be NOW() + 4000ms after the third failure (geometric growth)');
         queue.stop();
     });
     it('caps the rescheduled backoff delay at maxDelayMs', async (t) => {
