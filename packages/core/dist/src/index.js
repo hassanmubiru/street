@@ -28,7 +28,7 @@ export { MariaDbConnection } from './database/mysql/mariadb.js';
 export { JwtService } from './security/jwt.js';
 export { SessionManager } from './security/session.js';
 export { encryptSecret, decryptSecret, loadConfig, constantTimeEqual } from './security/vault.js';
-export { RateLimiter, RateLimitException } from './security/ratelimit.js';
+export { RateLimiter, RateLimitException, RateLimit, getRateLimitMeta } from './security/ratelimit.js';
 export { sanitizeString, sanitizeDeep, escapeHtml, xssMiddleware } from './security/xss.js';
 // ── Multipart ─────────────────────────────────────────────────────────────────
 export { MultipartParser } from './multipart/parser.js';
@@ -43,6 +43,7 @@ export { TelemetryTracker, telemetryMiddleware } from './telemetry/tracker.js';
 export { ClusterCoordinator, workerHeartbeat, signalReady, } from './cluster/coordinator.js';
 // ── Webhook ───────────────────────────────────────────────────────────────────
 export { WebhookDispatcher } from './webhook/dispatcher.js';
+export { WebhookManager, signWebhookPayload, verifyIncomingWebhook, WEBHOOK_ENDPOINTS_MIGRATION_SQL, WEBHOOK_DELIVERIES_MIGRATION_SQL, } from './webhook/manager.js';
 // ── Dev ───────────────────────────────────────────────────────────────────────
 export { DevWatcher } from './dev/watcher.js';
 // ── Query Builder ─────────────────────────────────────────────────────────────
@@ -102,6 +103,7 @@ export { EventStore, EVENTS_MIGRATION_SQL } from './microservices/event-store.js
 // ── Cloud ─────────────────────────────────────────────────────────────────────
 export { generateManifest } from './cloud/deployment.js';
 export { VaultSecretProvider, AwsSecretsManagerProvider, GcpSecretManagerProvider } from './cloud/secret-providers.js';
+export { registerShutdownHook, isRunningInServiceMesh, buildAutoscaleMetrics, registerAutoscaleRoute, } from './cloud/runtime.js';
 // ── Enterprise: Feature Flags ──────────────────────────────────────────────────
 export { FeatureFlagService, FEATURE_FLAGS_MIGRATION_SQL } from './enterprise/feature-flags.js';
 // ── Enterprise: Audit Logger ───────────────────────────────────────────────────
@@ -125,10 +127,17 @@ export { PluginModule } from './platform/plugins/sdk.js';
 export { PluginInstaller } from './platform/plugins/registry.js';
 // ── HTTP: Edge Runtime ────────────────────────────────────────────────────────
 export { FeatureUnavailableInEdgeRuntimeError } from './http/exceptions.js';
+// ── API Versioning ────────────────────────────────────────────────────────────
+export { ApiVersion, Deprecated, enableVersioning, getApiVersion, getDeprecatedMeta } from './versioning/strategy.js';
+// ── SDK Generator ─────────────────────────────────────────────────────────────
+export { generateTypescriptSdk } from './sdk-gen/typescript.js';
+export { generatePythonSdk } from './sdk-gen/python.js';
+// ── API Analytics ─────────────────────────────────────────────────────────────
+export { AnalyticsService, STREET_API_EVENTS_MIGRATION_SQL } from './observability/analytics.js';
 // ── GraphQL: SDL Schema Parser ────────────────────────────────────────────────
 export { parseSchema, typeRefToString, namedType, SchemaParseError } from './graphql/schema.js';
 // ── GraphQL: Execution Engine ─────────────────────────────────────────────────
-export { GraphQlEngine, graphqlMiddleware } from './graphql/engine.js';
+export { GraphQlEngine, graphqlMiddleware, registerGraphqlRoute, DEFAULT_GRAPHQL_PATH } from './graphql/engine.js';
 // ── GraphQL: Subscriptions (graphql-ws) ───────────────────────────────────────
 export { GraphQlWsConnection, attachGraphqlWs, GRAPHQL_WS_SUBPROTOCOL, GraphQlWsMessageType, GraphQlWsCloseCode, } from './graphql/subscriptions.js';
 //# sourceMappingURL=index.js.map
