@@ -131,7 +131,7 @@ export class GrpcServer {
   }
 
   private async *_readFrames(stream: ServerHttp2Stream): AsyncGenerator<Buffer> {
-    let buffer = Buffer.alloc(0);
+    let buffer: Buffer = Buffer.alloc(0);
     for await (const chunk of stream) {
       buffer = Buffer.concat([buffer, chunk as Buffer]);
       const { frames, rest } = decodeFrames(buffer, this.maxBytes);
