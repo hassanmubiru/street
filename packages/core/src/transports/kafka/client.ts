@@ -2,7 +2,7 @@
 // Kafka protocol client: metadata discovery, produce, fetch, list-offsets,
 // group-coordinator lookup, and offset commit/fetch. Built on KafkaConnection.
 
-import { KafkaWriter, KafkaReader } from './primitives.js';
+import type { KafkaWriter } from './primitives.js';
 import { KafkaConnection, API, type KafkaBroker, type KafkaConnectionOptions } from './connection.js';
 import { encodeRecordBatch, decodeRecordBatches, type KafkaRecord } from './recordbatch.js';
 
@@ -11,7 +11,6 @@ export interface TopicMeta { error: number; name: string; partitions: PartitionM
 export interface ClusterMeta { brokers: KafkaBroker[]; controllerId: number; topics: TopicMeta[]; }
 
 export interface KafkaClientOptions extends KafkaConnectionOptions {
-  /** Comma-separated or array of bootstrap brokers "host:port". */
   brokers?: string[];
 }
 
@@ -57,24 +56,60 @@ export class KafkaClient {
     throw lastErr instanceof Error ? lastErr : new Error('No Kafka brokers reachable');
   }
 
-  /** Fetch (and cache) cluster metadata for the given topics. */
+  /** Metadata v1: brokers (with rack), controller id, topics with partitions. */
   async metadata(topics: string[]): Promise<ClusterMeta> {
     const conn = await this._anyConn();
-    const r = await conn.request(API.METADATA, 1, (w) => {
+    const r = await conn.request(API.METADATA, 1, (w: KafkaWriter) => {
       w.int32(topics.length);
       for (const t of topics) w.string(t);
     });
-    const brokers = r.array((rd) => ({ nodeId: rd.int32(), host: rd.string()!, port: rd.int32(), }));
-    // each broker also has rack (nullable string) in v1
-    // NOTE: array() consumed nodeId/host/port; rack is read here per element is not possible.
-    // Re-parse manually to include rack:
-    return this._parseMetadata(brokers, r);
+    const brokerCount = r.int32();
+    const brokers: KafkaBroker[] = [];
+    for (let i = 0; i < brokerCount; i++) {
+      const nodeId = r.int32(); const host = r.string()!; const port = r.int32();
+      r.string(); // rack (nullable)
+      brokers.push({ nodeId, host, port });
+    }
+    const controllerId = r.int32();
+    const topicCount = r.int32();
+    const tmeta: TopicMeta[] = [];
+    for (let i = 0; i < topicCount; i++) {
+      const error = r.int16(); const name = r.string()!; r.int8(); // is_internal
+      const pCount = r.int32();
+      const partitions: PartitionMeta[] = [];
+      for (let p = 0; p < pCount; p++) {
+        const perr = r.int16(); const partition = r.int32(); const leader = r.int32();
+        const replicas = r.array((rd) => rd.int32());
+        const isr = r.array((rd) => rd.int32());
+        partitions.push({ error: perr, partition, leader, replicas, isr });
+      }
+      tmeta.push({ error, name, partitions });
+    }
+    this.meta = { brokers, controllerId, topics: tmeta };
+    return this.meta;
   }
 
-  private _parseMetadata(brokers: KafkaBroker[], r: KafkaReader): ClusterMeta {
-    // We must read rack for each broker; redo parsing cleanly below instead.
-    void brokers;
-    throw new Error('unused');
-    void r;
+  private _brokerById(nodeId: number): KafkaBroker {
+    const b = this.meta?.brokers.find((x) => x.nodeId === nodeId);
+    if (!b) throw new Error(`Kafka broker ${nodeId} not found in metadata`);
+    return b;
+  }
+
+  /** Resolve the leader broker for a topic-partition. */
+  async leaderFor(topic: string, partition: number): Promise<KafkaBroker> {
+    if (!this.meta) await this.metadata([topic]);
+    let tm = this.meta!.topics.find((t) => t.name === topic);
+    if (!tm) { await this.metadata([topic]); tm = this.meta!.topics.find((t) => t.name === topic); }
+    const pm = tm?.partitions.find((p) => p.partition === partition);
+    if (!pm) throw new Error(`No leader for ${topic}-${partition}`);
+    return this._brokerById(pm.leader);
+  }
+
+  close(): void {
+    for (const c of this.connections.values()) c.close();
+    this.connections.clear();
   }
 }
+
+export { encodeRecordBatch, decodeRecordBatches };
+export type { KafkaRecord };
