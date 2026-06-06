@@ -366,13 +366,13 @@ Status markers used in this plan:
   - [ ] 40.4 Export `/metrics/autoscale` response shape as `AutoscaleMetrics` type from `packages/core/src/index.ts`
   - [ ] 40.5 Write tests: `/metrics/autoscale` response matches Kubernetes External Metrics API format, service mesh env var disables retries, readiness delay holds probe in `down` state
 
-- [ ] 41. v2.1 — Edge Runtime Adapter
-  - [~] 41.1 Create `packages/edge/` workspace package with its own `package.json` (`@streetjs/edge`) and `tsconfig.json`; configure `"browser"` export condition
+- [~] 41. v2.1 — Edge Runtime Adapter
+  - [x] 41.1 Create `packages/edge/` workspace package with its own `package.json` (`@streetjs/edge`) and `tsconfig.json`; configure `"browser"` export condition
   - [~] 41.2 Create `packages/edge/src/adapter.ts` with `handleEdgeRequest(request: Request, app: StreetApp): Promise<Response>`: map Web Fetch `Request` → `StreetContext` using a synthetic `IncomingMessage`-like object; run the middleware pipeline; build a `Response` from the context's JSON/text/html output
   - [~] 41.3 Create `packages/edge/src/stubs.ts`: stub modules that replace `node:net`, `node:cluster`, `node:fs`, and `node:http` when bundled for edge targets; each stub's methods throw `FeatureUnavailableInEdgeRuntimeError` when called
   - [~] 41.4 Add `"browser"` export conditions in `packages/core/package.json` to map `node:net` imports to edge stubs for tree-shaking
-  - [~] 41.5 Create `FeatureUnavailableInEdgeRuntimeError` in `packages/core/src/http/exceptions.ts`
-  - [~] 41.6 Write tests: `handleEdgeRequest` routes to the correct handler, edge-incompatible features throw `FeatureUnavailableInEdgeRuntimeError` when initialized, routing/middleware/DI/JWT verify all work in edge mode
+  - [x] 41.5 Create `FeatureUnavailableInEdgeRuntimeError` in `packages/core/src/http/exceptions.ts`
+  - [ ] 41.6 Write tests: `handleEdgeRequest` routes to the correct handler, edge-incompatible features throw `FeatureUnavailableInEdgeRuntimeError` when initialized, routing/middleware/DI/JWT verify all work in edge mode
 
 
 - [ ] 42. v2.2 — Feature Flags
