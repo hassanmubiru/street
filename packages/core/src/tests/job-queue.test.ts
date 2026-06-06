@@ -2252,8 +2252,9 @@ describe('registerJobMetricsRoute', () => {
 
     assert.equal(nextCalled, false, 'Matching route should not fall through to next()');
     assert.ok(sent, 'Should have written a JSON response');
-    assert.equal(sent!.status, 200);
-    assert.deepEqual(sent!.body, {
+    const result = sent as unknown as { body: unknown; status: number };
+    assert.equal(result.status, 200);
+    assert.deepEqual(result.body, {
       pending: 1,
       inFlight: 2,
       failed: 0,
