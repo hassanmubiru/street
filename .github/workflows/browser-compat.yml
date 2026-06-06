@@ -1,0 +1,36 @@
+name: Browser Compatibility
+
+on:
+  push:
+    paths:
+      - 'packages/core/src/browser.ts'
+      - 'packages/core/src/browser-stub.ts'
+      - 'packages/core/package.json'
+      - 'packages/core/src/tests/browser-build.test.ts'
+      - '.github/workflows/browser-compat.yml'
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  browser-compat:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build core (produces dist/browser.js + dist/browser-stub.js)
+        run: npm run build -w packages/core
+
+      - name: Compile tests
+        run: npx tsc
+        working-directory: packages/core
+
+      - name: Run browser export-condition compatibility tests (esbuild platform=browser)
+        run: node --test dist/src/tests/browser-build.test.js
+        working-directory: packages/core
