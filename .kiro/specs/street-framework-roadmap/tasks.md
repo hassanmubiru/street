@@ -262,14 +262,14 @@ Status markers used in this plan:
   - [x] 28.4 Add `street generate sdk --lang <typescript|python> --output <dir>` to `GenerateCommand`: dynamically import the compiled project's `openApiSpec()`, pass to the appropriate generator
   - [x] 28.5 Write tests: generated TypeScript compiles without errors, generated Python dataclasses match the spec schema, backward-compatible spec change produces additive SDK update
 
-- [~] 29. v1.6 — Rate Limit Policies and API Analytics
+- [x] 29. v1.6 — Rate Limit Policies and API Analytics
   - [x] 29.1 Create `@RateLimit({ requests, window, key? })` method decorator in `packages/core/src/security/ratelimit.ts`: store config under `street:rateLimit` route metadata
   - [x] 29.2 Implement per-route rate limit resolution in the router middleware pipeline: read `street:rateLimit` metadata and instantiate a route-scoped `RateLimiter`; cache instances in a `Map<routeKey, RateLimiter>`; respond 429 with `Retry-After`, `X-RateLimit-*` headers on violation
   - [x] 29.3 Write `street_api_events` migration SQL; create `packages/core/src/observability/analytics.ts` with `AnalyticsService`
   - [x] 29.4 Implement `AnalyticsService.middleware()`: buffer events in memory (max 100); flush to DB every 5 seconds or when buffer reaches 100; use a single batched `INSERT` statement
   - [x] 29.5 Implement `AnalyticsService.report(from, to)`: SQL aggregation query returning top routes by count, average latency, and error rate
   - [x] 29.6 Implement retention pruning: `CronScheduler` nightly job deletes `street_api_events` rows older than `retentionDays`
-  - [ ] 29.7 Add `street analytics report --from <date> --to <date>` CLI command
+  - [x] 29.7 Add `street analytics report --from <date> --to <date>` CLI command
   - [x] 29.8 Write tests: per-route limiter overrides global, 429 headers are correct, analytics buffer flushes, retention pruning removes old rows
 
 - [~] 30. v1.6 — Webhook Management
