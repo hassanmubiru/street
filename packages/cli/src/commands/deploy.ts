@@ -5,6 +5,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { CliContext } from '../index.js';
+import type { CloudPlatform, DeployConfig } from '@streetjs/core';
 
 const PLATFORM_FILES: Record<string, string> = {
   kubernetes: 'deployment.yaml',
