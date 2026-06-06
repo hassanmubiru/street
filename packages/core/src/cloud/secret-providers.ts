@@ -162,6 +162,7 @@ export class VaultSecretProvider implements SecretProvider {
         return await httpsGet(url, headers, this._tls);
       } catch (err) {
         lastErr = err as Error;
+        if (!isRetryable(err)) break;
         if (i < delays.length && Date.now() + (delays[i] ?? 0) < deadline) {
           await new Promise((r) => setTimeout(r, delays[i]));
         } else {
@@ -302,6 +303,7 @@ export class AwsSecretsManagerProvider implements SecretProvider {
         return await this._fetchSecret(key);
       } catch (err) {
         lastErr = err as Error;
+        if (!isRetryable(err)) break;
         if (i < delays.length && Date.now() + (delays[i] ?? 0) < deadline) {
           await new Promise((r) => setTimeout(r, delays[i]));
         } else {
@@ -417,6 +419,7 @@ export class GcpSecretManagerProvider implements SecretProvider {
         return await this._fetchSecret(key);
       } catch (err) {
         lastErr = err as Error;
+        if (!isRetryable(err)) break;
         if (i < delays.length && Date.now() + (delays[i] ?? 0) < deadline) {
           await new Promise((r) => setTimeout(r, delays[i]));
         } else {
@@ -509,6 +512,7 @@ export class AzureKeyVaultProvider implements SecretProvider {
         return await this._fetchSecret(key);
       } catch (err) {
         lastErr = err as Error;
+        if (!isRetryable(err)) break;
         if (i < delays.length && Date.now() + (delays[i] ?? 0) < deadline) {
           await new Promise((r) => setTimeout(r, delays[i]));
         } else {
