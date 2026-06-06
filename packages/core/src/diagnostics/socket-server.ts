@@ -62,7 +62,7 @@ export class DiagnosticsServer {
 
     // Push snapshot to all connected clients every second
     this._pushTimer = setInterval(() => {
-      this._broadcastSnapshot();
+      void this._broadcastSnapshot();
     }, 1000);
     this._pushTimer.unref();
   }
