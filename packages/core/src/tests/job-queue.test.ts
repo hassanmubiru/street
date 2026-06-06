@@ -618,3 +618,65 @@ describe('RetryPolicy backoff formula', () => {
     assert.equal(delay, 5000);
   });
 });
+
+// ── Tests: setRetryPolicy registration (per-job-type retry config) ────────────
+
+describe('JobQueue.setRetryPolicy', () => {
+  it('accepts a policy with all four fields without throwing', () => {
+    const pool = makeMockPool();
+    const queue = new JobQueue(pool);
+    assert.doesNotThrow(() =>
+      queue.setRetryPolicy('send-email', {
+        maxAttempts: 5,
+        initialDelayMs: 1000,
+        backoffMultiplier: 2,
+        maxDelayMs: 30_000,
+      }),
+    );
+  });
+
+  it('reschedules a failing job (status=pending) when a per-type policy allows more attempts', async (t) => {
+    const T0 = 1_700_000_000_000;
+    t.mock.timers.enable({ apis: ['setInterval', 'Date'], now: T0 });
+
+    const pool = makeStatefulPool();
+    const queue = new JobQueue(pool, { pollIntervalMs: 100, concurrency: 5 });
+
+    // Register a per-type retry policy permitting multiple attempts.
+    queue.setRetryPolicy('flaky', {
+      maxAttempts: 3,
+      initialDelayMs: 500,
+      backoffMultiplier: 2,
+      maxDelayMs: 10_000,
+    });
+
+    queue.register('flaky', async () => {
+      throw new Error('boom');
+    });
+
+    const id = await queue.enqueue({ type: 'flaky' });
+
+    queue.start();
+    await advancePolls(t.mock.timers, 100, 100); // one poll cycle: job fails once
+    queue.stop();
+
+    const job = pool.jobs.get(id);
+    assert.ok(job, 'Job with remaining attempts must be retained, not removed');
+    assert.equal(job!.status, 'pending', 'Failing job should be re-scheduled as pending');
+    assert.equal(job!.attempt_count, 1, 'attempt_count should be incremented after a failed attempt');
+    assert.equal(job!.error, 'boom', 'Failure error should be recorded');
+  });
+
+  it('uses per-type policies independently — each type retains its own config', () => {
+    const pool = makeMockPool();
+    const queue = new JobQueue(pool);
+
+    queue.setRetryPolicy('a', { maxAttempts: 2, initialDelayMs: 100, backoffMultiplier: 2, maxDelayMs: 1000 });
+    queue.setRetryPolicy('b', { maxAttempts: 7, initialDelayMs: 250, backoffMultiplier: 3, maxDelayMs: 9000 });
+
+    // Inspect the internal per-type map to confirm isolation between types.
+    const policies = (queue as unknown as { retryPolicies: Map<string, { maxAttempts: number }> }).retryPolicies;
+    assert.equal(policies.get('a')!.maxAttempts, 2);
+    assert.equal(policies.get('b')!.maxAttempts, 7);
+  });
+});
