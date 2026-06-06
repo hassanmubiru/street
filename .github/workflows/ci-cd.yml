@@ -403,6 +403,39 @@ jobs:
           advanced-security: false
           annotations: true
 
+  # ── policy-checks: Absolute implementation policy enforcement (51.1, 51.5) ─
+  # Purpose:   Fail the build if banned placeholder markers (TODO/FIXME/HACK/
+  #            @ts-ignore) appear in shipped source, and run a high-severity
+  #            dependency audit.
+  # Depends:   Nothing (independent, fast)
+  policy-checks:
+    name: Policy Checks (no-placeholders + audit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Scan for banned placeholder markers in shipped source
+        run: |
+          # Excludes test files; scans the production source tree only.
+          if grep -RInE '\b(TODO|FIXME|HACK)\b|@ts-ignore' \
+               --include='*.ts' \
+               --exclude-dir=tests \
+               --exclude-dir=integration \
+               packages/core/src; then
+            echo "::error::Banned placeholder markers (TODO/FIXME/HACK/@ts-ignore) found in packages/core/src"
+            exit 1
+          fi
+          echo "No banned placeholder markers found ✔"
+
+      - name: High-severity dependency audit
+        run: npm audit --audit-level=high
+
   # ── summary: Post-system-test summary step ─────────────────────────────
   # Purpose:   Print a summary of system test results to the GitHub Actions
   #            job summary. Only collects after system-tests completes.
