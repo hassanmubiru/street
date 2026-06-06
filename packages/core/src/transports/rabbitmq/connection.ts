@@ -243,3 +243,137 @@ export class AmqpConnection extends EventEmitter {
     const args = new AmqpWriter().longUint(0).shortUint(prefetchCount).octet(0).build();
     await this._rpc(buildMethodFrame(CH, 60, 10, args), 60, 11); // Basic.Qos-Ok
   }
+
+  // ── Publish ─────────────────────────────────────────────────────────────────
+
+  /**
+   * Publish a message. When confirms are enabled, the returned promise resolves
+   * once the broker acks the publish (or rejects on nack).
+   */
+  async publish(exchange: string, routingKey: string, body: Buffer, opts: { persistent?: boolean; contentType?: string } = {}): Promise<void> {
+    const methodArgs = new AmqpWriter()
+      .shortUint(0)
+      .shortStr(exchange)
+      .shortStr(routingKey)
+      .bits(false, false) // mandatory, immediate
+      .build();
+    const props: Record<string, unknown> = {};
+    if (opts.contentType) props['contentType'] = opts.contentType;
+    if (opts.persistent !== false) props['deliveryMode'] = 2; // persistent by default
+
+    const tag = this.confirmEnabled ? this.nextPublishTag++ : 0n;
+    const confirm = this.confirmEnabled
+      ? new Promise<void>((resolve, reject) => {
+          this.confirmWaiters.set(tag.toString(), () => resolve());
+          // store reject alongside for nack
+          this.confirmWaiters.set(`rej:${tag}`, (() => reject(new Error('publish nacked'))) as never);
+        })
+      : Promise.resolve();
+
+    this._send(buildMethodFrame(CH, 60, 40, methodArgs));        // Basic.Publish
+    this._send(buildHeaderFrame(CH, 60, body.length, props));    // content header
+    if (body.length > 0) this._send(buildBodyFrame(CH, body));   // body
+
+    await confirm;
+  }
+
+  private _handleConfirm(reader: import('./codec.js').AmqpReader, nack: boolean): void {
+    const tag = reader.longLong();
+    const multiple = reader.bit();
+    const resolveTag = (t: string): void => {
+      if (nack) {
+        const rej = this.confirmWaiters.get(`rej:${t}`);
+        if (rej) rej();
+      } else {
+        const ok = this.confirmWaiters.get(t);
+        if (ok) ok();
+      }
+      this.confirmWaiters.delete(t);
+      this.confirmWaiters.delete(`rej:${t}`);
+    };
+    if (multiple) {
+      for (const key of [...this.confirmWaiters.keys()]) {
+        if (key.startsWith('rej:')) continue;
+        if (BigInt(key) <= tag) resolveTag(key);
+      }
+    } else {
+      resolveTag(tag.toString());
+    }
+  }
+
+  // ── Consume ─────────────────────────────────────────────────────────────────
+
+  /** Start consuming from a queue. Deliveries are passed to `handler`. */
+  async consume(queue: string, handler: (msg: DeliveredMessage) => void, opts: { noAck?: boolean } = {}): Promise<string> {
+    this.deliverHandler = handler;
+    const args = new AmqpWriter()
+      .shortUint(0)
+      .shortStr(queue)
+      .shortStr('')  // consumer-tag (server generates)
+      .bits(false, opts.noAck ?? false, false, false) // no-local, no-ack, exclusive, no-wait
+      .table({})
+      .build();
+    const { reader } = await this._rpc(buildMethodFrame(CH, 60, 20, args), 60, 21); // Basic.Consume-Ok
+    return reader.shortStr();
+  }
+
+  private _beginDelivery(reader: import('./codec.js').AmqpReader): void {
+    reader.shortStr(); // consumer-tag
+    const deliveryTag = reader.longLong();
+    const redelivered = reader.bit();
+    const exchange = reader.shortStr();
+    const routingKey = reader.shortStr();
+    this.pendingDelivery = { msg: { deliveryTag, redelivered, exchange, routingKey }, bodySize: 0, chunks: [] };
+  }
+
+  private _handleHeader(frame: RawFrame): void {
+    if (!this.pendingDelivery) return;
+    // payload: class-id(2) weight(2) body-size(8) flags(2) [props...]
+    const bodySize = Number(frame.payload.readBigUInt64BE(4));
+    this.pendingDelivery.bodySize = bodySize;
+    if (bodySize === 0) this._finishDelivery();
+  }
+
+  private _handleBody(frame: RawFrame): void {
+    if (!this.pendingDelivery) return;
+    this.pendingDelivery.chunks.push(frame.payload);
+    const have = this.pendingDelivery.chunks.reduce((n, b) => n + b.length, 0);
+    if (have >= this.pendingDelivery.bodySize) this._finishDelivery();
+  }
+
+  private _finishDelivery(): void {
+    if (!this.pendingDelivery) return;
+    const { msg, chunks } = this.pendingDelivery;
+    this.pendingDelivery = null;
+    const message: DeliveredMessage = { ...msg, body: Buffer.concat(chunks) };
+    if (this.deliverHandler) this.deliverHandler(message);
+  }
+
+  /** Acknowledge a delivery. */
+  ack(deliveryTag: bigint): void {
+    const args = new AmqpWriter().longLong(deliveryTag).bits(false).build();
+    this._send(buildMethodFrame(CH, 60, 80, args)); // Basic.Ack
+  }
+
+  /** Negatively acknowledge a delivery; `requeue` controls redelivery. */
+  nack(deliveryTag: bigint, requeue: boolean): void {
+    const args = new AmqpWriter().longLong(deliveryTag).bits(false, requeue).build();
+    this._send(buildMethodFrame(CH, 60, 120, args)); // Basic.Nack
+  }
+
+  /** Gracefully close the connection. */
+  async close(): Promise<void> {
+    this.closing = true;
+    if (this.heartbeatTimer) { clearInterval(this.heartbeatTimer); this.heartbeatTimer = null; }
+    try {
+      if (this.socket && !this.socket.destroyed) {
+        const args = new AmqpWriter().shortUint(200).shortStr('OK').shortUint(0).shortUint(0).build();
+        this._send(buildMethodFrame(0, 10, 50, args)); // Connection.Close
+      }
+    } catch { /* ignore */ }
+    this.socket?.destroy();
+    this.socket = null;
+  }
+
+  get connected(): boolean { return this.socket !== null && !this.socket.destroyed; }
+}
