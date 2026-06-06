@@ -165,13 +165,13 @@
   - [x] 18.5 Export `RefreshTokenService`, `TokenReplayError` from `packages/core/src/index.ts`
   - [x] 18.6 Write tests: rotation invalidates old token, replay attack revokes whole family, rotation invariant (old token invalid after rotation, new token valid), configurable lifetimes respected
 
-- [ ] 19. v1.4 — RBAC and Permission Decorators
+- [x] 19. v1.4 — RBAC and Permission Decorators
   - [x] 19.1 Create `packages/core/src/auth/rbac.ts`: `RoleHierarchy` type, `RbacService` class, `@Roles()` and `@Permissions()` method decorators, `rbacGuard(service)` middleware factory
   - [x] 19.2 Implement `RbacService` constructor: traverse hierarchy using BFS to build a `Map<role, Set<string>>` of flattened permissions; store at construction time for synchronous lookups
   - [x] 19.3 Implement `@Roles(...roles)` decorator: store roles on route metadata under `street:roles` key using `Reflect.defineMetadata`
   - [x] 19.4 Implement `@Permissions(...perms)` decorator: store permissions under `street:permissions` key
   - [x] 19.5 Implement `rbacGuard(service)` middleware: read metadata from the route handler class/method; call `service.hasRole()` or `service.hasPermission()`; throw `ForbiddenException` with `{ error: 'Forbidden', required: string[] }` on failure
-  - [-] 19.6 Write tests: role inheritance resolves permissions, `@Roles` guard blocks non-matching roles with 403, `@Permissions` guard blocks missing permission, synchronous resolution (no DB calls)
+  - [x] 19.6 Write tests: role inheritance resolves permissions, `@Roles` guard blocks non-matching roles with 403, `@Permissions` guard blocks missing permission, synchronous resolution (no DB calls)
 
 - [ ] 20. v1.4 — WebAuthn / Passkeys
   - [~] 20.1 Create `packages/core/src/auth/webauthn.ts` with `WebAuthnService`; write `street_webauthn_credentials` migration SQL
