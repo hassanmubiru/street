@@ -32,6 +32,14 @@ export declare class ReplicationCoordinator extends EventEmitter {
      */
     promotePrimary(regionName: string): Promise<void>;
     stop(): void;
+    /**
+     * Query `pg_stat_replication` on the primary and report per-replica lag (in
+     * seconds) into a Prometheus-style gauge. The gauge receives a value plus
+     * `{ region, replica_id }` labels for each replica row.
+     */
+    reportReplicationLag(gauge: {
+        set(value: number, labels?: Record<string, string>): void;
+    }): Promise<void>;
     private _checkHealth;
 }
 export declare function preferredRegionMiddleware(coordinator: ReplicationCoordinator): MiddlewareFn;

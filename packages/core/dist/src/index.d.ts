@@ -119,7 +119,7 @@ export { VaultSecretProvider, AwsSecretsManagerProvider, GcpSecretManagerProvide
 export type { SecretProvider } from './cloud/secret-providers.js';
 export { registerShutdownHook, isRunningInServiceMesh, buildAutoscaleMetrics, registerAutoscaleRoute, } from './cloud/runtime.js';
 export type { Closeable, ShutdownHookOptions, AutoscaleMetrics, AutoscaleSource, ExternalMetricValue, } from './cloud/runtime.js';
-export { FeatureFlagService, FEATURE_FLAGS_MIGRATION_SQL } from './enterprise/feature-flags.js';
+export { FeatureFlagService, FEATURE_FLAGS_MIGRATION_SQL, registerFeatureFlagAdminRoute } from './enterprise/feature-flags.js';
 export type { FeatureFlagRule } from './enterprise/feature-flags.js';
 export { AuditLogger, Sensitive, ENTERPRISE_AUDIT_MIGRATION_SQL } from './enterprise/audit-logger.js';
 export type { AuditCategory } from './enterprise/audit-logger.js';

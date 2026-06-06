@@ -105,7 +105,7 @@ export { generateManifest } from './cloud/deployment.js';
 export { VaultSecretProvider, AwsSecretsManagerProvider, GcpSecretManagerProvider } from './cloud/secret-providers.js';
 export { registerShutdownHook, isRunningInServiceMesh, buildAutoscaleMetrics, registerAutoscaleRoute, } from './cloud/runtime.js';
 // ── Enterprise: Feature Flags ──────────────────────────────────────────────────
-export { FeatureFlagService, FEATURE_FLAGS_MIGRATION_SQL } from './enterprise/feature-flags.js';
+export { FeatureFlagService, FEATURE_FLAGS_MIGRATION_SQL, registerFeatureFlagAdminRoute } from './enterprise/feature-flags.js';
 // ── Enterprise: Audit Logger ───────────────────────────────────────────────────
 export { AuditLogger, Sensitive, ENTERPRISE_AUDIT_MIGRATION_SQL } from './enterprise/audit-logger.js';
 // ── Enterprise: Data Policy ────────────────────────────────────────────────────
