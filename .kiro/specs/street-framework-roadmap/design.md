@@ -1740,16 +1740,55 @@ interface TransportMessage {
 
 These invariants hold across the roadmap implementation and are validated by tests:
 
-1. **Codec round-trip:** For every transport codec, `decode(encode(x)) === x` for all valid messages. Verified by unit tests for AMQP frames, Kafka `RecordBatch`, and RESP.
-2. **CRC integrity:** Kafka `RecordBatch` CRC32C is computed over the batch body and re-validated on decode; corrupted batches are rejected.
-3. **At-least-once delivery:** A consumed message is only removed/acknowledged after the handler resolves. Handler failure triggers `nack`/redelivery (RabbitMQ) or offset non-commit (Kafka).
-4. **Offset monotonicity:** Kafka committed offsets for a `(group, topic, partition)` never move backward across a normal session.
-5. **Idempotent migrations/seeds:** Running a migration or seed twice produces no additional changes (tracked in `street_migrations` / `street_seed_runs`).
-6. **Bounded memory:** Every stateful registry enforces a hard entry cap with LRU/ring-buffer eviction; memory does not grow unbounded under sustained load.
-7. **Token safety:** All secret comparisons are constant-time (`timingSafeEqual`); no token or private key is ever logged.
-8. **Audit immutability:** `street_audit_log` rows are append-only; the `AuditWriter` issues only `INSERT`s.
-9. **Tenant isolation:** Queries scoped to a tenant never return another tenant's rows (enforced via mandatory tenant predicate).
-10. **Graceful shutdown:** After `stop()`/`destroy()`, no timers, sockets, or listeners remain (all `setInterval` use `.unref()` and are cleared).
+### Property 1: Codec round-trip
+For every transport codec, `decode(encode(x))` equals `x` for all valid messages. Verified by unit tests for AMQP frames, Kafka `RecordBatch`, and RESP.
+
+**Validates: Requirements 36.5, 47.2**
+
+### Property 2: CRC integrity
+Kafka `RecordBatch` CRC32C is computed over the batch body and re-validated on decode; corrupted batches are rejected.
+
+**Validates: Requirements 47.2**
+
+### Property 3: At-least-once delivery
+A consumed message is only removed/acknowledged after the handler resolves. Handler failure triggers `nack`/redelivery (RabbitMQ) or offset non-commit (Kafka).
+
+**Validates: Requirements 36.5, 47.2**
+
+### Property 4: Offset monotonicity
+Kafka committed offsets for a `(group, topic, partition)` never move backward across a normal session.
+
+**Validates: Requirements 47.2**
+
+### Property 5: Idempotent migrations/seeds
+Running a migration or seed twice produces no additional changes (tracked in `street_migrations` / `street_seed_runs`).
+
+**Validates: Requirements 12.1, 12.2**
+
+### Property 6: Bounded memory
+Every stateful registry enforces a hard entry cap with LRU/ring-buffer eviction; memory does not grow unbounded under sustained load.
+
+**Validates: Requirements 51.1**
+
+### Property 7: Token safety
+All secret comparisons are constant-time (`timingSafeEqual`); no token or private key is ever logged.
+
+**Validates: Requirements 14.1, 51.1**
+
+### Property 8: Audit immutability
+`street_audit_log` rows are append-only; the `AuditWriter` issues only `INSERT`s.
+
+**Validates: Requirements 21.5**
+
+### Property 9: Tenant isolation
+Queries scoped to a tenant never return another tenant's rows (enforced via mandatory tenant predicate).
+
+**Validates: Requirements 33.1**
+
+### Property 10: Graceful shutdown
+After `stop()`/`destroy()`, no timers, sockets, or listeners remain (all `setInterval` use `.unref()` and are cleared).
+
+**Validates: Requirements 51.1**
 
 ---
 
@@ -1770,3 +1809,28 @@ The framework uses a consistent, typed error strategy with graceful degradation:
 - **Graceful degradation:** Observability exporters (tracing/metrics) drop samples when buffers are full rather than blocking the request path. Analytics writes are best-effort and never fail a request.
 - **Fail-closed security:** Authorization defaults to deny; SSRF validation rejects unknown hosts; missing secrets cause startup failure rather than silent insecure operation.
 - **Integration test skips:** When external infrastructure is unavailable, integration tests call `t.skip()` rather than failing, keeping the suite green while still exercising codecs via unit tests.
+
+---
+
+## Testing Strategy
+
+Testing follows the Absolute Implementation Policy: no mocks pretending to be production, and every protocol implementation is verified against real infrastructure.
+
+### Layers
+1. **Unit tests** (`node:test` + `node:assert/strict`) — codec round-trips, CRC validation, varint/zigzag encoding, query builders, backoff math, and pure logic. No external dependencies; run on every commit.
+2. **Integration tests** — exercise real systems:
+   - Databases: real PostgreSQL, MySQL, and SQLite (WASM).
+   - HTTP/gRPC: real servers with real HTTP/1.1 and HTTP/2 round-trips.
+   - Messaging: real RabbitMQ and Kafka brokers via docker-compose.
+   - Tests use `t.skip()` when infrastructure is unavailable so suites stay green locally.
+3. **Contract tests** — for cloud services without local emulators (AWS Secrets Manager, Vault, Azure Key Vault, GCP Secret Manager), request signing and response parsing are verified against recorded contracts and mock server harnesses.
+4. **Compatibility tests** — browser/bundler exports validated against Vite, Rollup, Webpack, and ESBuild.
+
+### Infrastructure
+- `docker-compose.rabbitmq.yml` and `docker-compose.kafka.yml` (KRaft single broker) provide reproducible broker environments.
+- Integration suites live under `packages/core/src/integration/<service>/`.
+
+### CI/CD
+- GitHub Actions workflows run build, lint (`tsc --noEmit`), unit tests, and per-service integration jobs: `rabbitmq-integration.yml`, `kafka-integration.yml`, and a browser-compatibility job.
+- Benchmarks run against Express, Fastify, NestJS, Hono, Fiber, and Gin.
+- Coverage target for transport modules is ≥ 90%.
