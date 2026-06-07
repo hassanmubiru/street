@@ -358,7 +358,8 @@ jobs:
 
   # ── benchmark: Performance Benchmarks ─────────────────────────────────
   # Purpose:   Run HTTP throughput benchmarks for Street framework.
-  #            Uses || true to allow missing baseline without failing CI.
+  #            Runs the HTTP throughput benchmark and enforces the regression
+  #            gate (>10% drop from baseline fails the build).
   # Depends:   build-and-test
   benchmark:
     name: Performance Benchmarks
@@ -374,8 +375,8 @@ jobs:
       - name: Build
         run: npm run build -w packages/core
 
-      - name: Run benchmarks
-        run: node packages/core/dist/benchmarks/run.js --baseline packages/core/dist/benchmarks/baseline.json || true
+      - name: Run benchmarks (with regression gate)
+        run: node packages/core/dist/benchmarks/run.js --baseline packages/core/dist/benchmarks/baseline.json
 
   # ── security-lint: Static analysis for workflow security ───────────────
   # Purpose:   Run zizmor — a static analyzer for GitHub Actions workflows.

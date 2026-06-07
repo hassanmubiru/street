@@ -34,6 +34,10 @@ benchmark-report.json
 benchmark-report.md
 benchmark-history.json
 
+# Isolated comparative-benchmark env (deps only; results.* are committed evidence)
+benchmarks/compare/node_modules/
+benchmarks/compare/package-lock.json
+
 # General log files
 log.txt
 *.log
