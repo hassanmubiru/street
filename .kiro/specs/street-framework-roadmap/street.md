@@ -1626,3 +1626,4 @@ Confidence & Release Recommendation
 Confidence: High — every claim is backed by a command executed this session against the actual build. Release recommendation: APPROVED — the plugin system is additive, fully tested, and introduces no regressions (747/51/211/83+38/14 all green, 0 cycles, 0 vulnerabilities).
 
 Net change this initiative: a verified formal plugin system (host + Ed25519 signing + dependency/permission resolution + lifecycle + discovery), Ecosystem 45→62, overall 83→84, committed with source + 17 tests + docs + public exports, zero regressions. Second initiative not started, per instruction.
+
