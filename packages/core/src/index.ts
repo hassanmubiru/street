@@ -338,6 +338,8 @@ export {
   S3Plugin, s3PluginManifest, validateS3Config, S3_PLUGIN_NAME, S3_PLUGIN_VERSION,
 } from './platform/plugins/official/s3.js';
 export type { S3PluginConfig } from './platform/plugins/official/s3.js';
+export { LocalPluginRegistry, installFromRegistry } from './platform/plugins/local-registry.js';
+export type { RegistryRecord } from './platform/plugins/local-registry.js';
 
 // ── HTTP: Edge Runtime ────────────────────────────────────────────────────────
 export { FeatureUnavailableInEdgeRuntimeError } from './http/exceptions.js';
