@@ -1,0 +1,90 @@
+{
+  "uid": "street-api",
+  "title": "Street API",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "street",
+    "http"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Request rate (req/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "job:http_request_rate:rate5m",
+          "legendFormat": "rps",
+          "refId": "A"
+        }
+      ],
+      "unit": "reqps"
+    },
+    {
+      "id": 2,
+      "title": "5xx error ratio",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "job:http_error_rate:ratio5m",
+          "legendFormat": "error ratio",
+          "refId": "A"
+        }
+      ],
+      "unit": "percentunit"
+    },
+    {
+      "id": 3,
+      "title": "Latency p95",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "job:http_request_latency:p95",
+          "legendFormat": "p95",
+          "refId": "A"
+        }
+      ],
+      "unit": "s"
+    },
+    {
+      "id": 4,
+      "title": "Latency p99",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "job:http_request_latency:p99",
+          "legendFormat": "p99",
+          "refId": "A"
+        }
+      ],
+      "unit": "s"
+    }
+  ]
+}
