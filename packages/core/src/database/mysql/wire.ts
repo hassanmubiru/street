@@ -456,22 +456,31 @@ export class MysqlConnection {
 
 
   /**
+   * Optional factory that upgrades a connected base connection to a
+   * dialect-specific subclass (e.g. MariaDB). Registered by `mariadb.ts` at
+   * module load via {@link registerDialectFactory}. Kept as a registration seam
+   * so `wire.ts` carries NO import of its subclasses — eliminating the former
+   * `wire ↔ mariadb` circular dependency. When unregistered, `connect()` returns
+   * a base `MysqlConnection` (functionally compatible with MariaDB).
+   */
+  private static _dialectFactory: ((base: MysqlConnection, version: string) => MysqlConnection) | null = null;
+
+  /** Register a dialect-upgrade factory (called by subclasses at module load). */
+  static registerDialectFactory(fn: (base: MysqlConnection, version: string) => MysqlConnection): void {
+    MysqlConnection._dialectFactory = fn;
+  }
+
+  /**
    * Static factory: connects to MySQL/MariaDB and returns the appropriate
    * subclass based on the server greeting (task 6.7).
    */
   static async connect(opts: MysqlConnectOptions): Promise<MysqlConnection> {
     const conn = new MysqlConnection();
     await conn._connect(opts);
-    // Check if the server is actually MariaDB
+    // Check if the server is actually MariaDB and a dialect factory is registered.
     const version = conn.greeting?.serverVersion ?? '';
-    if (version.includes('MariaDB') || version.startsWith('5.5.5-')) {
-      // Lazy import to avoid circular dependency (mariadb.ts imports from this file).
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const { MariaDbConnection } = await import('./mariadb.js');
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
-      const mariaConn = new MariaDbConnection() as MysqlConnection;
-      mariaConn._transferFrom(conn);
-      return mariaConn;
+    if ((version.includes('MariaDB') || version.startsWith('5.5.5-')) && MysqlConnection._dialectFactory) {
+      return MysqlConnection._dialectFactory(conn, version);
     }
     return conn;
   }
