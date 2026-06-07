@@ -2,6 +2,9 @@
 // immediately followed by a queryStream on the SAME connection, in a loop.
 import { PgConnection } from './dist/src/database/wire.js';
 
+let uncaught = 0;
+process.on('uncaughtException', (e) => { uncaught++; console.log(`UNCAUGHT at iter ~unknown: ${e.message}`); });
+
 const conn = await PgConnection.connect({
   host: '127.0.0.1', port: 55432, user: 'street', password: 'street_secret', database: 'street_test', connectTimeoutMs: 10000,
 });
