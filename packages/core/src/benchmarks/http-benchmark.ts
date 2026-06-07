@@ -32,6 +32,7 @@ export async function runHttpBenchmark(
   port: number,
   durationMs: number = 5000,
   concurrency: number = 10,
+  path: string = '/bench',
 ): Promise<BenchmarkResult> {
   const memBefore = process.memoryUsage().heapUsed;
   const results: number[] = [];
@@ -50,7 +51,7 @@ export async function runHttpBenchmark(
       }
       inFlight++;
       const start = Date.now();
-      const req = http.request({ host: '127.0.0.1', port, path: '/bench', method: 'GET' }, (res) => {
+      const req = http.request({ host: '127.0.0.1', port, path, method: 'GET' }, (res) => {
         res.resume();
         res.on('end', () => {
           results.push(Date.now() - start);
