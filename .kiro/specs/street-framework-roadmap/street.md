@@ -1693,3 +1693,68 @@ Zero regressions: ✅ 757/51/211/83+38/14 all pass; 0 cycles; 0 vulnerabilities.
 No claims without executable evidence: ✅ every row above maps to a command run this session.
 Net change: the PluginHost is now proven production-usable by a complete, signed, permission-gated, lifecycle-tested official S3 plugin with deterministic offline-verifiable SigV4 signing; Ecosystem 62→68, overall ≈84.4→84.9, zero regressions.
 
+Street Framework — Plugin Registry MVP Sprint
+Scope: a local, signed, in-process plugin registry integrated with PluginHost. No marketplace UI, no external services, no unrelated work. All evidence generated this session.
+
+Evidence Table
+Area	Command	Result	Status
+Lint	npm run lint -w packages/core	clean	VERIFIED
+Build (app + lib)	npx tsc; npm run build -w packages/core	clean	VERIFIED
+Registry tests	node --test dist/src/tests/plugin-registry.test.js	10 pass, 0 fail	VERIFIED
+Exports resolve	import('@streetjs/core') of LocalPluginRegistry, installFromRegistry	both function	VERIFIED
+Core unit suite	node --test dist/src/tests/*.test.js	767 pass (was 757; +10), 6 skip, 0 fail	VERIFIED
+Certification suite	node --test dist/tests/certification/*.test.js	51 pass, 0 fail	VERIFIED
+System suite	node --test dist/tests/system/*.test.js	211 pass, 0 fail	VERIFIED
+CLI	npm test -w packages/cli	83 + 38 pass, 0 fail	VERIFIED
+Edge	node --test packages/edge/dist/*.test.js	14 pass, 0 fail	VERIFIED
+Circular deps	node scripts/check-cycles.mjs (212 files)	0 cycles	VERIFIED
+Supply chain	npm audit	0 vulnerabilities	VERIFIED
+Certification Matrix
+Requirement	Implementation	Evidence	Status
+publish(plugin)	LocalPluginRegistry.publish(manifest, publicKeyPem, metadata?)	test: publishes S3, returns record	VERIFIED
+fetch(name, version)	fetch() (re-verifies signature)	test: returns manifest+publicKey+metadata	VERIFIED
+list()	list()	test: ['street-plugin-s3@1.0.0']	VERIFIED
+search(capability)	search()	test: search('object-storage') → 1 hit; unknown → 0	VERIFIED
+verify(signature)	verify(name, version) + internal _verifyRecord	test: true for good, false for unknown	VERIFIED
+Store manifest/checksum/signature	signed PluginManifest (checksum+signature)	test: fetched manifest carries both	VERIFIED
+Store public key	RegistryRecord.publicKey (PEM)	test: rec.publicKey === publicPem	VERIFIED
+Store metadata	RegistryRecord.metadata	test: metadata.author round-trips	VERIFIED
+Integrate with PluginHost	installFromRegistry(registry, host, plugin)	test: publish→install→enabled, 1 middleware	VERIFIED
+Publish signed plugin	Ed25519 via signManifest	test: end-to-end	VERIFIED
+Fetch signed plugin	fetch() re-verifies	test: install path uses it	VERIFIED
+Reject tampered plugin	checksum/signature mismatch	test: post-sign capability edit → PluginSignatureError	VERIFIED
+Reject invalid signature	wrong key / unsigned / bad key	test: 3 distinct rejections	VERIFIED
+Capability search	search()	test: capability match	VERIFIED
+Tamper-guarded persistence	toJSON/fromJSON re-verify	test: tampered snapshot → PluginSignatureError	VERIFIED
+Tests / docs / exports	plugin-registry.test.ts (10), 
+plugin-registry.md
+, index exports	all present + passing	VERIFIED
+Files: 
+local-registry.ts
+ (new), 
+plugin-registry.test.ts
+ (new), 
+index.ts
+ (exports), 
+plugin-registry.md
+ (new).
+
+Key Test Evidence (offline, real crypto)
+Publish→install→enable end-to-end: a real Ed25519-signed S3 manifest is published, then installFromRegistry fetches+verifies+registers+enables it on a PluginHost (state enabled, 1 middleware contributed).
+Tamper rejected at publish: editing capabilities after signing → PluginSignatureError.
+Wrong-key rejected: a manifest signed by key A, published with key B → PluginSignatureError.
+Persistence tamper guard: fromJSON re-verifies every record and refuses a mutated snapshot.
+Ecosystem Score Update
+Prev	Now	Justification
+Ecosystem	68	74	A working signed registry (publish/fetch/list/search/verify + host install + tamper rejection) now exists and is verified — it is a plugin ecosystem, not just a framework. Not higher: only 1 official plugin; no marketplace UI / distribution service / network registry (out of scope).
+Updated Platform Score
+Area	Prev	Now
+Ecosystem	68	74
+Overall (mean of 12)	≈84.9	≈85.4
+Other 11 categories unchanged (no work outside this sprint). Certification: ADVANCED PRODUCTION READY (85/100), High confidence — band still capped below 90 by absent DAST, deployment verification, and marketplace/distribution.
+
+Success Criteria
+Signed plugin published and installed through the registry: ✅ verified end-to-end (installFromRegistry → enabled).
+Tampered plugin rejected: ✅ at publish, at fetch re-verify, and at fromJSON.
+Zero regressions: ✅ 767 / 51 / 211 / 83+38 / 14 all pass; 0 cycles (212 files); 0 vulnerabilities.
+Net change: a verified local signed plugin registry (publish/fetch/list/search/verify + host integration + tamper-guarded persistence), Ecosystem 68→74, overall ≈84.9→85.4, committed with source + 10 tests + docs + exports, zero regressions.
