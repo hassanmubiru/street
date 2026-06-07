@@ -20,6 +20,7 @@ import { DeployInitCommand } from './commands/deploy.js';
 import { PluginInstallCommand, PluginListCommand } from './commands/plugin.js';
 import { AnalyticsReportCommand, AuditExportCommand, ComplianceReportCommand, RestoreCommand } from './commands/data-commands.js';
 import { CertifyCommand } from './commands/certify.js';
+import { UpgradeCommand } from './commands/upgrade.js';
 const VERSION = '1.0.3';
 const APP_NAME = 'street';
 
@@ -56,6 +57,10 @@ export async function runCli(argv: string[]): Promise<void> {
 
       case 'certify':
         await new CertifyCommand().execute(ctx);
+        break;
+
+      case 'upgrade':
+        await new UpgradeCommand().execute(ctx);
         break;
       case 'dev':
         await new DevCommand().execute(ctx);
@@ -196,6 +201,7 @@ Commands:
   deploy:init --platform <k8s|cloudrun|ecs|nomad>  Write deployment manifests
   plugin:install <name>@<version>  Install a verified marketplace plugin
   plugin:list                     List installed plugins and their status
+  upgrade [path] [--write]        Apply migration codemods (dry-run by default; --list to see codemods)
 
 Flags:
   --help, -h                      Show this help message
