@@ -443,6 +443,11 @@ export class MysqlConnection {
   // Sequence number for outgoing packets (increments per command)
   private seq = 0;
 
+  // Sequence id of the most recently received packet. The MySQL protocol
+  // requires a reply to carry the received packet's seq id + 1 within the same
+  // exchange (notably the auth-switch handshake), so we track it here.
+  private lastSeq = 0;
+
   get isReady(): boolean { return this.state === 'ready'; }
   get isClosed(): boolean { return this.state === 'closed'; }
 
@@ -566,7 +571,9 @@ export class MysqlConnection {
       const totalLen = 4 + bodyLen;
       if (this.buffer.length < totalLen) break;
 
-      // seq = this.buffer[3] — not used for state machine, just updated
+      // capture the incoming packet's sequence id so replies (e.g. the
+      // auth-switch response) can use seq+1 as the protocol requires.
+      this.lastSeq = this.buffer[3]!;
       const body = this.buffer.subarray(4, totalLen);
       this.buffer = this.buffer.subarray(totalLen);
       this._handlePacket(body);
@@ -679,7 +686,7 @@ export class MysqlConnection {
           ? nativePasswordHash(opts.password, newSeed)
           : Buffer.alloc(0);
       }
-      const pkt = wrapPacket(authResp, this.seq++);
+      const pkt = wrapPacket(authResp, this.lastSeq + 1);
       this.socket?.write(pkt);
       return;
     }
