@@ -14,7 +14,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { once } from 'node:events';
 import {
   createMutualTlsServer, validateClientCert, certificateFingerprint, verifyCertificatePin,
-  clientCertMiddleware, type PeerCertLike,
+  clientCertMiddleware, TrustStore, rotateServerCertificate, type PeerCertLike,
 } from '../security/mtls.js';
 
 let tmp = '';

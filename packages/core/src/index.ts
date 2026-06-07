@@ -40,9 +40,9 @@ export {
 export type { CspDirectives, SecurityHeadersOptions } from './security/headers.js';
 export {
   createMutualTlsServer, clientCertMiddleware, validateClientCert,
-  certificateFingerprint, verifyCertificatePin,
+  certificateFingerprint, verifyCertificatePin, TrustStore, rotateServerCertificate,
 } from './security/mtls.js';
-export type { ClientCertPolicy, ClientCertResult, PeerCertLike, MutualTlsServerOptions } from './security/mtls.js';
+export type { ClientCertPolicy, ClientCertResult, PeerCertLike, MutualTlsServerOptions, TrustMaterial, RotateCertificateOptions } from './security/mtls.js';
 export { generateOpenApi } from './http/openapi.js';
 
 // ── Router ────────────────────────────────────────────────────────────────────
