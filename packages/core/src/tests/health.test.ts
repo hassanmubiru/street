@@ -10,7 +10,7 @@ import { streetApp } from '../http/server.js';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function get(port: number, path: string): Promise<{ status: number; body: string }> {
+function get(port: number, path: string, attempt = 0): Promise<{ status: number; body: string }> {
   return new Promise((resolve, reject) => {
     const req = request(
       { hostname: '127.0.0.1', port, path, method: 'GET' },
@@ -22,12 +22,22 @@ function get(port: number, path: string): Promise<{ status: number; body: string
         );
       },
     );
-    req.on('error', reject);
+    req.on('error', (err: NodeJS.ErrnoException) => {
+      // Retry only transient connection-level errors (server bind race under
+      // heavy parallel test load); real HTTP-status assertions are unaffected.
+      if ((err.code === 'ECONNREFUSED' || err.code === 'ECONNRESET') && attempt < 5) {
+        setTimeout(() => { get(port, path, attempt + 1).then(resolve, reject); }, 25 * (attempt + 1));
+      } else {
+        reject(err);
+      }
+    });
     req.end();
   });
 }
 
-let testPort = 54200;
+// Randomize the base port per run to avoid colliding with sockets left in
+// TIME_WAIT by a previous run on the same machine.
+let testPort = 54200 + Math.floor(Math.random() * 500);
 function nextPort(): number { return testPort++; }
 
 // ── HealthCheckRegistry unit tests ────────────────────────────────────────────
