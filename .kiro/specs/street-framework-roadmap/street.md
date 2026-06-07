@@ -1204,3 +1204,91 @@ All ENTERPRISE-READY gates met: no Critical/High findings; E2E verified (incl. r
 CERTIFICATION STATUS: ENTERPRISE READY CONFIDENCE: HIGH RELEASE RECOMMENDATION: ENTERPRISE RELEASE
 
 Conditions (non-blocking, recommended within next cycle): capture comparative benchmark numbers via run.js --compare; add dist/ to .gitignore; run the PG/MySQL E2E matrix in CI before tagging the release.
+
+Street Framework — Platform Leadership Re-Certification
+1. Executive Summary
+This cycle implemented and fully verified mutual TLS (mTLS) support — the highest-value missing item from Phase 2 (Advanced Security Suite). The implementation is source + tests + passing tests + docs + public exports, with a real openssl-generated CA/server/client certificate handshake as runtime evidence.
+
+The framework remains ENTERPRISE READY (High confidence). The broad ecosystem programs (plugin marketplace, Grafana/Alertmanager packs, DAST-in-CI, enterprise console, interactive docs site) remain UNVERIFIED roadmap — no executable evidence exists, so they are not claimed as done.
+
+2. Evidence Table
+Area	Command	Result
+mTLS lint	npm run lint -w packages/core (tsc --noEmit)	clean (0 errors)
+mTLS tests	node --test dist/src/tests/mtls.test.js	8/8 pass (incl. real handshake)
+Public exports resolve	import('@streetjs/core') of 5 mTLS symbols	all function
+Core suite	node --test dist/src/tests/*.test.js	726 pass, 6 skip, 0 fail
+Certification suites	node --test dist/tests/certification/*.test.js	51 pass, 0 fail
+System suites	node --test dist/tests/system/*.test.js	211 pass, 3 skip, 0 fail
+CLI	npm test -w packages/cli	38 pass, 0 fail
+Edge	node --test dist/*.test.js	14 pass, 0 fail
+Vulnerabilities	npm audit	0 vulnerabilities
+Circular deps	source inspection (madge unavailable — see Risk Register)	no new cycle possible
+Total this run: 1,040 passing, 9 skipped, 0 failing across all workspaces.
+
+3. Security Findings
+NEW — mTLS (VERIFIED): 
+mtls.ts
+ exports createMutualTlsServer, clientCertMiddleware, validateClientCert, certificateFingerprint, verifyCertificatePin + types. Built only on node:https/node:tls/node:crypto (no new deps). Supports CA-verified clients, SHA-256 fingerprint pinning (constant-time timingSafeEqual), CN allow-listing, and minVersion (TLS 1.2 default). Self-signed pinning supported via rejectUnauthorized:false + middleware. Docs: 
+mtls.md
+.
+MFA (VERIFIED, prior cycle): RFC 4226/6238 against published vectors, 18 tests.
+CSP/security headers (VERIFIED): incl. CRLF-injection defense, 7 tests.
+UNVERIFIED: WebAuthn MFA chaining, device trust, DAST automation (Schemathesis/OWASP ZAP CI gates) — no evidence found.
+4. Architecture Findings
+0 circular dependencies (mysql seam fixed in prior cycle via registerDialectFactory; new mTLS module imports only a leaf exceptions.ts + node builtins, so it cannot introduce a cycle).
+2 production dependencies only (reflect-metadata, ws). New mTLS work added zero.
+5. Performance Findings
+No perf-relevant changes this cycle. Committed 
+results.json
+ unchanged (Street ~27.7k req/s; 2.1× Express, 2.3× NestJS; within ~11–17% of Fastify/Hono). Reproducible via benchmarks/compare/.
+6. Reliability Findings
+Full regression green across 5 workspaces; 9 skips are DB/broker-gated (require Docker services), not failures.
+7. Cloud Readiness
+VERIFIED: AWS Lambda, Azure Functions, GCF adapters (packages/edge, 14 tests). UNVERIFIED: Cloudflare/Deno/Vercel deployment templates + example apps.
+8. Enterprise Report
+VERIFIED: secret providers + rotation, field encryption, audit logging, tenant aggregation, RBAC, street certify gate. UNVERIFIED: enterprise admin console, policy engine UI, compliance dashboards.
+9. Ecosystem Report
+UNVERIFIED: plugin marketplace (registry/signing/scanning), reference plugins (Stripe/Auth0/SendGrid/Twilio/S3/R2). No evidence found.
+10. Sustainability Report
+VERIFIED docs: GOVERNANCE.md, 
+lts-policy.md
+, CONTRIBUTING, SBOM generator. UNVERIFIED: automated changelog-quality checks, release scorecards.
+11. Technical Debt Register
+madge not installed and environment has no network access — automated cycle re-verification could not run this cycle (mitigated by import-graph inspection).
+9 skipped tests depend on external services; not exercised in this offline run.
+12. Risk Register
+Risk	Severity	Status
+Circular-dep tool (madge) unrunnable offline	Low	Mitigated by source inspection; re-run when network available
+Ecosystem features claimed elsewhere but unbuilt	Med	Reported as UNVERIFIED, not done
+DAST CI gates absent	Med	Open — no XSS/SQLi/SSRF scanning in CI
+13. Strategic Roadmap (next high-value, achievable)
+WebAuthn registration/assertion verification (extends MFA, no new deps via WebCrypto).
+DAST: wire Schemathesis against the OpenAPI output in CI as a real gate.
+Grafana dashboard JSON + Prometheus recording rules with a smoke test.
+14. Top Improvements (this cycle, done)
+mTLS server + middleware + pinning + CN allow-list (VERIFIED).
+Cloud adapters Azure/GCF (VERIFIED, prior phase of this program).
+MFA TOTP/HOTP (VERIFIED).
+Circular-dependency removal (VERIFIED).
+15. Scorecard
+Dimension	Score	Basis
+Architecture	95	0 cycles, 2 deps
+Security	88	mTLS + MFA + headers verified; WebAuthn/DAST absent
+Testing	95	1,040 passing, 0 failing
+Reliability	90	full green regression
+Performance	90	reproducible benchmarks
+Observability	85	OTel/Prometheus verified; no Grafana packs
+Cloud	80	3 adapters verified; templates/examples partial
+Enterprise	82	core controls verified; no console
+Developer Experience	80	CLI verified; no interactive docs/codemods
+Ecosystem	45	marketplace/plugins unbuilt
+Sustainability	80	governance/LTS docs; scorecards absent
+Overall	~85/100	weighted
+16. Final Verdict
+ENTERPRISE READY — High confidence.
+
+Not raised to PLATFORM LEADERSHIP: the ecosystem pillar (marketplace, reference plugins, observability packs, DAST gates, enterprise console, interactive docs) has no executable evidence and is explicitly reported as UNVERIFIED roadmap. The security and cloud pillars advanced materially this cycle with mTLS and cloud adapters, both backed by passing tests and runtime verification.
+
+This cycle's net change: mTLS fully delivered (source + 8 passing tests incl. a real certificate handshake + 
+mtls.md
+ + 5 public exports verified at runtime), zero regressions, 0 vulnerabilities.
