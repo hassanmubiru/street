@@ -5,7 +5,7 @@
 
 import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -30,29 +30,18 @@ before(() => {
     // CA
     sh('openssl', ['genrsa', '-out', f('ca.key'), '2048']);
     sh('openssl', ['req', '-x509', '-new', '-nodes', '-key', f('ca.key'), '-sha256', '-days', '2', '-subj', '/CN=Street-Test-CA', '-out', f('ca.crt')]);
-    // Server cert signed by CA (SAN 127.0.0.1)
+    // Server cert signed by CA, with a SAN for 127.0.0.1 via an extension file.
+    writeFileSync(f('san.cnf'), 'subjectAltName=IP:127.0.0.1\n');
     sh('openssl', ['genrsa', '-out', f('server.key'), '2048']);
     sh('openssl', ['req', '-new', '-key', f('server.key'), '-subj', '/CN=127.0.0.1', '-out', f('server.csr')]);
-    sh('openssl', ['x509', '-req', '-in', f('server.csr'), '-CA', f('ca.crt'), '-CAkey', f('ca.key'), '-CAcreateserial', '-days', '2', '-sha256', '-extfile', '/dev/stdin', '-out', f('server.crt')].concat([]));
-    // The extfile via /dev/stdin isn't portable with execFileSync; redo with a file.
-    opensslOk = existsSync(f('server.crt'));
+    sh('openssl', ['x509', '-req', '-in', f('server.csr'), '-CA', f('ca.crt'), '-CAkey', f('ca.key'), '-CAcreateserial', '-days', '2', '-sha256', '-extfile', f('san.cnf'), '-out', f('server.crt')]);
+    // Client cert signed by the same CA.
+    sh('openssl', ['genrsa', '-out', f('client.key'), '2048']);
+    sh('openssl', ['req', '-new', '-key', f('client.key'), '-subj', '/CN=street-client', '-out', f('client.csr')]);
+    sh('openssl', ['x509', '-req', '-in', f('client.csr'), '-CA', f('ca.crt'), '-CAkey', f('ca.key'), '-CAcreateserial', '-days', '2', '-sha256', '-out', f('client.crt')]);
+    opensslOk = existsSync(f('server.crt')) && existsSync(f('client.crt'));
   } catch {
     opensslOk = false;
-  }
-  // Recreate server cert with a proper SAN extension file (robust path).
-  if (opensslOk) {
-    try {
-      const f = (n: string) => join(tmp, n);
-      const { writeFileSync } = require('node:fs') as typeof import('node:fs');
-      writeFileSync(f('san.cnf'), 'subjectAltName=IP:127.0.0.1\n');
-      sh('openssl', ['x509', '-req', '-in', f('server.csr'), '-CA', f('ca.crt'), '-CAkey', f('ca.key'), '-CAcreateserial', '-days', '2', '-sha256', '-extfile', f('san.cnf'), '-out', f('server.crt')]);
-      // Client cert signed by the same CA
-      sh('openssl', ['genrsa', '-out', f('client.key'), '2048']);
-      sh('openssl', ['req', '-new', '-key', f('client.key'), '-subj', '/CN=street-client', '-out', f('client.csr')]);
-      sh('openssl', ['x509', '-req', '-in', f('client.csr'), '-CA', f('ca.crt'), '-CAkey', f('ca.key'), '-CAcreateserial', '-days', '2', '-sha256', '-out', f('client.crt')]);
-    } catch {
-      opensslOk = false;
-    }
   }
 });
 
