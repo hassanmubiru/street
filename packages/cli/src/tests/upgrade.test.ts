@@ -18,7 +18,7 @@ function captureConsole() {
   return { logs, restore: () => { console.log = origLog; console.error = origErr; } };
 }
 
-function ctx(cwd: string, positional: string[] = [], flags: Record<string, unknown> = {}) {
+function ctx(cwd: string, positional: string[] = [], flags: Record<string, string | boolean> = {}) {
   return { cwd, args: { command: 'upgrade', positional, flags } };
 }
 
