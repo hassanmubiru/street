@@ -19,7 +19,6 @@ import { JobsDashboardCommand } from './commands/jobs-dashboard.js';
 import { DeployInitCommand } from './commands/deploy.js';
 import { PluginInstallCommand, PluginListCommand } from './commands/plugin.js';
 import { AnalyticsReportCommand, AuditExportCommand, ComplianceReportCommand, RestoreCommand } from './commands/data-commands.js';
-
 const VERSION = '1.0.3';
 const APP_NAME = 'street';
 
