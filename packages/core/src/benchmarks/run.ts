@@ -25,6 +25,12 @@ async function runStreetBenchmark(): Promise<BenchmarkResult> {
 }
 
 async function main(): Promise<void> {
+  const compareMode = process.argv.includes('--compare');
+  if (compareMode) {
+    await runComparison();
+    return;
+  }
+
   console.log('\n🏎  Street Framework HTTP Benchmark\n');
   console.log(`Duration: ${DURATION_MS}ms | Concurrency: 10`);
   console.log('─'.repeat(60));
