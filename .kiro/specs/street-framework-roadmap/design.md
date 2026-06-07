@@ -1611,3 +1611,162 @@ Every new authentication/authorization feature follows these invariants from the
 - All session data is AES-256-GCM encrypted (reusing `SessionManager`)
 - All private keys and tokens are never logged (using `[REDACTED]` convention)
 - All headers are validated and sanitized before use
+
+---
+
+## Components and Interfaces
+
+This section summarizes the key components introduced across the roadmap, grouped by module. Each component is a concrete class or interface added to `packages/core/src` (or a new workspace package). Full per-feature signatures appear in the version sections above.
+
+### Developer Experience (v1.1)
+- `Scaffolder` — generates controllers, services, and modules from templates.
+- `OpenApiGenerator` — reflects decorator metadata into an OpenAPI 3.1 document.
+- `SdkGenerator` — emits typed client SDKs from the OpenAPI document.
+- `DevServer` — file-watching reload server wrapping the core HTTP server.
+
+### Database Platform (v1.2)
+- `QueryBuilder` — fluent, parameterized SQL builder (`$N` placeholders).
+- `Seeder` / `SeedRunner` — idempotent seed execution tracked in `street_seed_runs`.
+- `SchemaDiffer` — computes migration diffs against `street_schema_versions`.
+- `ReplicaPool` — read/write splitting over multiple `PgPool` instances.
+
+### Observability (v1.3)
+- `OtelTracer` — bounded (1,000-span) OpenTelemetry-compatible span exporter.
+- `MetricsRegistry` — Prometheus-format counters, gauges, histograms.
+- `RouteProfiler` — per-route latency sampling (10,000-sample ring buffer).
+- `AnalyticsCollector` — writes API events to `street_api_events`.
+
+### Auth & Authorization (v1.4)
+- `RefreshTokenService`, `ApiKeyService`, `WebAuthnService`, `SessionManager`.
+- `rbacGuard` / `AuditWriter` — permission enforcement and immutable audit trail.
+
+### Background Processing (v1.5)
+- `JobQueue`, `Worker`, `Scheduler`, `WorkflowEngine` — DB-backed queue with DLQ.
+
+### API Platform (v1.6)
+- `WebhookManager` (`webhook/manager.ts`) — delivery with backoff and dead-letter.
+- `RateLimiter` — per-route `@RateLimit` enforcement with standard headers.
+
+### Multi-Tenancy (v1.7)
+- `TenantProvisioner`, `TenantMetricsRegistry`, `TenantBillingAdapter`.
+
+### Microservices (v2.0)
+- `GrpcServer` (`microservices/grpc/`) — proto parser, HTTP/2 framing, server.
+- Transports: `RedisTransport`, `MemcachedTransport`, `KinesisTransport`, `RabbitMqTransport`, `KafkaStreamTransport`.
+
+### Cloud Native (v2.1)
+- `CloudRuntime` — shutdown hooks, autoscale metrics, service-mesh detection.
+- Storage: `S3StorageAdapter`, `GcsStorageAdapter` (SigV4 / bearer auth).
+
+### Enterprise & Next-Gen (v2.2 / v3.0)
+- `FeatureFlagService`, `BackupManager`, `SecretProvider` implementations, `@streetjs/edge` runtime.
+
+---
+
+## Data Models
+
+The persistent data model is defined by the framework-managed tables in the [Database Schema Summary](#database-schema-summary) above (all `street_`-prefixed). This section describes the primary in-memory and transport data structures that cross module boundaries.
+
+### Core Domain Types
+
+```typescript
+interface JobRecord {
+  id: string;
+  type: string;
+  payload: unknown;
+  status: 'pending' | 'running' | 'completed' | 'failed' | 'dead';
+  attempts: number;
+  maxAttempts: number;
+  runAt: Date;
+  createdAt: Date;
+}
+
+interface WebhookDelivery {
+  id: string;
+  endpointId: string;
+  event: string;
+  payload: unknown;
+  status: 'pending' | 'delivered' | 'failed' | 'dead';
+  attempts: number;
+  nextRetryAt: Date | null;
+}
+
+interface TenantRecord {
+  id: string;
+  name: string;
+  status: 'active' | 'suspended';
+  plan: string;
+  createdAt: Date;
+}
+
+interface AuditEvent {
+  id: string;
+  actor: string;
+  action: string;
+  resource: string;
+  outcome: 'success' | 'failure';
+  metadata: Record<string, unknown>;
+  createdAt: Date;
+}
+```
+
+### Transport Wire Models
+
+Messaging transports serialize to protocol-native wire formats, implemented from scratch over Node core sockets (zero runtime dependencies):
+
+- **RabbitMQ** — AMQP 0-9-1 frames (`method`, `header`, `body`, `heartbeat`) encoded/decoded in `transports/rabbitmq/codec.ts`.
+- **Kafka** — Kafka binary protocol requests/responses with `RecordBatch` v2 (varint zigzag, CRC32C) in `transports/kafka/recordbatch.ts` and `primitives.ts`.
+- **Redis** — RESP (REdis Serialization Protocol) framing.
+- **gRPC** — Protobuf-encoded messages over HTTP/2 length-prefixed frames.
+
+All transports normalize to a common `Message` envelope before delivery to application handlers:
+
+```typescript
+interface TransportMessage {
+  topic: string;
+  partition?: number;
+  offset?: string;
+  key: Buffer | null;
+  value: Buffer;
+  headers: Record<string, Buffer>;
+  ack(): Promise<void>;
+  nack(requeue: boolean): Promise<void>;
+}
+```
+
+---
+
+## Correctness Properties
+
+These invariants hold across the roadmap implementation and are validated by tests:
+
+1. **Codec round-trip:** For every transport codec, `decode(encode(x)) === x` for all valid messages. Verified by unit tests for AMQP frames, Kafka `RecordBatch`, and RESP.
+2. **CRC integrity:** Kafka `RecordBatch` CRC32C is computed over the batch body and re-validated on decode; corrupted batches are rejected.
+3. **At-least-once delivery:** A consumed message is only removed/acknowledged after the handler resolves. Handler failure triggers `nack`/redelivery (RabbitMQ) or offset non-commit (Kafka).
+4. **Offset monotonicity:** Kafka committed offsets for a `(group, topic, partition)` never move backward across a normal session.
+5. **Idempotent migrations/seeds:** Running a migration or seed twice produces no additional changes (tracked in `street_migrations` / `street_seed_runs`).
+6. **Bounded memory:** Every stateful registry enforces a hard entry cap with LRU/ring-buffer eviction; memory does not grow unbounded under sustained load.
+7. **Token safety:** All secret comparisons are constant-time (`timingSafeEqual`); no token or private key is ever logged.
+8. **Audit immutability:** `street_audit_log` rows are append-only; the `AuditWriter` issues only `INSERT`s.
+9. **Tenant isolation:** Queries scoped to a tenant never return another tenant's rows (enforced via mandatory tenant predicate).
+10. **Graceful shutdown:** After `stop()`/`destroy()`, no timers, sockets, or listeners remain (all `setInterval` use `.unref()` and are cleared).
+
+---
+
+## Error Handling
+
+The framework uses a consistent, typed error strategy with graceful degradation:
+
+### Error Taxonomy
+- **`StreetError`** (base) — all framework errors extend it, carrying a stable `code` and HTTP `status`.
+- **Validation errors** (`400`) — request/schema validation failures, returned with field-level detail.
+- **Auth errors** (`401`/`403`) — surfaced by guards; failures are audited but never leak token material.
+- **Transport errors** — connection, protocol, and serialization failures are wrapped with the originating broker context.
+
+### Strategies
+- **Retries with backoff:** Webhooks, job workers, and transports retry transient failures with exponential backoff and jitter, capped by `maxAttempts`.
+- **Dead-lettering:** Exhausted retries route to a dead-letter destination (`street_dead_letter_queue`, AMQP DLX, or Kafka DLQ topic) rather than dropping data.
+- **Reconnect logic:** Transport connection managers detect socket loss (heartbeat timeout / read error) and reconnect with backoff, re-establishing channels, subscriptions, and consumer assignments.
+- **Graceful degradation:** Observability exporters (tracing/metrics) drop samples when buffers are full rather than blocking the request path. Analytics writes are best-effort and never fail a request.
+- **Fail-closed security:** Authorization defaults to deny; SSRF validation rejects unknown hosts; missing secrets cause startup failure rather than silent insecure operation.
+- **Integration test skips:** When external infrastructure is unavailable, integration tests call `t.skip()` rather than failing, keeping the suite green while still exercising codecs via unit tests.
