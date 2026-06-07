@@ -1,0 +1,5 @@
+[
+  { "method": "GET", "path": "/health", "summary": "Liveness probe", "responses": { "200": { "description": "ok" } } },
+  { "method": "GET", "path": "/users", "summary": "List users", "responses": { "200": { "description": "ok" } } },
+  { "method": "GET", "path": "/users/:id", "summary": "Get a user", "responses": { "200": { "description": "ok" }, "404": { "description": "not found" } } }
+]
