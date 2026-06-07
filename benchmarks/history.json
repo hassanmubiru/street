@@ -24,5 +24,31 @@
         "rps_median": 32256
       }
     ]
+  },
+  {
+    "at": "2026-06-07T04:47:13.913Z",
+    "node": "v20.20.1",
+    "frameworks": [
+      {
+        "framework": "Street",
+        "rps_median": 27700
+      },
+      {
+        "framework": "Express",
+        "rps_median": 13017
+      },
+      {
+        "framework": "Fastify",
+        "rps_median": 33183
+      },
+      {
+        "framework": "NestJS",
+        "rps_median": 11783
+      },
+      {
+        "framework": "Hono",
+        "rps_median": 30776
+      }
+    ]
   }
 ]
