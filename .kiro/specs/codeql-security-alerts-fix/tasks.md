@@ -32,7 +32,7 @@ hover status tracks the documented properties.
   - Mark complete when the test is written, run, and the leak is documented
   - _Requirements: 1.1_
 
-- [~] 2. Write Class B bug-condition exploration test (ReDoS / super-linear timing)
+- [-] 2. Write Class B bug-condition exploration test (ReDoS / super-linear timing)
   - **Property 2: Bug Condition** - Linear-Time Matching/Parsing (Class B)
   - **CRITICAL**: This property-based / timing test MUST demonstrate super-linear growth on unfixed code
   - **DO NOT attempt to fix the test or the code when it fails**
