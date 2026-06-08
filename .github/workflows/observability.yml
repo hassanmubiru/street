@@ -9,6 +9,9 @@ on:
   pull_request:
     paths: ['packages/core/src/observability/**', 'scripts/observability/**', '.github/workflows/observability.yml']
 
+permissions:
+  contents: read
+
 jobs:
   promtool:
     runs-on: ubuntu-latest
