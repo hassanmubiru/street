@@ -85,9 +85,14 @@ describe('MysqlConnection — connect', { skip }, () => {
   });
 
   it('throws on bad credentials', async () => {
+    // The connection must be rejected for a wrong password. The exact message
+    // depends on the server's auth plugin: mysql_native_password yields a
+    // generic "MySQL error" / "Access denied", while caching_sha2_password (the
+    // MySQL 8 default) forces the full-auth path and the driver refuses to send
+    // the password in cleartext over a non-TLS link — both are valid rejections.
     await assert.rejects(
       () => MysqlConnection.connect({ ...opts, password: '__wrong_password__' }),
-      /MySQL error/i,
+      /MySQL error|Access denied|cleartext password transmission/i,
     );
   });
 });
