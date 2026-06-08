@@ -1,0 +1,47 @@
+# Local live databases for running the real-DB test suites (Postgres + MySQL).
+#
+# Usage:
+#   docker compose -f docker-compose.test-db.yml up -d        # start
+#   docker compose -f docker-compose.test-db.yml ps           # status/health
+#   docker compose -f docker-compose.test-db.yml down -v      # stop + wipe
+#
+# Credentials match the test defaults / CI service config:
+#   Postgres: street / street_secret / street_test           (host port 5433)
+#   MySQL:    root   / testpass      / street_test            (port 3306)
+# The MySQL init script also creates the E2E certification users
+#   streetnat / natpass  (mysql_native_password)
+#   streetsha2 / sha2pass (caching_sha2_password)
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: street_test_pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: street
+      POSTGRES_PASSWORD: street_secret
+      POSTGRES_DB: street_test
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U street -d street_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  mysql:
+    image: mysql:8.0
+    container_name: street_test_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: testpass
+      MYSQL_DATABASE: street_test
+    ports:
+      - "3306:3306"
+    command: --default-authentication-plugin=caching_sha2_password
+    volumes:
+      - ./scripts/mysql-test-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-ptestpass"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
