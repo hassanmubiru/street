@@ -255,7 +255,7 @@ hover status tracks the documented properties.
   - **EXPECTED OUTCOME**: all preservation tests pass; no regressions across A–F or unrelated modules
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 3.7_
 
-- [-] 13. Re-run CodeQL and confirm alerts resolved
+- [x] 13. Re-run CodeQL and confirm alerts resolved
   - Re-run CodeQL on the branch after all changes
   - Confirm each targeted alert is resolved: A (#24), B (#26, #20, #19), C (#25), D (#7, #6), E (#4, #3, #18, #17, #16, #15), F (#30, #29, #28, #27, #23, #22, #21)
   - Confirm no new alerts are introduced
