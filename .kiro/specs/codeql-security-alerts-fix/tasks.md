@@ -191,13 +191,13 @@ hover status tracks the documented properties.
     - Run `npm run build -w packages/core` so `dist/security/xss.js` (the flagged file) is regenerated from corrected source
     - _Requirements: 2.6_
 
-  - [-] 9.3 Verify Class D exploration test now passes
+  - [x] 9.3 Verify Class D exploration test now passes
     - **Property 4: Expected Behavior** - Sanitization Fixed Point (Class D)
     - **IMPORTANT**: Re-run the SAME test from task 4 (against the rebuilt artifact) — do NOT write a new test
     - **EXPECTED OUTCOME**: output contains no dangerous substring and `sanitizeString'(out) === out` (idempotent)
     - _Requirements: 2.6_
 
-  - [~] 9.4 Verify Class D preservation still holds
+  - [-] 9.4 Verify Class D preservation still holds
     - **Property 7: Preservation** - Benign Equivalence + Bounds (Class D)
     - Re-run the Class D preservation PBT from task 5
     - **EXPECTED OUTCOME**: benign sanitized output and depth/length/array/key bounds unchanged
