@@ -3,7 +3,6 @@
 // Pure node:net + node:crypto — no external dependencies.
 
 import { createConnection, type Socket } from 'node:net';
-import { createHash } from 'node:crypto';
 import { Readable } from 'node:stream';
 import type { DbResult } from '../types.js';
 
