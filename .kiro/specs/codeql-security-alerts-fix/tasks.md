@@ -176,7 +176,7 @@ hover status tracks the documented properties.
     - **EXPECTED OUTCOME**: purls and sorted SBOM `components` unchanged for non-`@` / single-`@` names
     - _Requirements: 3.3_
 
-- [ ] 9. Fix Class D — drive `sanitizeString` to a fixed point and rebuild `dist`
+- [x] 9. Fix Class D — drive `sanitizeString` to a fixed point and rebuild `dist`
 
   - [x] 9.1 Loop replacements until stable in `packages/core/src/security/xss.ts`
     - Replace the capped (`MAX_SANITIZE_PASSES`) loop with the `do { … } while (current !== previous)`
@@ -197,7 +197,7 @@ hover status tracks the documented properties.
     - **EXPECTED OUTCOME**: output contains no dangerous substring and `sanitizeString'(out) === out` (idempotent)
     - _Requirements: 2.6_
 
-  - [-] 9.4 Verify Class D preservation still holds
+  - [x] 9.4 Verify Class D preservation still holds
     - **Property 7: Preservation** - Benign Equivalence + Bounds (Class D)
     - Re-run the Class D preservation PBT from task 5
     - **EXPECTED OUTCOME**: benign sanitized output and depth/length/array/key bounds unchanged
