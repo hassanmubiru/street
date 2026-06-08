@@ -7,20 +7,30 @@ const DANGEROUS_ATTRS = /on\w+\s*=/gi;
 const SCRIPT_PROTOCOL = /javascript\s*:/gi;
 const DATA_PROTOCOL = /data\s*:/gi;
 const VBSCRIPT_PROTOCOL = /vbscript\s*:/gi;
-const HTML_TAGS = /<[^>]*>/g;
 const NULL_BYTES = /\x00/g;
 /** Sanitize a single string value */
 export function sanitizeString(input) {
     if (input.length > MAX_STRING_LEN) {
         input = input.substring(0, MAX_STRING_LEN);
     }
-    return input
-        .replace(NULL_BYTES, '')
-        .replace(HTML_TAGS, '')
-        .replace(SCRIPT_PROTOCOL, '')
-        .replace(DATA_PROTOCOL, '')
-        .replace(VBSCRIPT_PROTOCOL, '')
-        .replace(DANGEROUS_ATTRS, '');
+    let previous;
+    let current = input;
+    // Loop to a true fixed point. Each pass only DELETES characters, so the
+    // string length is monotonically non-increasing and the loop is guaranteed
+    // to terminate. This eliminates the residual Class D defect where a deeply
+    // nested reconstitution (e.g. nestedReconstitution(11)) survived the former
+    // MAX_SANITIZE_PASSES cap and left a dangerous substring intact.
+    do {
+        previous = current;
+        current = current
+            .replace(NULL_BYTES, '')
+            .replace(/[<>]/g, '')
+            .replace(SCRIPT_PROTOCOL, '')
+            .replace(DATA_PROTOCOL, '')
+            .replace(VBSCRIPT_PROTOCOL, '')
+            .replace(DANGEROUS_ATTRS, '');
+    } while (current !== previous);
+    return current;
 }
 /** Recursively sanitize all string values in an object or array */
 export function sanitizeDeep(value, depth = 0) {
