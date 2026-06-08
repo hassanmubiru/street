@@ -20,8 +20,15 @@ export interface WebhookTarget {
   maxRetries?: number;
   /**
    * Optional TLS settings for endpoints served by a private/corporate CA.
-   * `ca` supplies trusted certificate(s); `rejectUnauthorized` should remain
-   * true in production (default).
+   *
+   * `ca` is the supported mechanism for trusting endpoints served by a private
+   * CA: supply the trusted certificate(s) here.
+   *
+   * `rejectUnauthorized` can no longer disable certificate validation. The
+   * dispatcher never forwards `rejectUnauthorized: false` to the HTTPS layer,
+   * so validation is always enabled regardless of this value. The field is
+   * retained only for backward-compatible typing; setting it to `false` has no
+   * effect. Trust private CAs via `ca` instead.
    */
   tls?: { ca?: string | Buffer | Array<string | Buffer>; rejectUnauthorized?: boolean };
 }
