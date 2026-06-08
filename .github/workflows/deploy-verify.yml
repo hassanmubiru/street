@@ -9,6 +9,9 @@ on:
   pull_request:
     paths: ['packages/core/src/cloud/**', '.github/workflows/deploy-verify.yml']
 
+permissions:
+  contents: read
+
 jobs:
   k8s:
     runs-on: ubuntu-latest

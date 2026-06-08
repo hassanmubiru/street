@@ -203,7 +203,7 @@ hover status tracks the documented properties.
     - **EXPECTED OUTCOME**: benign sanitized output and depth/length/array/key bounds unchanged
     - _Requirements: 3.4_
 
-- [ ] 10. Resolve Class E — documented CodeQL suppression for protocol-mandated hashing (NO behavioral change)
+- [x] 10. Resolve Class E — documented CodeQL suppression for protocol-mandated hashing (NO behavioral change)
 
   - [x] 10.1 Add inline suppression + rationale at the flagged MySQL call sites
     - Confirm the exact rule id from the alert/SARIF (e.g. `js/insufficient-password-hash`)
@@ -221,7 +221,7 @@ hover status tracks the documented properties.
     - _Preservation: byte-identical hash output; protocol coverage of the tests unchanged_
     - _Requirements: 2.7, 2.8, 3.5_
 
-  - [-] 10.2 Verify Class E equivalence and protocol tests
+  - [x] 10.2 Verify Class E equivalence and protocol tests
     - **Property 5: Equivalence** - Resolved Without Behavioral Change (Class E)
     - Run the existing `mysql-native-password` / `mysql-caching-sha2-password` known-vector and reference-scramble tests
     - **EXPECTED OUTCOME**: Tests PASS unchanged; `nativePasswordHash('password', SEED)` still equals `c17d6009a5cb47e59f7483fcf05553bbbf7dd0d6`
@@ -229,7 +229,7 @@ hover status tracks the documented properties.
 
 - [ ] 11. Resolve Class F — add least-privilege `permissions` to seven workflows
 
-  - [~] 11.1 Add a top-level `permissions: { contents: read }` block to each workflow
+  - [-] 11.1 Add a top-level `permissions: { contents: read }` block to each workflow
     - Insert immediately after the `on:` block in: `.github/workflows/vendor-integration.yml`,
       `observability.yml`, `deploy-verify.yml`, `dast.yml`, `browser-compat.yml`,
       `kafka-integration.yml`, `rabbitmq-integration.yml`

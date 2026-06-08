@@ -10,6 +10,9 @@ on:
   schedule:
     - cron: '0 4 * * 1'   # weekly
 
+permissions:
+  contents: read
+
 jobs:
   vendor:
     runs-on: ubuntu-latest
