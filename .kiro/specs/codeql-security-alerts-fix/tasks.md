@@ -148,7 +148,7 @@ hover status tracks the documented properties.
     - **EXPECTED OUTCOME**: Processing completes within the linear time budget at all N (no super-linear growth)
     - _Requirements: 2.2, 2.3, 2.4_
 
-  - [~] 7.5 Verify Class B preservation still holds
+  - [-] 7.5 Verify Class B preservation still holds
     - **Property 7: Preservation** - Well-Formed Equivalence (Class B)
     - Re-run the Class B equivalence PBT/unit tests from task 5
     - **EXPECTED OUTCOME**: base32 round-trip, `generateGrpc` filename, and `parseProto` AST all unchanged
