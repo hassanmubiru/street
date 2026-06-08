@@ -60,7 +60,7 @@ hover status tracks the documented properties.
   - Mark complete when the test is written, run, and the partial encoding is documented
   - _Requirements: 1.5_
 
-- [-] 4. Write Class D bug-condition exploration test (sanitization reconstitution)
+- [x] 4. Write Class D bug-condition exploration test (sanitization reconstitution)
   - **Property 4: Bug Condition** - Sanitization Fixed Point (Class D)
   - **CRITICAL**: This test MUST FAIL on the stale single-pass artifact - failure confirms the bug exists
   - **DO NOT attempt to fix the test or the code when it fails**
@@ -75,7 +75,7 @@ hover status tracks the documented properties.
 
 ### Phase 2 — Preservation Baseline (write BEFORE any fix)
 
-- [~] 5. Write preservation property/unit tests capturing current behavior (BEFORE implementing fixes)
+- [-] 5. Write preservation property/unit tests capturing current behavior (BEFORE implementing fixes)
   - **Property 7: Preservation** - Non-Buggy Inputs Unchanged (all classes)
   - **IMPORTANT**: Follow observation-first methodology — record actual outputs of the UNFIXED code, then assert them
   - **GOAL**: Lock in the baseline so the fixes can be proven to leave non-buggy inputs untouched (`F(X) = F'(X)`)
