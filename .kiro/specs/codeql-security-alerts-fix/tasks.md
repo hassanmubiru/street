@@ -75,7 +75,7 @@ hover status tracks the documented properties.
 
 ### Phase 2 — Preservation Baseline (write BEFORE any fix)
 
-- [-] 5. Write preservation property/unit tests capturing current behavior (BEFORE implementing fixes)
+- [x] 5. Write preservation property/unit tests capturing current behavior (BEFORE implementing fixes)
   - **Property 7: Preservation** - Non-Buggy Inputs Unchanged (all classes)
   - **IMPORTANT**: Follow observation-first methodology — record actual outputs of the UNFIXED code, then assert them
   - **GOAL**: Lock in the baseline so the fixes can be proven to leave non-buggy inputs untouched (`F(X) = F'(X)`)
