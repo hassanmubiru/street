@@ -2,21 +2,29 @@
 // Class D bug-condition exploration test (CodeQL alerts #7, #6) —
 // incomplete multi-character sanitization / reconstitution.
 //
-// Bug condition (isBugCondition_D): an input for which a single (or limited)
+// Bug condition (isBugCondition_D): an input for which a single (or LIMITED)
 // sanitization pass still leaves a dangerous substring, because removing one
-// match splices two fragments into a NEW dangerous token that the same pass no
-// longer re-scans (e.g. "javascjavascript:ript:" -> after one pass ->
-// "javascript:", or "java<>script:" -> after the angle-bracket removal ->
-// "javascript:").
+// match splices two fragments into a NEW dangerous token. A *bounded* pass
+// count cannot reach a stable fixed point for deeply-nested reconstitutions.
 //
 // Safety / fix-checking property (bugfix.md / design.md Property 4):
 //   FOR ALL input WHERE isBugCondition_D(input) DO
 //     out := sanitizeString'(input)
 //     ASSERT out contains no dangerous substring   // stable fixed point
 //
-// EXPECTED (per the task) on the UNFIXED single-pass artifact: this assertion
-// FAILS because the output still contains a reconstituted dangerous substring
-// (e.g. "javascript:"). The failure IS the counterexample proving the bug.
+// CONTEXT — out-of-band Copilot Autofix:
+//   Two autofix commits already touched packages/core/src/security/xss.ts:
+//     0c190f4  alert no. 9  — wrapped the chained .replace() in a do/while loop
+//                             capped at MAX_SANITIZE_PASSES = 10
+//     73487f4  alert no. 14 — HTML_TAGS=/<[^>]*>/g -> /[<>]/g (strip ALL <,>)
+//   Those neutralize SHALLOW reconstitutions (e.g. "java<>script:"), but the
+//   loop is capped at 10 passes rather than driven to an UNCONDITIONAL fixed
+//   point (design task 9.1). A reconstitution nested >10 layers deep therefore
+//   still survives — the residual Class D defect.
+//
+// EXPECTED OUTCOME on the current (capped) source: the deep-nesting case FAILS
+// the safety assertion — sanitizeString leaves a reconstituted "javascript:".
+// That failure IS the counterexample proving isBugCondition_D still holds.
 //
 // **Validates: Requirements 1.6**
 
@@ -44,42 +52,57 @@ function firstDangerousSubstring(value: string): string | null {
   return null;
 }
 
-// Inputs satisfying isBugCondition_D: each one, under a single/limited pass,
-// can be reconstituted into a dangerous substring after an earlier removal.
-const RECONSTITUTABLE_INPUTS: ReadonlyArray<string> = [
-  '<scr<script>ipt>',
-  'java<>script:',
-  // Split-protocol reconstitution: removing the inner "javascript:" splices
-  // the outer fragments into a fresh "javascript:" that a single global pass
-  // cannot re-scan.
-  'javascjavascript:ript:',
-  'jajavascript:vascript:',
-];
+/**
+ * Build a reconstitution payload that needs exactly `depth` sanitization passes
+ * to fully neutralize. Each layer wraps the inner "javascript:" so that one
+ * global replace peels exactly one layer and reconstitutes a fresh
+ * "javascript:":   S1 = "javascript:",  Sn = "java" + S(n-1) + "script:".
+ * A loop capped below `depth` leaves a residual "javascript:".
+ */
+function nestedReconstitution(depth: number): string {
+  let s = 'javascript:';
+  for (let i = 1; i < depth; i++) s = `java${s}script:`;
+  return s;
+}
 
 describe('Class D — sanitizeString reconstitution (alerts #7, #6)', () => {
-  for (const input of RECONSTITUTABLE_INPUTS) {
+  // Shallow reconstitutions the out-of-band autofix already neutralizes — kept
+  // to document the boundary of the partial fix (these stabilize in <= 3 passes).
+  for (const input of ['<scr<script>ipt>', 'java<>script:', 'javascjavascript:ript:']) {
     it(`reaches a dangerous-substring-free fixed point for ${JSON.stringify(input)}`, () => {
       const out = sanitizeString(input);
-
-      // SAFETY assertion: the sanitized result must contain no dangerous
-      // substring. On the unfixed single-pass artifact this FAILS because a
-      // dangerous token (e.g. "javascript:") is reconstituted after one pass.
       const residual = firstDangerousSubstring(out);
       assert.equal(
         residual,
         null,
         `sanitizeString(${JSON.stringify(input)}) = ${JSON.stringify(out)} still ` +
-          `contains a dangerous substring (${residual}) — single-pass ` +
-          `sanitization was reconstituted (isBugCondition_D)`,
-      );
-
-      // Fixed-point / idempotence: a stable result re-sanitizes to itself.
-      assert.equal(
-        sanitizeString(out),
-        out,
-        `sanitizeString is not idempotent for ${JSON.stringify(input)} — ` +
-          `not a stable fixed point`,
+          `contains a dangerous substring (${residual})`,
       );
     });
   }
+
+  // Deep reconstitution that exceeds the capped pass count: the COUNTEREXAMPLE.
+  // On the current (capped at MAX_SANITIZE_PASSES = 10) source this FAILS,
+  // proving sanitizeString is not a true fixed point (isBugCondition_D holds).
+  it('reaches a stable fixed point for a deeply-nested reconstitution (exceeds the pass cap)', () => {
+    const depth = 11; // one layer beyond the autofix's 10-pass cap
+    const input = nestedReconstitution(depth);
+    const out = sanitizeString(input);
+
+    const residual = firstDangerousSubstring(out);
+    assert.equal(
+      residual,
+      null,
+      `sanitizeString(<${depth}-layer reconstitution>) = ${JSON.stringify(out)} still ` +
+        `contains a dangerous substring (${residual}) — a bounded/limited pass ` +
+        `count was reconstituted into a residual "javascript:" (isBugCondition_D)`,
+    );
+
+    // Fixed-point / idempotence: a truly stable result re-sanitizes to itself.
+    assert.equal(
+      sanitizeString(out),
+      out,
+      'sanitizeString is not idempotent for the deep reconstitution — not a stable fixed point',
+    );
+  });
 });
