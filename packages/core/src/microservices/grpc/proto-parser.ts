@@ -35,9 +35,39 @@ export interface ProtoAst {
   services: ServiceDefinition[];
 }
 
-/** Strip `//` line comments and `/* *\/` block comments. */
+/**
+ * Strip `//` line comments and `/* *\/` block comments in a single O(n) pass.
+ *
+ * Mirrors the original regex semantics exactly:
+ *  - block comment `/* … *\/`: first `*\/` terminates; if unterminated, consume to end-of-input
+ *  - line comment `// …`: consume to end-of-line (the trailing newline is preserved)
+ *  - all other characters are copied through unchanged
+ *
+ * A linear scanner avoids the super-linear backtracking that the lazy
+ * `/\/\*[\s\S]*?\*\//g` pattern exhibits on unterminated `/*` openers.
+ */
 function stripComments(src: string): string {
-  return src.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  let out = '';
+  let i = 0;
+  const n = src.length;
+  while (i < n) {
+    const c = src[i];
+    const d = src[i + 1];
+    if (c === '/' && d === '*') {
+      // block comment: skip to first '*/'
+      i += 2;
+      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) i++;
+      i += 2; // consume closing '*/' (or run off the end if unterminated)
+    } else if (c === '/' && d === '/') {
+      // line comment: skip to end of line (newline left in place)
+      i += 2;
+      while (i < n && src[i] !== '\n') i++;
+    } else {
+      out += c;
+      i++;
+    }
+  }
+  return out;
 }
 
 /** Parse a `.proto` source string into a {@link ProtoAst}. */
