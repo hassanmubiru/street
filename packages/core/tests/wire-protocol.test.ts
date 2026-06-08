@@ -313,6 +313,11 @@ describe('buildSyncMessage', () => {
 // messages are written atomically, and the connection correctly handles the
 // server response cycle.
 
+/** Flush pending micro/macrotasks so deferred socket writes have executed before
+ *  we assert on them. query() awaits the command gate (_acquire) before writing,
+ *  so the socket write happens on a later tick rather than synchronously. */
+const flushAsync = (): Promise<void> => new Promise((resolve) => setImmediate(resolve));
+
 describe('_queryParams integration (via PgConnection.query)', () => {
   /** Helper: create a PgConnection wired to a mock socket */
   function createMockedConnection(): {
@@ -349,7 +354,9 @@ describe('_queryParams integration (via PgConnection.query)', () => {
 
     const queryPromise = conn.query('SELECT $1::text AS name', ['Alice']);
 
-    // The write should have been called synchronously with one buffer
+    // query() awaits the command gate (_acquire) before writing, so the write
+    // happens on a later tick — flush pending tasks before asserting.
+    await flushAsync();
     assert.equal(socket.write.mock.calls.length, 1);
     const written = socket.write.mock.calls[0].arguments[0] as Buffer;
 
