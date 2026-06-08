@@ -1,0 +1,19 @@
+name: "Street CodeQL config"
+
+# Custom CodeQL configuration referenced from .github/workflows/codeql.yml via the
+# `config-file` input on github/codeql-action/init.
+#
+# paths-ignore excludes specific files from analysis. We scope this as narrowly as
+# possible: ONLY the dedicated MySQL auth-scramble module, which contains nothing
+# but the protocol-mandated mysql_native_password (SHA1) and caching_sha2_password
+# (SHA256) challenge-response computations. Those necessarily hash the password per
+# the MySQL wire protocol; they are NOT at-rest password storage and cannot be
+# changed without breaking authentication, so CodeQL's js/insufficient-password-hash
+# is a false positive there. (Inline `// codeql[...]` comments are not honored by
+# GitHub code scanning — github/codeql#11427.)
+#
+# The rest of the MySQL driver (wire.ts) and the whole codebase remain fully scanned,
+# so the rule still protects real password storage (e.g. the PBKDF2 hashing in
+# packages/core/src/services/user.service.ts) and any future insecure additions.
+paths-ignore:
+  - packages/core/src/database/mysql/auth-scramble.ts
