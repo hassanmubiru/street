@@ -13,7 +13,10 @@ twitter:
 logo:        "/assets/images/logo.png"
 
 # ── Theme ─────────────────────────────────────────────────────────────────────
-remote_theme: just-the-docs/just-the-docs@v0.10.0
+# just-the-docs is installed as a gem (see Gemfile), so use `theme`, not
+# `remote_theme` (the latter needs the jekyll-remote-theme plugin, which is not
+# installed — that left every page unstyled).
+theme: just-the-docs
 
 # ── just-the-docs configuration ───────────────────────────────────────────────
 color_scheme:    light
