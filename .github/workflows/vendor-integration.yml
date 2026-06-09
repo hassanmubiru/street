@@ -17,6 +17,15 @@ jobs:
   vendor:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # Secrets cannot be referenced in step-level `if:` conditions, so they are
+    # mapped to env at the job level and the gates below test `env.*` instead.
+    env:
+      SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+      STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+      AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
+      AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
+      AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
+      AUTH0_AUDIENCE: ${{ secrets.AUTH0_AUDIENCE }}
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -28,20 +37,13 @@ jobs:
       # Each step builds the vendor request via the plugin client and performs a
       # minimal real call, asserting an authenticated (non-401/403) response.
       - name: SendGrid (scopes check)
-        if: ${{ secrets.SENDGRID_API_KEY != '' }}
-        env: { SENDGRID_API_KEY: '${{ secrets.SENDGRID_API_KEY }}' }
+        if: ${{ env.SENDGRID_API_KEY != '' }}
         run: node scripts/vendor/check-sendgrid.mjs
 
       - name: Stripe (balance check)
-        if: ${{ secrets.STRIPE_API_KEY != '' }}
-        env: { STRIPE_API_KEY: '${{ secrets.STRIPE_API_KEY }}' }
+        if: ${{ env.STRIPE_API_KEY != '' }}
         run: node scripts/vendor/check-stripe.mjs
 
       - name: Auth0 (client-credentials token)
-        if: ${{ secrets.AUTH0_DOMAIN != '' }}
-        env:
-          AUTH0_DOMAIN: '${{ secrets.AUTH0_DOMAIN }}'
-          AUTH0_CLIENT_ID: '${{ secrets.AUTH0_CLIENT_ID }}'
-          AUTH0_CLIENT_SECRET: '${{ secrets.AUTH0_CLIENT_SECRET }}'
-          AUTH0_AUDIENCE: '${{ secrets.AUTH0_AUDIENCE }}'
+        if: ${{ env.AUTH0_DOMAIN != '' }}
         run: node scripts/vendor/check-auth0.mjs
