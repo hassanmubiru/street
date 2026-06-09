@@ -10,7 +10,10 @@ lang:        "en"
 author:      "street contributors"
 twitter:
   username:  streetjs
-logo:        "/assets/images/logo.png"
+  card:      summary_large_image
+logo:        "/assets/images/logo.svg"
+# Default social-share image (jekyll-seo-tag → og:image / twitter:image)
+image:       "/assets/images/og.png"
 
 # ── Theme ─────────────────────────────────────────────────────────────────────
 # just-the-docs is installed as a gem (see Gemfile), so use `theme`, not
