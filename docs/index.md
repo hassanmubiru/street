@@ -19,7 +19,7 @@ description: "Street — production-grade, memory-safe TypeScript backend framew
 /* ── Tokens ─────────────────────────────────────────────────────────────── */
 .home{--a:#3B82F6;--a2:#60A5FA;--a-soft:rgba(59,130,246,.10);--a-line:rgba(59,130,246,.22);
   --bg:#080C14;--s0:#0B1018;--s1:#0E141F;--s2:#121A28;--bd:#1B2638;--bd2:rgba(59,130,246,.30);
-  --t1:#E5EChex;--t1:#E6EDF6;--t2:#9FB0C3;--t3:#5C6B80;--t4:#3C4A5E;
+  --t1:#E6EDF6;--t2:#9FB0C3;--t3:#5C6B80;--t4:#3C4A5E;
   --fh:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --fm:'JetBrains Mono','SFMono-Regular',Consolas,monospace;
   --tr:.2s cubic-bezier(.4,0,.2,1);--rs:8px;--rm:12px;--rl:16px;--rx:22px;
