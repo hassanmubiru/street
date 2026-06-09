@@ -7,15 +7,19 @@ whose **request building is deterministic and verified offline**. The actual
 network call to the vendor API is a thin wrapper (exercised in CI / with real
 credentials).
 
-| Plugin | Package symbol | Capability | Deterministic offline logic |
-| --- | --- | --- | --- |
-| S3 | `S3Plugin` | object-storage | AWS SigV4 signing |
-| SendGrid | `SendGridPlugin` | email | v3 mail/send request (bearer + JSON) |
-| Stripe | `StripePlugin` | payments | form-encoded request (bearer) |
-| Twilio | `TwilioPlugin` | sms | Basic-auth + form-encoded request |
-| Auth0 | `Auth0Plugin` | auth | client-credentials token request (JSON) |
-| R2 | `R2Plugin` | object-storage | S3-compatible SigV4 (`region=auto`) |
-{: .st-responsive }
+<table class="st-responsive">
+  <thead>
+    <tr><th>Plugin</th><th>Package symbol</th><th>Capability</th><th>Deterministic offline logic</th></tr>
+  </thead>
+  <tbody>
+    <tr><td data-label="Plugin">S3</td><td data-label="Package symbol"><code>S3Plugin</code></td><td data-label="Capability">object-storage</td><td data-label="Offline logic">AWS SigV4 signing</td></tr>
+    <tr><td data-label="Plugin">SendGrid</td><td data-label="Package symbol"><code>SendGridPlugin</code></td><td data-label="Capability">email</td><td data-label="Offline logic">v3 mail/send request (bearer + JSON)</td></tr>
+    <tr><td data-label="Plugin">Stripe</td><td data-label="Package symbol"><code>StripePlugin</code></td><td data-label="Capability">payments</td><td data-label="Offline logic">form-encoded request (bearer)</td></tr>
+    <tr><td data-label="Plugin">Twilio</td><td data-label="Package symbol"><code>TwilioPlugin</code></td><td data-label="Capability">sms</td><td data-label="Offline logic">Basic-auth + form-encoded request</td></tr>
+    <tr><td data-label="Plugin">Auth0</td><td data-label="Package symbol"><code>Auth0Plugin</code></td><td data-label="Capability">auth</td><td data-label="Offline logic">client-credentials token request (JSON)</td></tr>
+    <tr><td data-label="Plugin">R2</td><td data-label="Package symbol"><code>R2Plugin</code></td><td data-label="Capability">object-storage</td><td data-label="Offline logic">S3-compatible SigV4 (<code>region=auto</code>)</td></tr>
+  </tbody>
+</table>
 
 All require permissions `['net','secrets','middleware']` and inject their client
 into `ctx.state` on load.
