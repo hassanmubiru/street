@@ -15,6 +15,7 @@ credentials).
 | Twilio | `TwilioPlugin` | sms | Basic-auth + form-encoded request |
 | Auth0 | `Auth0Plugin` | auth | client-credentials token request (JSON) |
 | R2 | `R2Plugin` | object-storage | S3-compatible SigV4 (`region=auto`) |
+{: .st-responsive }
 
 All require permissions `['net','secrets','middleware']` and inject their client
 into `ctx.state` on load.
