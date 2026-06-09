@@ -89,6 +89,15 @@ relative_links:
 markdown:    kramdown
 highlighter: rouge
 
+# ── Front-matter defaults ───────────────────────────────────────────────────
+# Apply the just-the-docs layout to EVERY page so none render as bare,
+# unstyled markdown (previously ~35 pages, incl. the Jobs guide, had no layout).
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
+
 kramdown:
   input:        GFM
   syntax_highlighter: rouge
