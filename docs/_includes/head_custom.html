@@ -107,3 +107,44 @@
 }
 </script>
 {%- endif -%}
+
+{%- comment -%} BreadcrumbList for nested doc pages (those with a parent) {%- endcomment -%}
+{%- if page.parent -%}
+{%- assign base = site.url | append: site.baseurl -%}
+{%- assign parent_page = site.html_pages | where: "title", page.parent | first -%}
+{%- assign gp_page = nil -%}
+{%- if page.grand_parent -%}{%- assign gp_page = site.html_pages | where: "title", page.grand_parent | first -%}{%- endif -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type":"ListItem","position":1,"name":"Home","item":"{{ base }}/"}
+    {%- assign pos = 1 -%}
+    {%- if gp_page -%}{%- assign pos = pos | plus: 1 -%},{"@type":"ListItem","position":{{ pos }},"name":{{ page.grand_parent | jsonify }},"item":"{{ base }}{{ gp_page.url }}"}{%- endif -%}
+    {%- if parent_page -%}{%- assign pos = pos | plus: 1 -%},{"@type":"ListItem","position":{{ pos }},"name":{{ page.parent | jsonify }},"item":"{{ base }}{{ parent_page.url }}"}{%- endif -%}
+    {%- assign pos = pos | plus: 1 -%},{"@type":"ListItem","position":{{ pos }},"name":{{ page.title | jsonify }},"item":"{{ base }}{{ page.url }}"}
+  ]
+}
+</script>
+{%- endif -%}
+
+{%- if page.path == "api-reference.md" -%}
+<!-- Street docs: APIReference structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "APIReference",
+  "name": "StreetJS API Reference",
+  "headline": "StreetJS API Reference",
+  "description": "Complete public API reference for StreetJS — app, routing, dependency injection, native PostgreSQL driver, security, WebSockets, messaging and CLI.",
+  "url": "{{ site.url }}{{ site.baseurl }}{{ page.url }}",
+  "inLanguage": "en",
+  "programmingModel": "Decorator-based TypeScript",
+  "targetPlatform": "Node.js >= 20",
+  "about": { "@type": "SoftwareApplication", "name": "StreetJS", "applicationCategory": "DeveloperApplication" },
+  "isPartOf": { "@type": "WebSite", "name": "StreetJS Documentation", "url": "{{ site.url }}{{ site.baseurl }}/" },
+  "author": { "@type": "Organization", "name": "Street contributors", "url": "https://github.com/hassanmubiru/street" }
+}
+</script>
+{%- endif -%}
