@@ -49,7 +49,7 @@ curl http://localhost:3000/api/hello
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.0-blue)](https://www.typescriptlang.org)
 [![package size](https://img.shields.io/bundlephobia/min/@streetjs/core)](https://bundlephobia.com/package/@streetjs/core)
-[![OpenSSF Best Practices](https://api.securityscorecards.dev/projects/github.com/hassanmubiru/street/badge)](https://securityscorecards.dev/viewer/?uri=github.com/hassanmubiru/street)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/hassanmubiru/street/badge)](https://securityscorecards.dev/viewer/?uri=github.com/hassanmubiru/street)
 
 ## Documentation
 
