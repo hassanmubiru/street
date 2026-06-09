@@ -2,6 +2,7 @@
 layout: default
 title: "Deployment Manifests"
 nav_exclude: true
+description: "Kubernetes deployment manifests in StreetJS — generate and validate manifests for your TypeScript backend."
 ---
 
 # Deployment Manifests

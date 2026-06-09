@@ -4,6 +4,7 @@ title:     "Controllers"
 parent:    "Core"
 nav_order: 3
 permalink: /core/controllers/
+description: "Controllers in StreetJS — define HTTP endpoints with decorators, route params and the typed request context in your TypeScript backend."
 ---
 
 # Controllers

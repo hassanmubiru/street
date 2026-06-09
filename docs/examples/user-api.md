@@ -4,6 +4,7 @@ title:     "User CRUD API"
 parent:    "Examples"
 nav_order: 1
 permalink: /examples/user-api/
+description: "Example: build a complete REST user API in StreetJS — PostgreSQL, JWT auth and validation in TypeScript."
 ---
 
 # Example: User CRUD API

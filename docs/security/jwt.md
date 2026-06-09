@@ -4,6 +4,7 @@ title:     "JWT, Sessions, Vault, XSS & Rate Limiting"
 parent:    "Security"
 nav_order: 1
 permalink: /security/jwt/
+description: "JSON Web Tokens in StreetJS — sign and verify JWTs natively, no jsonwebtoken dependency, for TypeScript backends."
 ---
 
 # JWT Authentication

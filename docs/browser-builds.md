@@ -2,6 +2,7 @@
 layout: default
 title: "Browser & Edge Builds"
 nav_exclude: true
+description: "Browser and edge builds in StreetJS — tree-shakeable exports for edge runtimes from a TypeScript backend framework."
 ---
 
 # Browser & Edge Builds

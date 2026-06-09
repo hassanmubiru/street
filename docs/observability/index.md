@@ -2,6 +2,7 @@
 title: Observability
 nav_order: 7
 has_children: true
+description: "Observability in StreetJS — Prometheus metrics, OpenTelemetry tracing and health checks for TypeScript backends."
 ---
 
 # Observability

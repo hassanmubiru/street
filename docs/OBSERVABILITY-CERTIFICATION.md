@@ -2,6 +2,7 @@
 layout: default
 title: "Observability Certification"
 nav_exclude: true
+description: "Observability Certification — StreetJS, the production-grade, memory-safe TypeScript backend framework for Node.js."
 ---
 
 # Observability Certification

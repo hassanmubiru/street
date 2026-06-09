@@ -2,6 +2,7 @@
 layout: default
 title: "Support & LTS Policy"
 nav_exclude: true
+description: "StreetJS support and LTS policy — release cadence and supported Node.js versions for the TypeScript backend framework."
 ---
 
 # Support & LTS Policy

@@ -4,6 +4,7 @@ title:     "GitHub Pages & npm Publishing"
 parent:    "Deployment"
 nav_order: 2
 permalink: /deployment/hosting-guide/
+description: "Hosting StreetJS in production — deploy your TypeScript backend to containers, VMs and platform services."
 ---
 
 # Hosting Guide: GitHub Pages + npm

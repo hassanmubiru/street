@@ -4,6 +4,7 @@ title:        "Database"
 nav_order:    4
 has_children: true
 permalink:    /database/
+description: "Databases in StreetJS — native PostgreSQL wire driver, connection pooling, repositories and migrations for TypeScript backends."
 ---
 
 {% include doc-styles.html %}

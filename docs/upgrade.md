@@ -2,6 +2,7 @@
 layout: default
 title: "`street upgrade` — codemods"
 nav_exclude: true
+description: "Upgrade StreetJS — codemods and the street upgrade command to move between framework versions."
 ---
 
 # `street upgrade` — codemods

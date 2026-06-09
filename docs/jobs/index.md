@@ -2,6 +2,7 @@
 title: Jobs
 nav_order: 6
 has_children: true
+description: "Background jobs in StreetJS — a PostgreSQL-backed job queue, cron scheduler and saga workflow engine, no Redis required."
 ---
 
 # Jobs Guide

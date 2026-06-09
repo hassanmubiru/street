@@ -2,6 +2,7 @@
 title: OAuth2 / OIDC
 parent: Authentication
 nav_order: 2
+description: "OAuth2 in StreetJS — authorization-code and client-credentials flows for TypeScript Node.js backends."
 ---
 
 # OAuth2 + OIDC Guide

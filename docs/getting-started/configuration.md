@@ -4,6 +4,7 @@ title:     "Configuration"
 parent:    "Getting Started"
 nav_order: 4
 permalink: /getting-started/configuration/
+description: "Configure StreetJS — environment variables, database connection and runtime options for your TypeScript backend."
 ---
 
 # Configuration

@@ -2,6 +2,7 @@
 layout: default
 title: "Chaos / Fault-Injection Testing"
 nav_exclude: true
+description: "Chaos and fault-injection testing in StreetJS — verify resilience of your TypeScript Node.js backend."
 ---
 
 # Chaos / Fault-Injection Testing

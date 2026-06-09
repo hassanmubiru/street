@@ -2,6 +2,7 @@
 layout: default
 title: "Observability Pack"
 nav_exclude: true
+description: "The StreetJS observability pack — ready-to-use Prometheus rules and a Grafana dashboard for your TypeScript backend."
 ---
 
 # Observability Pack

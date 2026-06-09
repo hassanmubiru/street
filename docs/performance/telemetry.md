@@ -4,6 +4,7 @@ title:     "Telemetry, Caching & Clustering"
 parent:    "Performance"
 nav_order: 1
 permalink: /performance/telemetry/
+description: "Telemetry in StreetJS — P50/P99 latency tracking and ring-buffer metrics for TypeScript Node.js backends."
 ---
 
 # Performance

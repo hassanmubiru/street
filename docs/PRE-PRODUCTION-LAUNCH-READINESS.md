@@ -2,6 +2,7 @@
 layout: default
 title: "Street Framework — Pre-Production Launch Readiness Report"
 nav_exclude: true
+description: "Street Framework — Pre-Production Launch Readiness Report — StreetJS, the production-grade, memory-safe TypeScript backend framework for Node.js."
 ---
 
 # Street Framework — Pre-Production Launch Readiness Report

@@ -2,6 +2,7 @@
 layout: default
 title: CLI Reference
 nav_order: 5
+description: "StreetJS CLI reference — create, dev, generate and migrate commands for scaffolding TypeScript backend projects."
 ---
 
 # CLI Reference

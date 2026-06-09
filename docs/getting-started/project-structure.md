@@ -4,6 +4,7 @@ title:     "Project Structure"
 parent:    "Getting Started"
 nav_order: 2
 permalink: /getting-started/project-structure/
+description: "StreetJS project structure — how a scaffolded TypeScript backend is organized: controllers, services, repositories and migrations."
 ---
 
 # Project Structure
