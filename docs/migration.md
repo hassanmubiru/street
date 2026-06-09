@@ -8,6 +8,35 @@ nav_order: 7
 
 This document covers version-to-version migration instructions for Street Framework.
 
+## Package rename: `@streetjs/core` → `streetjs`
+
+The framework's primary package was renamed from **`@streetjs/core`** to
+**`streetjs`**. The old package is now a deprecated backward-compatibility shim
+that re-exports `streetjs` unchanged — the export surface is identical.
+
+**New projects:**
+
+```diff
+- npm install @streetjs/core
++ npm install streetjs
+```
+
+```diff
+- import { streetApp, Controller, Get } from '@streetjs/core';
++ import { streetApp, Controller, Get } from 'streetjs';
+```
+
+Subpath imports map 1:1 as well (`@streetjs/core/http` → `streetjs/http`,
+`/router`, `/database`, `/security`, …).
+
+**Existing projects** require no immediate change: `@streetjs/core` continues to
+work because it re-exports `streetjs`. To migrate, update your dependency and
+rewrite the import specifier as above. There are **no API changes** — every named
+export and subpath is preserved (verified by the export-parity test suite).
+
+> `@streetjs/core` is deprecated and will only receive the re-export shim going
+> forward. Please migrate to `streetjs`.
+
 ## v1.x → v2.0
 
 ### Breaking Changes
