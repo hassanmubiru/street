@@ -1,0 +1,52 @@
+# OpenSSF Scorecard — supply-chain security analysis.
+# Publishes results so the README badge (api.securityscorecards.dev) and the
+# viewer (securityscorecards.dev/viewer/?uri=github.com/hassanmubiru/street)
+# resolve. Without a published run the viewer reports "invalid repo path".
+name: Scorecard supply-chain security
+
+on:
+  # Re-run when branch protection rules change (Scorecard reads them).
+  branch_protection_rule:
+  schedule:
+    - cron: '27 7 * * 1'   # weekly, Monday 07:27 UTC
+  push:
+    branches: [ "main" ]
+
+# Least-privilege default; the analysis job elevates only what it needs.
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      # Needed to upload the results SARIF to the code-scanning dashboard.
+      security-events: write
+      # Needed to publish results to the OpenSSF API (badge data) via OIDC.
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@99c09fe975337306107572b4fdf4db224cf8e2f2 # v2.4.3
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          # publish_results makes the badge/viewer data available publicly.
+          publish_results: true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: SARIF file
+          path: results.sarif
+          retention-days: 5
+
+      - name: Upload to code-scanning
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4.36.2
+        with:
+          sarif_file: results.sarif
