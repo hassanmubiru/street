@@ -2,6 +2,7 @@
 layout: default
 title: API Reference
 nav_order: 4
+description: "StreetJS API reference — the complete public API for the TypeScript backend framework: app, routing, DI, database, security and more."
 ---
 
 # API Reference

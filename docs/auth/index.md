@@ -2,6 +2,7 @@
 title: Authentication
 nav_order: 3
 has_children: true
+description: "Authentication in StreetJS — JWT, sessions, OAuth2, RBAC, WebAuthn and MFA for TypeScript Node.js backends."
 ---
 
 # Authentication

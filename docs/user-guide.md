@@ -2,6 +2,7 @@
 layout: default
 title: User Guide
 nav_order: 3
+description: "StreetJS user guide — routing, middleware, authentication and database access for building TypeScript Node.js backends."
 ---
 
 # User Guide

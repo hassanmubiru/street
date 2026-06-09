@@ -4,6 +4,7 @@ title:     "Multipart Uploads"
 parent:    "Storage"
 nav_order: 1
 permalink: /storage/multipart-uploads/
+description: "Multipart file uploads in StreetJS — bounded, streaming multipart parsing for TypeScript Node.js backends, no multer."
 ---
 
 # Multipart File Uploads

@@ -2,6 +2,7 @@
 layout: default
 title: "DAST Pipeline (OpenAPI-driven)"
 nav_exclude: true
+description: "DAST pipeline for StreetJS — OpenAPI-driven dynamic application security testing for TypeScript backends."
 ---
 
 # DAST Pipeline (OpenAPI-driven)

@@ -2,6 +2,7 @@
 layout: default
 title: "Security Hardening Guide"
 nav_exclude: true
+description: "Security Hardening Guide — StreetJS, the production-grade, memory-safe TypeScript backend framework for Node.js."
 ---
 
 # Security Hardening Guide

@@ -2,6 +2,7 @@
 layout: default
 title: "street"
 nav_exclude: true
+description: "street — StreetJS, the production-grade, memory-safe TypeScript backend framework for Node.js."
 ---
 
 # street

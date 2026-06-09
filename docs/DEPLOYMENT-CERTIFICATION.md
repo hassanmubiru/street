@@ -2,6 +2,7 @@
 layout: default
 title: "Deployment Certification"
 nav_exclude: true
+description: "Deployment Certification — StreetJS, the production-grade, memory-safe TypeScript backend framework for Node.js."
 ---
 
 # Deployment Certification

@@ -4,6 +4,7 @@ title:     "Repositories, Transactions & Migrations"
 parent:    "Database"
 nav_order: 2
 permalink: /database/repositories/
+description: "Repositories in StreetJS — type-safe data access over the native PostgreSQL driver, no ORM required."
 ---
 
 # Repositories

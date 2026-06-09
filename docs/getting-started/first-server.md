@@ -4,6 +4,7 @@ title:     "First Server"
 parent:    "Getting Started"
 nav_order: 3
 permalink: /getting-started/first-server/
+description: "Build your first server with StreetJS — a minimal TypeScript HTTP API in a few lines, no Express."
 ---
 
 # Your First Server

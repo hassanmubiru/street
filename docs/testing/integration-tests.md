@@ -4,6 +4,7 @@ title:     "Integration Tests & Debugging"
 parent:    "Testing"
 nav_order: 1
 permalink: /testing/integration-tests/
+description: "Integration testing in StreetJS — write tests against a real PostgreSQL database for your TypeScript backend."
 ---
 
 # Integration Testing

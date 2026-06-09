@@ -4,6 +4,7 @@ title:     "Dependency Injection"
 parent:    "Core"
 nav_order: 1
 permalink: /core/dependency-injection/
+description: "Dependency injection in StreetJS — an IoC container with constructor injection, singletons and circular-dependency detection for TypeScript."
 ---
 
 # Dependency Injection

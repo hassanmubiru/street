@@ -4,6 +4,7 @@ title:     "Streaming, Chat & File Upload"
 parent:    "Examples"
 nav_order: 2
 permalink: /examples/streaming-query/
+description: "Example: streaming a large PostgreSQL query in StreetJS with socket-level backpressure."
 ---
 
 # Example: Streaming PostgreSQL Query

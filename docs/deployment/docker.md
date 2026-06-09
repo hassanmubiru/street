@@ -4,6 +4,7 @@ title:     "Docker, CI/CD & Scaling"
 parent:    "Deployment"
 nav_order: 1
 permalink: /deployment/docker/
+description: "Deploy StreetJS with Docker — production container setup and environment configuration for TypeScript Node.js backends."
 ---
 
 # Docker Deployment

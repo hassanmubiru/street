@@ -2,6 +2,7 @@
 layout: default
 title: Troubleshooting
 nav_order: 8
+description: "Troubleshooting StreetJS — fixes for common setup, database, auth and deployment issues in your TypeScript backend."
 ---
 
 # Troubleshooting

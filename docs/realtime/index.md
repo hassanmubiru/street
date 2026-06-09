@@ -4,6 +4,7 @@ title:        "Realtime"
 nav_order:    6
 has_children: true
 permalink:    /realtime/
+description: "Real-time in StreetJS — bounded WebSocket server, typed events and Server-Sent Events for TypeScript backends."
 ---
 
 {% include doc-styles.html %}

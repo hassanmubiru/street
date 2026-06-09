@@ -2,6 +2,7 @@
 layout: default
 title: "Official Plugin: SendGrid (email)"
 nav_exclude: true
+description: "Official SendGrid plugin for StreetJS — send transactional email from your TypeScript backend with a signed, verified client."
 ---
 
 # Official Plugin: SendGrid (email)

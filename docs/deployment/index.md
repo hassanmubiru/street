@@ -4,6 +4,7 @@ title:        "Deployment"
 nav_order:    10
 has_children: true
 permalink:    /deployment/
+description: "Deploying StreetJS — Docker, Kubernetes manifests, environment config and production hardening for TypeScript backends."
 ---
 
 {% include doc-styles.html %}

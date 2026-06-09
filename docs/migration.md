@@ -2,6 +2,7 @@
 layout: default
 title: Migration Guide
 nav_order: 7
+description: "Migrate to StreetJS — move from @streetjs/core to streetjs, or from Express, with this step-by-step guide."
 ---
 
 # Migration Guide

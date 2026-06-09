@@ -4,6 +4,7 @@ title:        "Testing"
 nav_order:    11
 has_children: true
 permalink:    /testing/
+description: "Testing StreetJS apps — integration tests against real PostgreSQL with the built-in test runner."
 ---
 
 {% include doc-styles.html %}

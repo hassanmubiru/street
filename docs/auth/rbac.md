@@ -2,6 +2,7 @@
 title: RBAC
 parent: Authentication
 nav_order: 1
+description: "Role-based access control (RBAC) in StreetJS — fine-grained authorization for TypeScript backend services."
 ---
 
 # Role-Based Access Control (RBAC)

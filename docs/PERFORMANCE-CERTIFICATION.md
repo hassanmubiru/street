@@ -2,6 +2,7 @@
 layout: default
 title: "Performance Certification"
 nav_exclude: true
+description: "Performance Certification — StreetJS, the production-grade, memory-safe TypeScript backend framework for Node.js."
 ---
 
 # Performance Certification
