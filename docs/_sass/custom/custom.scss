@@ -299,3 +299,78 @@ pre.highlight code {
   .main-content { max-width: 100% !important; padding: 0 !important; }
   pre.highlight, pre.highlight code { background: #f6f8fa !important; color: #111 !important; }
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// DEPTH & STRUCTURE — soft tinted canvas + floating content card
+// Removes the flat "all white" feel and gives every page a contained surface.
+// ═══════════════════════════════════════════════════════════════════════════
+
+$canvas:   #EEF2F8;   // soft blue-grey page canvas
+$card:     #FFFFFF;
+
+// Tint the whole app canvas (body + main column) a soft blue-grey
+body { background-color: $canvas !important; }
+.side-bar { background-color: #F4F7FB !important; }
+
+@media (min-width: 50rem) {
+  .main { background-color: $canvas !important; }
+
+  // Float the article on the canvas as a bordered white card
+  #main-content {
+    background: $card !important;
+    border: 1px solid $border !important;
+    border-radius: 16px !important;
+    padding: 2.5rem 3rem 3rem !important;
+    margin: 1.5rem 0 2.5rem !important;
+    box-shadow: 0 1px 3px rgba(15,23,42,0.05), 0 8px 24px -16px rgba(15,23,42,0.12) !important;
+  }
+}
+
+// Auto-style the FIRST heading of any page as a professional page header —
+// so pages that don't manually include doc-styles (the jobs guide, etc.) still
+// look finished: accent kicker bar, strong title, divider under it.
+.main-content > h1:first-child {
+  position: relative !important;
+  padding-bottom: 1.1rem !important;
+  margin-bottom: 1.5rem !important;
+  border-bottom: 1px solid $border !important;
+}
+.main-content > h1:first-child::before {
+  content: '' !important;
+  display: block !important;
+  width: 40px !important; height: 4px !important;
+  border-radius: 4px !important;
+  background: linear-gradient(90deg, $accent, #60A5FA) !important;
+  margin-bottom: 1rem !important;
+}
+// The lead paragraph right after the title reads as a subtitle
+.main-content > h1:first-child + p {
+  font-size: 1.08rem !important;
+  color: $muted !important;
+  line-height: 1.7 !important;
+}
+
+// ── Home page: opt OUT of the card so the landing sections sit on the canvas ──
+#main-content:has(.home) {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+}
+#main-content:has(.home) > h1:first-child { display: none !important; }
+body:has(.home) { background-color: #FFFFFF !important; }
+.main:has(.home) { background-color: #FFFFFF !important; }
+
+// Slightly richer section rhythm on doc pages
+.main-content h2 { color: $heading !important; }
+.main-content h2::before {
+  content: '' !important;
+  display: inline-block !important;
+  width: 3px !important; height: 1.05em !important;
+  background: $accent !important;
+  border-radius: 3px !important;
+  margin-right: 0.6rem !important;
+  vertical-align: -0.14em !important;
+}
