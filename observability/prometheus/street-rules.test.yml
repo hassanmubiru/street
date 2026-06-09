@@ -1,0 +1,71 @@
+# promtool unit tests for street-rules.yml
+# Run: promtool test rules street-rules.test.yml
+rule_files:
+  - street-rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  # 1) High 5xx ratio must raise StreetHighErrorRate (via the recording rule).
+  - interval: 1m
+    input_series:
+      - series: 'http_requests_total{status="500"}'
+        values: '0+30x10'      # +30 req/min of 5xx
+      - series: 'http_requests_total{status="200"}'
+        values: '0+70x10'      # +70 req/min of 2xx  → 30% error ratio (> 5%)
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: StreetHighErrorRate
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: Elevated 5xx error ratio
+              description: "HTTP 5xx ratio above 5% for 5m."
+
+  # 2) A healthy service must NOT raise the error alert.
+  - interval: 1m
+    input_series:
+      - series: 'http_requests_total{status="500"}'
+        values: '0+0x10'       # zero 5xx
+      - series: 'http_requests_total{status="200"}'
+        values: '0+100x10'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: StreetHighErrorRate
+        exp_alerts: []
+
+  # 3) An unreachable scrape target must raise StreetTargetDown.
+  - interval: 1m
+    input_series:
+      - series: 'up{job="street",instance="app:3000"}'
+        values: '0 0 0 0 0'
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: StreetTargetDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: street
+              instance: app:3000
+            exp_annotations:
+              summary: Target down
+              description: A scrape target has been unreachable for 1m.
+
+  # 4) Sustained high error ratio must trip the fast error-budget burn alert.
+  - interval: 1m
+    input_series:
+      - series: 'http_requests_total{status="500"}'
+        values: '0+20x70'      # 20% sustained 5xx over >1h
+      - series: 'http_requests_total{status="200"}'
+        values: '0+80x70'
+    alert_rule_test:
+      - eval_time: 65m
+        alertname: StreetErrorBudgetBurnFast
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              slo: availability-99.9
+            exp_annotations:
+              summary: Fast error-budget burn
+              description: "Burning the 99.9% budget 14.4x over 1h/5m windows."
