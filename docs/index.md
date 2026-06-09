@@ -30,6 +30,17 @@ description: "Street — production-grade, memory-safe TypeScript backend framew
 
 /* ── Section scaffolding ────────────────────────────────────────────────── */
 .home .sec{margin:0 0 6rem}
+/* Tinted panel to break up the white and add depth */
+.home .band{position:relative;padding:3.25rem 2.75rem;border:1px solid var(--bd);border-radius:24px;
+  background:linear-gradient(180deg,#F8FAFC 0%,#EEF2F8 100%);overflow:hidden}
+.home .band::before{content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle at 1px 1px,rgba(37,99,235,.10) 1px,transparent 0);
+  background-size:28px 28px;
+  -webkit-mask-image:radial-gradient(ellipse 60% 70% at 85% 0%,#000,transparent 70%);
+  mask-image:radial-gradient(ellipse 60% 70% at 85% 0%,#000,transparent 70%);
+  opacity:.7;pointer-events:none}
+.home .band>*{position:relative;z-index:1}
+@media(max-width:640px){.home .band{padding:2rem 1.25rem;border-radius:18px}}
 .home .eyebrow{display:inline-flex;align-items:center;gap:.55rem;font-size:.72rem;font-weight:700;
   text-transform:uppercase;letter-spacing:.14em;color:var(--a);margin-bottom:.85rem}
 .home .eyebrow::before{content:'';width:20px;height:2px;border-radius:2px;background:var(--a)}
@@ -215,7 +226,7 @@ description: "Street — production-grade, memory-safe TypeScript backend framew
 </div>
 
 <!-- ════════════════════════ FEATURES ════════════════════════ -->
-<section class="sec">
+<section class="sec band">
   <span class="eyebrow">Core capabilities</span>
   <h2 class="s-title">Everything you need. Nothing you don't.</h2>
   <p class="s-sub">Every feature is implemented directly from Node.js core modules, with explicit memory bounds on every component.</p>
@@ -345,7 +356,7 @@ await app.listen();
 </section>
 
 <!-- ════════════════════════ DOCS ════════════════════════ -->
-<section class="sec">
+<section class="sec band">
   <span class="eyebrow">Documentation</span>
   <h2 class="s-title">Everything you need to ship.</h2>
   <p class="s-sub">Comprehensive guides, API references and real-world examples for every part of the framework.</p>
