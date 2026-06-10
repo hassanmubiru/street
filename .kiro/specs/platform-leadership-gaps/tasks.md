@@ -23,7 +23,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Verification Artifact subsystem → Status engine_
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.6, 1.9_
 
-  - [ ]* 1.2 Write property test for status classification
+  - [ ] 1.2 Write property test for status classification
     - **Property 1: Status classification is deterministic and honors precedence** (fast-check, min 100 runs) — built first)
   - [ ] 1.1 Implement the status engine and shared types
     - Create `packages/core/src/verification/status.ts` with `VerificationStatus`, `EvidenceComponents`, `BlockedReason`, `ClassifyInput`, and `classify()` honoring precedence NOT_IMPLEMENTED → BLOCKED → VERIFIED → PARTIAL (pure, Node-core only)
@@ -43,15 +43,15 @@ Each property-based test is tagged with the comment format:
     - _Design: Verification Artifact subsystem → Command runner; Architecture → Artifact directory layout (atomic writes)_
     - _Requirements: 1.7, 1.9, 1.10, 1.11_
 
-  - [ ]* 1.5 Write property test for BLOCKED prerequisite preservation
+  - [ ] 1.5 Write property test for BLOCKED prerequisite preservation
     - **Property 2: BLOCKED preserves the missing prerequisite** (fast-check, min 100 runs)
     - **Validates: Requirements 1.5, 1.10**
 
-  - [ ]* 1.6 Write property test for artifact completeness and atomic writes
+  - [ ] 1.6 Write property test for artifact completeness and atomic writes
     - **Property 3: Produced artifacts are complete and atomically written** (fast-check, min 100 runs; include induced write-failure points asserting no partial/leftover temp file)
     - **Validates: Requirements 1.7, 1.11**
 
-  - [ ]* 1.7 Write unit tests for runner process behavior and status enum
+  - [ ] 1.7 Write unit tests for runner process behavior and status enum
     - Assert the four-status enum membership (1.1) and that `CommandRunner` kills a sleeping command at a small injected timeout (1.10 process side)
     - _Requirements: 1.1, 1.10_
 
@@ -74,7 +74,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Architecture → Lazy database initialization_
     - _Requirements: 2.12_
 
-  - [ ]* 3.3 Write integration test for no-DB bootstrap
+  - [ ] 3.3 Write integration test for no-DB bootstrap
     - Start the app with no PostgreSQL provisioned and assert startup < 30s and both health endpoints return 200 within 5s
     - _Requirements: 2.12_
 
@@ -84,7 +84,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Cloud Deployment Verifier (per-target deliverables table)_
     - _Requirements: 2.1, 2.2_
 
-  - [ ]* 4.2 Write property test for generated manifests
+  - [ ] 4.2 Write property test for generated manifests
     - **Property 4: Generated deployment manifests are structurally valid for every supported target** (fast-check, min 100 runs; kubernetes, cloudrun, ecs)
     - **Validates: Requirements 2.2, 2.3, 2.4**
 
@@ -103,7 +103,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Cloud Deployment Verifier (offline-verifiable artifacts); Testing Strategy → Honest BLOCKED recording_
     - _Requirements: 2.14, 1.5_
 
-  - [ ]* 4.6 Write kind-cluster integration verification for Kubernetes (Layer B)
+  - [ ] 4.6 Write kind-cluster integration verification for Kubernetes (Layer B)
     - Deploy generated manifests + Helm to a local kind cluster, assert pod `1/1 Running`, health 200, smoke 0 fail/0 error; skip (not fail) when kind is unreachable, recording BLOCKED honestly
     - _Requirements: 2.9, 2.10_
 
@@ -112,7 +112,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Testing Strategy → CI integration and evidence retention_
     - _Requirements: 2.11_
 
-  - [ ]* 4.8 Write unit tests for the deployment report status mapping
+  - [ ] 4.8 Write unit tests for the deployment report status mapping
     - Cover VERIFIED/PARTIAL/BLOCKED mapping and retained failing output in the report
     - _Requirements: 2.11, 2.13, 2.14_
 
@@ -125,15 +125,15 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → DAST verifier_
     - _Requirements: 3.1, 3.2, 3.7_
 
-  - [ ]* 6.2 Write property test for the severity gate
+  - [ ] 6.2 Write property test for the severity gate
     - **Property 5: The DAST severity gate fails iff a finding meets the threshold** (fast-check, min 100 runs; `DastFinding[]` generator across all five severities)
     - **Validates: Requirements 3.4, 3.5, 3.6**
 
-  - [ ]* 6.3 Write property test for severity counts
+  - [ ] 6.3 Write property test for severity counts
     - **Property 6: Severity counts are an exact tally** (fast-check, min 100 runs)
     - **Validates: Requirements 3.7**
 
-  - [ ]* 6.4 Write property test for scan coverage
+  - [ ] 6.4 Write property test for scan coverage
     - **Property 7: Scan coverage equals the enumerated operation set** (fast-check, min 100 runs)
     - **Validates: Requirements 3.2**
 
@@ -148,11 +148,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Network Plugin Registry (`normalizePageSize`)_
     - _Requirements: 4.6_
 
-  - [ ]* 7.2 Write property test for pagination clamping
+  - [ ] 7.2 Write property test for pagination clamping
     - **Property 12: Pagination is clamped to its bounds** (fast-check, min 100 runs)
     - **Validates: Requirements 4.6**
 
-  - [ ]* 7.3 Write property test for signature verification soundness
+  - [ ] 7.3 Write property test for signature verification soundness
     - **Property 8: Signature verification is sound** (fast-check, min 100 runs; manifest + Ed25519 keypair generator with tamper mutations)
     - **Validates: Requirements 4.2, 5.7**
 
@@ -161,19 +161,19 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Network Plugin Registry; Sequence → publish → install; Error Handling 4.4/4.9/4.10_
     - _Requirements: 4.1, 4.2, 4.3, 4.5, 4.6, 4.9, 4.10_
 
-  - [ ]* 7.5 Write property test for manifest metadata validation
+  - [ ] 7.5 Write property test for manifest metadata validation
     - **Property 10: Manifest metadata validation accepts iff well-formed and non-duplicate** (fast-check, min 100 runs)
     - **Validates: Requirements 4.5, 4.10**
 
-  - [ ]* 7.6 Write property test for publish authentication and authorization
+  - [ ] 7.6 Write property test for publish authentication and authorization
     - **Property 13: Publishing requires authentication and authorization** (fast-check, min 100 runs)
     - **Validates: Requirements 4.9**
 
-  - [ ]* 7.7 Write property test for the download round trip
+  - [ ] 7.7 Write property test for the download round trip
     - **Property 9: Download is a byte-faithful round trip** (fast-check, min 100 runs)
     - **Validates: Requirements 4.3**
 
-  - [ ]* 7.8 Write property test for rejected versions and preservation of prior versions
+  - [ ] 7.8 Write property test for rejected versions and preservation of prior versions
     - **Property 11: A rejected version never becomes installable and prior valid versions are preserved** (fast-check, min 100 runs)
     - **Validates: Requirements 4.4, 5.7, 5.8**
 
@@ -206,11 +206,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Official Plugin Ecosystem (install path); Error Handling 5.7/5.8_
     - _Requirements: 5.6, 5.7, 5.8_
 
-  - [ ]* 9.4 Write unit tests for plugin structure and signature enforcement
+  - [ ] 9.4 Write unit tests for plugin structure and signature enforcement
     - Verify the per-package official-plugin structure (5.5) and signature-enforcement behavior on install
     - _Requirements: 5.5, 5.7, 5.8_
 
-  - [ ]* 9.5 Write integration tests against real backing services with BLOCKED recording (Layer B)
+  - [ ] 9.5 Write integration tests against real backing services with BLOCKED recording (Layer B)
     - Run each plugin's integration test against its real backing service (Redis/S3/R2 via containers; Twilio/SendGrid/Stripe/Auth0 via sandbox accounts), emit `plugin.<id>.artifact.json` with pass result + plugin id + ISO-8601 timestamp, and record BLOCKED with the missing credential id when a test account is absent
     - _Design: Components → Official Plugin Ecosystem; Testing Strategy → Layer B + Honest BLOCKED_
     - _Requirements: 5.9_
@@ -221,11 +221,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Enterprise Console APIs; Error Handling 6.6/6.7/6.8_
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
 
-  - [ ]* 10.2 Write property test for authentication/authorization gating
+  - [ ] 10.2 Write property test for authentication/authorization gating
     - **Property 14: Every enterprise operation requires authn and authz, else state is unchanged** (fast-check, min 100 runs)
     - **Validates: Requirements 6.5, 6.6, 6.7**
 
-  - [ ]* 10.3 Write property test for invalid-input rejection
+  - [ ] 10.3 Write property test for invalid-input rejection
     - **Property 15: Invalid input is rejected without state change** (fast-check, min 100 runs)
     - **Validates: Requirements 6.8**
 
@@ -234,11 +234,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Enterprise Console APIs (OpenAPI + docs)_
     - _Requirements: 6.9_
 
-  - [ ]* 10.5 Write property test for OpenAPI coverage
+  - [ ] 10.5 Write property test for OpenAPI coverage
     - **Property 16: Generated OpenAPI covers every exposed enterprise operation** (fast-check, min 100 runs)
     - **Validates: Requirements 6.9**
 
-  - [ ]* 10.6 Run the enterprise suite against a running instance and emit the artifact (Layer B)
+  - [ ] 10.6 Run the enterprise suite against a running instance and emit the artifact (Layer B)
     - Execute the suite against a running app + PostgreSQL container through `CommandRunner`, emit `enterprise.api.artifact.json` with executed command, exit code, and pass/fail counts, and upload from CI
     - _Design: Components → Enterprise Console APIs; Testing Strategy → Layer B_
     - _Requirements: 6.10_
@@ -252,15 +252,15 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Interactive Developer Experience_
     - _Requirements: 7.2, 7.3, 7.4, 7.5_
 
-  - [ ]* 12.2 Write property test for the route tree
+  - [ ] 12.2 Write property test for the route tree
     - **Property 17: The route tree reflects exactly the registered routes** (fast-check, min 100 runs)
     - **Validates: Requirements 7.2**
 
-  - [ ]* 12.3 Write property test for the dependency graph
+  - [ ] 12.3 Write property test for the dependency graph
     - **Property 18: The dependency graph is well-formed** (fast-check, min 100 runs)
     - **Validates: Requirements 7.3**
 
-  - [ ]* 12.4 Write property test for the API Inspector failure path
+  - [ ] 12.4 Write property test for the API Inspector failure path
     - **Property 19: A failed inspector request retains its input** (fast-check, min 100 runs)
     - **Validates: Requirements 7.5**
 
@@ -269,7 +269,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Interactive Developer Experience_
     - _Requirements: 7.1, 7.6, 7.7, 7.8_
 
-  - [ ]* 12.6 Build the devtools bundle and run its tests, emitting artifacts (Layer B)
+  - [ ] 12.6 Build the devtools bundle and run its tests, emitting artifacts (Layer B)
     - Build the bundle + run headless-browser tests through `CommandRunner`, emit `devx.playground`/`devx.route-explorer`/`devx.dependency-graph` artifacts, and upload from CI
     - _Design: Testing Strategy → Layer B_
     - _Requirements: 7.9_
@@ -280,11 +280,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Upgrade System; Error Handling 8.2_
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-  - [ ]* 13.2 Write property test for version resolution
+  - [ ] 13.2 Write property test for version resolution
     - **Property 20: Version resolution prefers the explicit target, else latest** (fast-check, min 100 runs)
     - **Validates: Requirements 8.1, 8.2**
 
-  - [ ]* 13.3 Write property test for breaking-change analysis
+  - [ ] 13.3 Write property test for breaking-change analysis
     - **Property 21: Breaking-change analysis is well-formed** (fast-check, min 100 runs)
     - **Validates: Requirements 8.3, 8.4**
 
@@ -293,11 +293,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Upgrade System (codemods); Error Handling 8.7_
     - _Requirements: 8.5, 8.7_
 
-  - [ ]* 13.5 Write property test for codemod idempotence
+  - [ ] 13.5 Write property test for codemod idempotence
     - **Property 22: Codemods are idempotent** (fast-check, min 100 runs; source-string + codemod generator including already-migrated inputs)
     - **Validates: Requirements 8.6**
 
-  - [ ]* 13.6 Write property test for codemod failure safety
+  - [ ] 13.6 Write property test for codemod failure safety
     - **Property 23: Codemods are safe on failure** (fast-check, min 100 runs; include unparseable inputs)
     - **Validates: Requirements 8.7**
 
@@ -315,7 +315,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Kafka Reliability; Error Handling 9.2_
     - _Requirements: 9.1, 9.2_
 
-  - [ ]* 15.2 Write property test for the gate timeout
+  - [ ] 15.2 Write property test for the gate timeout
     - **Property 24: A gate timeout preserves committed offsets and does not consume** (fast-check, min 100 runs)
     - **Validates: Requirements 9.2**
 
@@ -324,11 +324,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Kafka Reliability (chaos framework)_
     - _Requirements: 9.3, 9.4, 9.5, 9.6, 9.7, 9.8_
 
-  - [ ]* 15.4 Write property test for lost-message accounting
+  - [ ] 15.4 Write property test for lost-message accounting
     - **Property 25: Lost-message accounting is exact** (fast-check, min 100 runs)
     - **Validates: Requirements 9.8**
 
-  - [ ]* 15.5 Run the full-scale (100/100) chaos suite and emit artifacts (Layer B)
+  - [ ] 15.5 Run the full-scale (100/100) chaos suite and emit artifacts (Layer B)
     - Run 100 cold starts and 100 broker restarts plus the network-interruption and slow-broker scenarios against `apache/kafka:3.7.1` (KRaft) in Docker through `CommandRunner`, emit `kafka.coldstart`/`kafka.chaos.*` artifacts (parameter values, pass count, lost-message count, ISO-8601 timestamp), upload from CI, and record BLOCKED honestly when the broker is unreachable
     - _Design: Testing Strategy → Layer B + Honest BLOCKED_
     - _Requirements: 9.4, 9.5, 9.6, 9.7, 9.8_
@@ -344,7 +344,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Advanced Observability (anti-fabrication guard); Error Handling 10.7_
     - _Requirements: 10.1, 10.7_
 
-  - [ ]* 16.3 Write property test for metric references
+  - [ ] 16.3 Write property test for metric references
     - **Property 26: Observability assets reference only exported metrics** (fast-check, min 100 runs)
     - **Validates: Requirements 10.1, 10.7**
 
@@ -353,7 +353,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Advanced Observability_
     - _Requirements: 10.3, 10.4, 10.5_
 
-  - [ ]* 16.5 Write property test for dashboard and rule structural validity
+  - [ ] 16.5 Write property test for dashboard and rule structural validity
     - **Property 27: Provided dashboards and rules are structurally valid** (fast-check, min 100 runs)
     - **Validates: Requirements 10.3, 10.4, 10.5**
 
@@ -371,15 +371,15 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Release Engineering; Data Models → Release Scorecard_
     - _Requirements: 11.1, 11.2, 11.4, 11.5_
 
-  - [ ]* 18.2 Write property test for bounded release scores
+  - [ ] 18.2 Write property test for bounded release scores
     - **Property 28: Release scores are bounded** (fast-check, min 100 runs)
     - **Validates: Requirements 11.1**
 
-  - [ ]* 18.3 Write property test for semver and release-notes validation
+  - [ ] 18.3 Write property test for semver and release-notes validation
     - **Property 29: Semver and release-notes validation are correct** (fast-check, min 100 runs)
     - **Validates: Requirements 11.2, 11.3**
 
-  - [ ]* 18.4 Write property test for release health deltas
+  - [ ] 18.4 Write property test for release health deltas
     - **Property 30: Release health deltas are exact** (fast-check, min 100 runs)
     - **Validates: Requirements 11.4**
 
@@ -394,7 +394,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Exit-criteria engine; Data Models → Exit-Criteria set + report_
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-  - [ ]* 19.2 Write property test for the leadership decision
+  - [ ] 19.2 Write property test for the leadership decision
     - **Property 31: The Platform Leadership decision is computed only from artifacts** (fast-check, min 100 runs; artifact-set generator across all status combinations and missing entries)
     - **Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5**
 
@@ -403,7 +403,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Exit-criteria engine (CLI surface)_
     - _Requirements: 12.4, 12.5_
 
-  - [ ]* 19.4 Write the governance unit test that only the aggregator writes the report
+  - [ ] 19.4 Write the governance unit test that only the aggregator writes the report
     - Grep/lint assertion confirming `platform-leadership.report.json` is produced solely by `computeLeadership` (no hand-authored writes)
     - _Requirements: 12.4_
 
