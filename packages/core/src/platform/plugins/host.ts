@@ -37,6 +37,8 @@ export class PluginPermissionError extends PluginError {}
 export class PluginDependencyError extends PluginError {}
 export class PluginSignatureError extends PluginError {}
 export class PluginStateError extends PluginError {}
+/** Thrown when a plugin manifest is missing or malformed during installation. */
+export class PluginManifestError extends PluginError {}
 
 // ── Minimal semver ──────────────────────────────────────────────────────────
 
