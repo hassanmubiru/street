@@ -92,6 +92,7 @@ export type { CheckResult, HealthResponse, CheckType, CheckStatus, CheckFn } fro
 export { Logger, correlationMiddleware } from './observability/logger.js';
 export type { LogLevel, LogEntry } from './observability/logger.js';
 export { MetricsRegistry, Counter, Gauge, Histogram, MetricConflictError, prometheusMiddleware, metricsHandler, registerMetricsRoute, PROMETHEUS_CONTENT_TYPE } from './observability/prometheus.js';
+export { SubsystemMetrics, registerSubsystemMetrics, subsystemMetricNames, SUBSYSTEM_METRIC_NAMES, instrumentPgPool, instrumentKafkaClient, instrumentCoordinatorGate, instrumentRabbitMqPublisher, instrumentRabbitMqConsumer, instrumentPluginHost, } from './observability/subsystem-metrics.js';
 export { streetRecordingRules, streetAlertRules, streetSaturationRules, streetSloBurnRateRules, streetRuleGroups, validatePrometheusRuleGroups, serializePrometheusRulesYaml, isAlertRule, } from './observability/prometheus-rules.js';
 export type { RecordingRule, AlertRule, PromRule, RuleGroup, RuleValidationResult } from './observability/prometheus-rules.js';
 export { streetApiDashboard, streetRuntimeDashboard, streetDashboards, validateGrafanaDashboard } from './observability/grafana-dashboard.js';
@@ -165,6 +166,8 @@ export { AuditLogger, Sensitive, ENTERPRISE_AUDIT_MIGRATION_SQL } from './enterp
 export type { AuditCategory } from './enterprise/audit-logger.js';
 export { RetainFor, Encrypt, Classify, RetentionJob, ComplianceReporter, FieldEncryptor, redactByClassification } from './enterprise/data-policy.js';
 export type { DataClassificationLevel, RetentionEntityMeta, ComplianceReport } from './enterprise/data-policy.js';
+export { EnterpriseConsole, CONSOLE_ROUTES, InMemoryConsoleBackend, ConsoleNotFoundError } from './enterprise/console/index.js';
+export type { EnterpriseConsoleOptions, ConsoleArea, ConsoleBackend, ConsoleMethod, ConsolePrincipal, ConsoleRequest, ConsoleResponse, ConsoleRoute, ValidationResult as ConsoleValidationResult, CreateTenantInput, UpdateTenantInput, RbacPolicyInput, MfaPolicyInput, RetentionPolicyInput, ClassificationPolicyInput, AuditExportInput, ManageUserInput, RotateKeyInput, ManageSecretInput, } from './enterprise/console/index.js';
 export { BackupService, LocalStorageAdapter, BACKUPS_MIGRATION_SQL } from './enterprise/backup.js';
 export type { StorageAdapter, BackupRecord } from './enterprise/backup.js';
 export { S3StorageAdapter, GcsStorageAdapter, signAwsV4 } from './enterprise/storage-adapters.js';

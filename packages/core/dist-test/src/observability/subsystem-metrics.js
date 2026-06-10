@@ -86,7 +86,7 @@ export class SubsystemMetrics {
         // `prometheusMiddleware(registry, pool)`. Reuse it if present so the two
         // wiring paths don't conflict; otherwise register it here.
         this.dbPoolConnections = (registry.has('db_pool_connections')
-            ? registry.metrics.get('db_pool_connections')
+            ? registry.get('db_pool_connections')
             : registry.gauge('db_pool_connections', 'Database pool connection counts by state', ['state']));
         this.dbQueryDuration = registry.histogram('db_query_duration_seconds', 'PostgreSQL query execution duration in seconds', DURATION_BUCKETS);
         this.dbPoolAcquire = registry.histogram('db_pool_acquire_seconds', 'Time spent acquiring a PostgreSQL connection from the pool in seconds', DURATION_BUCKETS);

@@ -22,7 +22,8 @@ import {
   instrumentPluginHost,
 } from '../observability/subsystem-metrics.js';
 import type { PgPool } from '../database/pool.js';
-import { PluginHost, PluginModule, signManifest } from '../platform/plugins/host.js';
+import { PluginHost, signManifest } from '../platform/plugins/host.js';
+import { PluginModule } from '../platform/plugins/sdk.js';
 import { streetApp } from '../http/server.js';
 import { request } from 'node:http';
 import { generateKeyPairSync } from 'node:crypto';

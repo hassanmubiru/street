@@ -203,6 +203,10 @@ export class MetricsRegistry {
     has(name) {
         return this.metrics.has(name);
     }
+    /** The registered metric for `name`, or undefined if not registered. */
+    get(name) {
+        return this.metrics.get(name);
+    }
     /** The names of every registered metric, in registration order. */
     names() {
         return [...this.metrics.keys()];

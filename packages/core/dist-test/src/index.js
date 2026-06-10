@@ -76,6 +76,7 @@ export { HealthCheckRegistry, registerHealthRoutes } from './observability/healt
 export { Logger, correlationMiddleware } from './observability/logger.js';
 // ── Prometheus Metrics ────────────────────────────────────────────────────────
 export { MetricsRegistry, Counter, Gauge, Histogram, MetricConflictError, prometheusMiddleware, metricsHandler, registerMetricsRoute, PROMETHEUS_CONTENT_TYPE } from './observability/prometheus.js';
+export { SubsystemMetrics, registerSubsystemMetrics, subsystemMetricNames, SUBSYSTEM_METRIC_NAMES, instrumentPgPool, instrumentKafkaClient, instrumentCoordinatorGate, instrumentRabbitMqPublisher, instrumentRabbitMqConsumer, instrumentPluginHost, } from './observability/subsystem-metrics.js';
 export { streetRecordingRules, streetAlertRules, streetSaturationRules, streetSloBurnRateRules, streetRuleGroups, validatePrometheusRuleGroups, serializePrometheusRulesYaml, isAlertRule, } from './observability/prometheus-rules.js';
 export { streetApiDashboard, streetRuntimeDashboard, streetDashboards, validateGrafanaDashboard } from './observability/grafana-dashboard.js';
 // ── Route Profiler ────────────────────────────────────────────────────────────
@@ -132,6 +133,8 @@ export { FeatureFlagService, FEATURE_FLAGS_MIGRATION_SQL, registerFeatureFlagAdm
 export { AuditLogger, Sensitive, ENTERPRISE_AUDIT_MIGRATION_SQL } from './enterprise/audit-logger.js';
 // ── Enterprise: Data Policy ────────────────────────────────────────────────────
 export { RetainFor, Encrypt, Classify, RetentionJob, ComplianceReporter, FieldEncryptor, redactByClassification } from './enterprise/data-policy.js';
+// ── Enterprise: Console APIs ────────────────────────────────────────────────────
+export { EnterpriseConsole, CONSOLE_ROUTES, InMemoryConsoleBackend, ConsoleNotFoundError } from './enterprise/console/index.js';
 // ── Enterprise: Backup ────────────────────────────────────────────────────────
 export { BackupService, LocalStorageAdapter, BACKUPS_MIGRATION_SQL } from './enterprise/backup.js';
 export { S3StorageAdapter, GcsStorageAdapter, signAwsV4 } from './enterprise/storage-adapters.js';
