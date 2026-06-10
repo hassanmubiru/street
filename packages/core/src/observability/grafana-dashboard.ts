@@ -46,6 +46,41 @@ export function streetApiDashboard(): GrafanaDashboard {
   };
 }
 
+/** Runtime/saturation dashboard: heap usage and request throughput. */
+export function streetRuntimeDashboard(): GrafanaDashboard {
+  const panel = (id: number, title: string, type: string, x: number, y: number, targets: GrafanaTarget[], unit?: string): GrafanaPanel => ({
+    id, title, type, gridPos: { x, y, w: 12, h: 8 }, targets, ...(unit ? { unit } : {}),
+  });
+  return {
+    uid: 'street-runtime',
+    title: 'Street Runtime',
+    schemaVersion: 39,
+    version: 1,
+    tags: ['street', 'runtime', 'saturation'],
+    timezone: 'browser',
+    refresh: '30s',
+    panels: [
+      panel(1, 'Process heap (bytes)', 'timeseries', 0, 0, [
+        { expr: 'process_heap_bytes', legendFormat: 'heap', refId: 'A' },
+      ], 'bytes'),
+      panel(2, 'Request rate (req/s)', 'timeseries', 12, 0, [
+        { expr: 'job:http_request_rate:rate5m', legendFormat: 'rps', refId: 'A' },
+      ], 'reqps'),
+      panel(3, 'Error ratio', 'timeseries', 0, 8, [
+        { expr: 'job:http_error_rate:ratio5m', legendFormat: 'error ratio', refId: 'A' },
+      ], 'percentunit'),
+      panel(4, 'Latency p99', 'timeseries', 12, 8, [
+        { expr: 'job:http_request_latency:p99', legendFormat: 'p99', refId: 'A' },
+      ], 's'),
+    ],
+  };
+}
+
+/** All default Street dashboards. */
+export function streetDashboards(): GrafanaDashboard[] {
+  return [streetApiDashboard(), streetRuntimeDashboard()];
+}
+
 export interface DashboardValidationResult { valid: boolean; errors: string[]; }
 
 /** Validate a Grafana dashboard's required structure (uid/title/schema/panels/targets). */

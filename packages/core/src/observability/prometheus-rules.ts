@@ -95,9 +95,23 @@ export function streetSloBurnRateRules(): RuleGroup {
   };
 }
 
+/** Resource saturation alerts (references the real `process_heap_bytes` gauge). */
+export function streetSaturationRules(): RuleGroup {
+  return {
+    name: 'street-saturation-alerts',
+    rules: [
+      {
+        alert: 'StreetHighHeapUsage', expr: 'process_heap_bytes > 536870912', for: '10m',
+        labels: { severity: 'warning' },
+        annotations: { summary: 'High process heap usage', description: 'Process heap above 512MiB for 10m — investigate memory pressure.' },
+      },
+    ],
+  };
+}
+
 /** All default Street rule groups. */
 export function streetRuleGroups(): RuleGroup[] {
-  return [streetRecordingRules(), streetAlertRules(), streetSloBurnRateRules()];
+  return [streetRecordingRules(), streetAlertRules(), streetSaturationRules(), streetSloBurnRateRules()];
 }
 
 // ── Validation ────────────────────────────────────────────────────────────────

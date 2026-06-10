@@ -69,3 +69,18 @@ tests:
             exp_annotations:
               summary: Fast error-budget burn
               description: "Burning the 99.9% budget 14.4x over 1h/5m windows."
+
+  # 5) Heap above 512MiB for 10m must raise StreetHighHeapUsage (saturation).
+  - interval: 1m
+    input_series:
+      - series: 'process_heap_bytes'
+        values: '700000000x15'   # ~668 MiB, sustained
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: StreetHighHeapUsage
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: High process heap usage
+              description: "Process heap above 512MiB for 10m — investigate memory pressure."

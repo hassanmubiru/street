@@ -36,6 +36,16 @@ groups:
         annotations:
           summary: Target down
           description: A scrape target has been unreachable for 1m.
+  - name: street-saturation-alerts
+    rules:
+      - alert: StreetHighHeapUsage
+        expr: "process_heap_bytes > 536870912"
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: High process heap usage
+          description: Process heap above 512MiB for 10m — investigate memory pressure.
   - name: street-slo-burn-rate
     rules:
       - alert: StreetErrorBudgetBurnFast
