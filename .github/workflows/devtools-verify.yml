@@ -1,0 +1,58 @@
+# .github/workflows/devtools-verify.yml
+# Interactive Developer Experience (devtools) Layer-B verification (Requirement
+# 7.9). Builds the @streetjs/devtools browser bundle, runs its node:test suite,
+# and drives a REAL headless browser over the rendered bundle through the
+# zero-dependency `CommandRunner` (scripts/devtools/verify.mjs), which emits one
+# machine-readable artifact per tool:
+#   verification-artifacts/devx/devx.playground.artifact.json
+#   verification-artifacts/devx/devx.route-explorer.artifact.json
+#   verification-artifacts/devx/devx.dependency-graph.artifact.json
+# Each reaches VERIFIED only when the build + tests pass AND the tool genuinely
+# renders in a headless browser. When no headless browser is available the run
+# is recorded as an honest BLOCKED (missing prerequisite `headless-browser`)
+# while still running the build + tests as offline-verifiable evidence. All
+# artifacts are uploaded via actions/upload-artifact.
+name: devtools-verify
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'packages/devtools/**'
+      - 'scripts/devtools/**'
+      - 'scripts/verification/**'
+      - '.github/workflows/devtools-verify.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  devtools-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+
+      # @streetjs/devtools resolves `streetjs` (packages/core) for its types and
+      # data builders, so core must be built before the bundle compiles.
+      - name: Build core
+        run: npm run build -w packages/core
+
+      - name: Build devtools bundle
+        run: npm run build -w packages/devtools
+
+      # ubuntu-latest ships Google Chrome at /usr/bin/google-chrome; the probe
+      # finds it and the run reaches VERIFIED. If a browser is ever absent the
+      # verifier records an honest BLOCKED instead of failing.
+      - name: Verify devtools (build + tests + headless browser, CommandRunner)
+        run: node scripts/devtools/verify.mjs
+
+      - name: Upload devtools verification artifacts
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: devtools-verification
+          path: verification-artifacts/devx/
