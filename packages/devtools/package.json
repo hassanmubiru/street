@@ -1,0 +1,70 @@
+{
+  "name": "@streetjs/devtools",
+  "version": "1.0.0",
+  "description": "Street Framework Interactive Developer Experience: a browser bundle delivering the Playground (route/middleware/plugin testing + OpenAPI viewer), Route Explorer, Dependency Graph Visualizer, and API Inspector, gated by a token-based, read-only authn/authz model and embedded into the GitHub Pages docs site.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "streetjs-devtools": "./dist/cli.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:docs": "npm run build && node ./dist/cli.js --out ../../docs/devtools/index.html",
+    "lint": "tsc --noEmit",
+    "test": "node --test dist-test/tests/*.test.js",
+    "test:run": "tsc -p tsconfig.test.json && node --test dist-test/tests/*.test.js",
+    "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true});require('fs').rmSync('dist-test',{recursive:true,force:true})\"",
+    "prepublishOnly": "npm run clean && npm run build"
+  },
+  "dependencies": {
+    "streetjs": "^1.0.6"
+  },
+  "devDependencies": {
+    "@types/node": "^25.9.1",
+    "fast-check": "^3.23.2",
+    "typescript": "^6.0.3"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "keywords": [
+    "street",
+    "streetjs",
+    "devtools",
+    "playground",
+    "route-explorer",
+    "dependency-graph",
+    "api-inspector",
+    "openapi"
+  ],
+  "author": "street contributors",
+  "license": "MIT",
+  "homepage": "https://hassanmubiru.github.io/street/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hassanmubiru/street.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hassanmubiru/street/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
