@@ -4,6 +4,7 @@ import fc from 'fast-check';
 
 import {
   classify,
+  type BlockedReason,
   type ClassifyInput,
   type VerificationStatus,
 } from '../src/verification/status.js';
@@ -27,9 +28,14 @@ const evidenceArb = fc.record({
 const blockedArb = fc.oneof(
   fc.constant(undefined),
   fc.constant(null),
-  fc.record({
+  fc.record<BlockedReason>({
     missingPrerequisite: fc.string({ minLength: 1 }),
-    kind: fc.constantFrom('service', 'credential', 'runtime', 'timeout'),
+    kind: fc.constantFrom<BlockedReason['kind']>(
+      'service',
+      'credential',
+      'runtime',
+      'timeout',
+    ),
   }),
 );
 
