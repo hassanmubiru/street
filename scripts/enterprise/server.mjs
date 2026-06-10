@@ -94,7 +94,7 @@ class PgConsoleBackend {
 
   async updateTenant(id, input) {
     const exists = await this.pool.query(`SELECT id FROM console_tenants WHERE id = $1`, [id]);
-    if (exists.rows.length === 0) throw new NotFound(`tenant ${id} not found`);
+    if (exists.rows.length === 0) throw new ConsoleNotFoundError(`tenant ${id} not found`);
     if (input.name !== undefined) await this.pool.query(`UPDATE console_tenants SET name = $2 WHERE id = $1`, [id, input.name]);
     if (input.plan !== undefined) await this.pool.query(`UPDATE console_tenants SET plan = $2 WHERE id = $1`, [id, input.plan]);
     if (input.status !== undefined) await this.pool.query(`UPDATE console_tenants SET status = $2 WHERE id = $1`, [id, input.status]);
@@ -103,7 +103,7 @@ class PgConsoleBackend {
 
   async suspendTenant(id) {
     const r = await this.pool.query(`UPDATE console_tenants SET status = 'suspended' WHERE id = $1`, [id]);
-    if (r.rowCount === 0) throw new NotFound(`tenant ${id} not found`);
+    if (r.rowCount === 0) throw new ConsoleNotFoundError(`tenant ${id} not found`);
     return { id, status: 'suspended' };
   }
 
