@@ -283,7 +283,7 @@ Each property-based test is tagged with the comment format:
     - **Property 21: Breaking-change analysis is well-formed** (fast-check, min 100 runs)
     - **Validates: Requirements 8.3, 8.4**
 
-  - [~] 13.4 Implement routing, middleware, and plugin-API codemods
+  - [-] 13.4 Implement routing, middleware, and plugin-API codemods
     - Extend `packages/core/src/devx/codemods.ts` with `ROUTING_CODEMODS`, `MIDDLEWARE_CODEMODS`, `PLUGIN_API_CODEMODS` following the pure source→source contract; unparseable/conflicting files are left unchanged and reported with a reason
     - _Design: Components → Upgrade System (codemods); Error Handling 8.7_
     - _Requirements: 8.5, 8.7_
@@ -361,7 +361,7 @@ Each property-based test is tagged with the comment format:
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 18. Release Engineering
-  - [~] 18.1 Implement the release scorecard, validation, and health-delta logic in core
+  - [-] 18.1 Implement the release scorecard, validation, and health-delta logic in core
     - In core (zero-dep) add `isValidSemver()`, `validateReleaseNotes()`, the bounded `ReleaseScorecard`, `HealthMetrics` deltas (`current − previous`), and `buildReleaseReport()` recording the failed control when a validation fails
     - _Design: Components → Release Engineering; Data Models → Release Scorecard_
     - _Requirements: 11.1, 11.2, 11.4, 11.5_
