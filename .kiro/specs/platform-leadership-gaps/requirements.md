@@ -180,12 +180,14 @@ The following cross-cutting constraints apply to every requirement in this docum
 #### Acceptance Criteria
 
 1. THE Street Playground SHALL provide route testing, middleware testing, plugin testing, and an OpenAPI viewer.
-2. THE Route Explorer SHALL render a visual route tree of the application's registered routes.
-3. THE Dependency Graph Visualizer SHALL render a visual graph of the application's module dependencies.
-4. THE API Inspector SHALL provide a request and response explorer.
-5. THE Street Playground, Route Explorer, Dependency Graph Visualizer, and API Inspector SHALL be delivered as a browser-based experience.
-6. THE interactive developer experience SHALL be integrated into the published documentation.
-7. WHEN the interactive developer experience is built and its test suite is executed, THE build SHALL succeed and THE tests SHALL pass, recorded in a Verification Artifact.
+2. WHEN a developer opens the Route Explorer, THE Route Explorer SHALL render a visual route tree in which each registered route shows its HTTP method and path.
+3. WHEN a developer opens the Dependency Graph Visualizer, THE Dependency Graph Visualizer SHALL render a visual graph of the application's module dependencies as nodes and edges.
+4. WHEN a developer submits a request through the API Inspector, THE API Inspector SHALL render the response status, headers, and body.
+5. IF a request submitted through the API Inspector fails, THEN THE API Inspector SHALL display an error indication and SHALL retain the submitted request input.
+6. THE Street Playground, Route Explorer, Dependency Graph Visualizer, and API Inspector SHALL be delivered as a browser-based experience.
+7. THE interactive developer experience SHALL declare and enforce an authentication and authorization model governing access to the tools.
+8. THE interactive developer experience SHALL be integrated into the published documentation on the GitHub Pages docs site.
+9. WHEN the interactive developer experience is built and its test suite is executed, THE build SHALL succeed and THE tests SHALL pass, recorded in a Verification Artifact.
 
 ---
 
@@ -195,12 +197,14 @@ The following cross-cutting constraints apply to every requirement in this docum
 
 #### Acceptance Criteria
 
-1. WHEN `street upgrade` is executed, THE Upgrade System SHALL detect the currently installed Framework version and the target version.
-2. WHEN `street upgrade` is executed, THE Upgrade System SHALL analyze and report the breaking changes between the installed version and the target version.
-3. WHEN `street upgrade` is executed, THE Upgrade System SHALL produce upgrade recommendations for the detected breaking changes.
-4. THE Upgrade System SHALL provide Codemods that perform automated migrations for routing changes, middleware changes, and plugin API changes.
-5. WHEN a Codemod is applied twice to the same source, THE second application SHALL produce no further changes.
-6. WHEN the Codemod test suite is executed against the migration examples, THE tests SHALL pass and SHALL be recorded in a Verification Artifact.
+1. WHEN `street upgrade` is executed, THE Upgrade System SHALL detect the currently installed Framework version and SHALL resolve the target version from the command's target argument, defaulting to the latest available Framework version when no target argument is supplied.
+2. IF the installed Framework version or the target version cannot be determined, THEN THE Upgrade System SHALL halt the upgrade, SHALL leave all source files unchanged, and SHALL report an error indicating which version could not be resolved.
+3. WHEN `street upgrade` is executed, THE Upgrade System SHALL analyze and report the breaking changes between the installed version and the target version, and for each reported breaking change SHALL record its affected area (routing, middleware, or plugin API) and whether an automated Codemod is available for it.
+4. WHEN `street upgrade` is executed, THE Upgrade System SHALL produce, for each detected breaking change, an upgrade recommendation that states the required source change and identifies the Codemod that performs it where one is available.
+5. THE Upgrade System SHALL provide Codemods that perform automated migrations for routing changes, middleware changes, and plugin API changes.
+6. WHEN a Codemod that has already been applied to a source file is applied a second time to that same source file, THE Upgrade System SHALL leave the file byte-for-byte unchanged.
+7. IF a Codemod cannot complete a transformation on a source file because the file cannot be parsed or the change cannot be applied without conflict, THEN THE Upgrade System SHALL leave that source file unchanged and SHALL report the affected file together with the reason the transformation was not applied.
+8. WHEN the Codemod test suite is executed against the migration examples, THE tests SHALL pass and SHALL be recorded in a Verification Artifact.
 
 ---
 
@@ -210,13 +214,14 @@ The following cross-cutting constraints apply to every requirement in this docum
 
 #### Acceptance Criteria
 
-1. THE Kafka integration SHALL implement a Coordinator Readiness Gate that waits for a successful `FindCoordinator` response and for `__consumer_offsets` topic stability before consuming.
-2. THE Chaos Framework SHALL implement broker restart, network interruption, connection loss, and slow broker fault scenarios.
-3. WHEN the Cold Start Verification is executed at full target scale of 100 cold starts, THE Kafka integration SHALL achieve a 100% pass rate with no hangs and no message loss.
-4. WHEN the Chaos Framework executes 100 broker restarts, THE Kafka integration SHALL achieve a 100% pass rate with no hangs and no message loss.
-5. WHEN the network interruption scenario is executed, THE Kafka integration SHALL recover and SHALL preserve all in-flight messages.
-6. WHEN the slow broker scenario is executed, THE Kafka integration SHALL continue operating without message loss.
-7. THE Kafka verification SHALL be reproducible via a parameterized script that supports the full-scale targets, and the run outcome SHALL be recorded in a Verification Artifact.
+1. THE Kafka integration SHALL implement a Coordinator Readiness Gate that, before consuming, waits up to 30 seconds for a successful `FindCoordinator` response and for `__consumer_offsets` topic stability, where stability is defined as the topic existing with every partition having a live leader.
+2. IF the Coordinator Readiness Gate does not observe a successful `FindCoordinator` response and `__consumer_offsets` stability within 30 seconds, THEN THE Kafka integration SHALL not begin consuming and SHALL preserve any committed consumer offsets.
+3. THE Chaos Framework SHALL implement broker restart, network interruption, connection loss, and slow broker fault scenarios, where the slow broker scenario injects a response delay of at least 5000 milliseconds.
+4. WHEN the Cold Start Verification is executed at the full target scale of 100 cold starts, THE Kafka integration SHALL complete each cold start within 60 seconds with a 100% pass rate and zero lost messages, where a lost message is a produced message that is never delivered to a committed consumer.
+5. WHEN the Chaos Framework executes 100 broker restarts, THE Kafka integration SHALL achieve a 100% pass rate with zero lost messages.
+6. WHEN the network interruption scenario is executed, THE Kafka integration SHALL resume consuming within 60 seconds of connectivity restoration and SHALL deliver all messages produced during the interruption.
+7. WHEN the slow broker scenario is executed, THE Kafka integration SHALL continue delivering messages with zero lost messages.
+8. THE Kafka verification SHALL be reproducible via a parameterized script that accepts the cold-start count and the broker-restart-cycle count as inputs and supports the full-scale targets, and the run outcome SHALL be recorded in a Verification Artifact that includes the parameter values, the pass count, the lost-message count, and an ISO-8601 timestamp.
 
 ---
 
@@ -226,14 +231,15 @@ The following cross-cutting constraints apply to every requirement in this docum
 
 #### Acceptance Criteria
 
-1. WHERE a dashboard or alert references a metric, THE Framework SHALL export that metric at runtime from a real metrics source before the dashboard or alert is built.
-2. THE Framework SHALL export the PostgreSQL, Kafka, RabbitMQ, and Plugin Host metrics required to support their dashboards before those dashboards are built.
+1. WHERE a dashboard or alert references a metric, THE Framework SHALL emit that metric as an Exported Metric via its metrics endpoint before the dashboard or alert is built.
+2. THE Framework SHALL export the PostgreSQL, Kafka, RabbitMQ, and Plugin Host Exported Metrics required to support their dashboards before those dashboards are built.
 3. THE Framework SHALL provide dashboards for PostgreSQL, Kafka, RabbitMQ, HTTP, and Plugin Host.
-4. THE Framework SHALL provide alerts for latency, error rate, queue depth, and memory pressure.
-5. THE Framework SHALL provide an SLO Pack covering availability, latency, and error budget.
+4. THE Framework SHALL provide alerts for latency, error rate, queue depth, and memory pressure, where each alert defines a numeric trigger threshold and an evaluation window.
+5. THE Framework SHALL provide an SLO Pack covering availability, latency, and error budget, where each objective defines a numeric target and a measurement window.
 6. WHEN the observability assets are validated, promtool validation of the alert and SLO rules SHALL pass and the dashboard validation SHALL pass.
-7. IF a dashboard or alert references a metric that the application does not export, THEN THE observability validation SHALL fail.
-8. THE observability assets SHALL be documented, and the validation outcome SHALL be recorded in a Verification Artifact.
+7. IF a dashboard or alert references a metric that the application does not export, THEN THE observability validation SHALL fail and SHALL record the offending metric and asset.
+8. IF promtool validation or dashboard validation reports an error, THEN THE observability validation SHALL fail and SHALL record the validation error.
+9. THE observability assets SHALL be documented covering the dashboards, alerts, and SLO Pack, and the validation outcome SHALL be recorded in a Verification Artifact that includes the executed command, the command exit code, and an ISO-8601 timestamp.
 
 ---
 
@@ -243,12 +249,12 @@ The following cross-cutting constraints apply to every requirement in this docum
 
 #### Acceptance Criteria
 
-1. THE Release Engineering subsystem SHALL produce a Release Scorecard scoring security, reliability, coverage, and performance.
-2. WHEN a release is prepared, THE Release Engineering subsystem SHALL validate the changelog for semver compliance and SHALL validate the release notes.
-3. IF the changelog violates semver or the release notes fail validation, THEN THE Release Engineering subsystem SHALL fail the release in CI.
-4. THE Release Engineering subsystem SHALL report health metrics covering dependency freshness, test trends, and vulnerability trends.
-5. WHEN a release is prepared, THE Release Engineering subsystem SHALL generate an automated release report and SHALL record it as a Verification Artifact.
-6. THE Release Engineering subsystem SHALL enforce its scorecard and validation controls in CI.
+1. WHEN a release is prepared, THE Release Engineering subsystem SHALL produce a Release Scorecard scoring security, reliability, coverage, and performance, each on a 0–100 numeric scale, and SHALL record the scorecard as a Verification Artifact.
+2. WHEN a release is prepared, THE Release Engineering subsystem SHALL validate that the changelog version conforms to semver MAJOR.MINOR.PATCH and SHALL validate that the release notes contain a non-empty entry for the release version.
+3. IF the changelog version does not conform to semver or the release notes fail validation, THEN THE Release Engineering subsystem SHALL fail the release in CI with a non-zero exit status, SHALL indicate which validation failed, and SHALL NOT publish the release.
+4. THE Release Engineering subsystem SHALL report health metrics covering dependency freshness, test trends, and vulnerability trends as counts and as deltas relative to the previous release.
+5. WHEN a release is prepared, THE Release Engineering subsystem SHALL generate an automated release report containing the Release Scorecard, the validation results, and the health metrics, and SHALL record it as a Verification Artifact that includes the executed command, the command exit code, and an ISO-8601 timestamp.
+6. THE Release Engineering subsystem SHALL enforce its scorecard and validation controls in CI, failing the release with a non-zero exit status when an enforced control is not satisfied.
 
 ---
 
