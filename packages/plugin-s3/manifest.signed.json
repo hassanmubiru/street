@@ -1,0 +1,16 @@
+{
+  "name": "street-plugin-s3",
+  "version": "1.0.0",
+  "capabilities": [
+    "storage",
+    "object-storage",
+    "s3"
+  ],
+  "permissions": [
+    "net",
+    "secrets",
+    "middleware"
+  ],
+  "checksum": "4894f843fc4128d6ba9271fe8a62e6b2fb6aafd06717b9c91ebf02ddab8644c1",
+  "signature": "mSCik8GMl+zAOl7oMUIMs4vquPvz2ZlwzkCNH52kZ4vUt3D+6z4I8xPtD5PqYI2l/8EIyFfvIyvRaRqi0G9uAw=="
+}
