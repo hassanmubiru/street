@@ -93,7 +93,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Cloud Deployment Verifier (`buildDeploymentReport`); Sequence → deploy → verify_
     - _Requirements: 2.9, 2.10, 2.11, 2.13_
 
-  - [-] 4.5 Implement prerequisite probes, offline-verifiable artifacts, and BLOCKED recording
+  - [x] 4.5 Implement prerequisite probes, offline-verifiable artifacts, and BLOCKED recording
     - Add prerequisite probes (kubectl/helm/credentials) and offline artifacts that run without credentials: `validateDeploymentManifest()`, `helm lint`, `helm template`, `wrangler deploy --dry-run`, task-def JSON schema validation, workflow lint; record the target BLOCKED with the specific missing dependency id while still emitting the offline evidence
     - _Design: Components → Cloud Deployment Verifier (offline-verifiable artifacts); Testing Strategy → Honest BLOCKED recording_
     - _Requirements: 2.14, 1.5_
@@ -107,7 +107,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Testing Strategy → CI integration and evidence retention_
     - _Requirements: 2.11_
 
-  - [ ] 4.8 Write unit tests for the deployment report status mapping
+  - [-] 4.8 Write unit tests for the deployment report status mapping
     - Cover VERIFIED/PARTIAL/BLOCKED mapping and retained failing output in the report
     - _Requirements: 2.11, 2.13, 2.14_
 
@@ -172,7 +172,7 @@ Each property-based test is tagged with the comment format:
     - **Property 11: A rejected version never becomes installable and prior valid versions are preserved** (fast-check, min 100 runs)
     - **Validates: Requirements 4.4, 5.7, 5.8**
 
-  - [-] 7.9 Implement registry CLI commands and publishing/installation guides
+  - [x] 7.9 Implement registry CLI commands and publishing/installation guides
     - Add `street registry publish|install|search|list` driving the server, and author the publishing guide and installation guide as Pages docs
     - _Design: Components → Network Plugin Registry (CLI + guides)_
     - _Requirements: 4.1, 4.7_
@@ -201,7 +201,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Official Plugin Ecosystem (install path); Error Handling 5.7/5.8_
     - _Requirements: 5.6, 5.7, 5.8_
 
-  - [ ] 9.4 Write unit tests for plugin structure and signature enforcement
+  - [-] 9.4 Write unit tests for plugin structure and signature enforcement
     - Verify the per-package official-plugin structure (5.5) and signature-enforcement behavior on install
     - _Requirements: 5.5, 5.7, 5.8_
 
@@ -224,12 +224,12 @@ Each property-based test is tagged with the comment format:
     - **Property 15: Invalid input is rejected without state change** (fast-check, min 100 runs)
     - **Validates: Requirements 6.8**
 
-  - [-] 10.4 Generate the OpenAPI specification and documentation for every operation
+  - [x] 10.4 Generate the OpenAPI specification and documentation for every operation
     - Generate the OpenAPI spec via `openApiSpec()` and author published docs covering every exposed operation
     - _Design: Components → Enterprise Console APIs (OpenAPI + docs)_
     - _Requirements: 6.9_
 
-  - [ ] 10.5 Write property test for OpenAPI coverage
+  - [-] 10.5 Write property test for OpenAPI coverage
     - **Property 16: Generated OpenAPI covers every exposed enterprise operation** (fast-check, min 100 runs)
     - **Validates: Requirements 6.9**
 
@@ -259,7 +259,7 @@ Each property-based test is tagged with the comment format:
     - **Property 19: A failed inspector request retains its input** (fast-check, min 100 runs)
     - **Validates: Requirements 7.5**
 
-  - [-] 12.5 Implement the `@streetjs/devtools` browser bundle and embed it in the docs site
+  - [x] 12.5 Implement the `@streetjs/devtools` browser bundle and embed it in the docs site
     - Create `packages/devtools/` delivering Playground (route/middleware/plugin testing + OpenAPI viewer), Route Explorer, Dependency Graph Visualizer, and API Inspector as a browser experience; declare and enforce a token-gated authn/authz model (read-only against the inspected app); embed into the GitHub Pages docs site
     - _Design: Components → Interactive Developer Experience_
     - _Requirements: 7.1, 7.6, 7.7, 7.8_
@@ -339,7 +339,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Advanced Observability (anti-fabrication guard); Error Handling 10.7_
     - _Requirements: 10.1, 10.7_
 
-  - [-] 16.3 Write property test for metric references
+  - [x] 16.3 Write property test for metric references
     - **Property 26: Observability assets reference only exported metrics** (fast-check, min 100 runs)
     - **Validates: Requirements 10.1, 10.7**
 
@@ -348,7 +348,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Advanced Observability_
     - _Requirements: 10.3, 10.4, 10.5_
 
-  - [ ] 16.5 Write property test for dashboard and rule structural validity
+  - [-] 16.5 Write property test for dashboard and rule structural validity
     - **Property 27: Provided dashboards and rules are structurally valid** (fast-check, min 100 runs)
     - **Validates: Requirements 10.3, 10.4, 10.5**
 
@@ -378,7 +378,7 @@ Each property-based test is tagged with the comment format:
     - **Property 30: Release health deltas are exact** (fast-check, min 100 runs)
     - **Validates: Requirements 11.4**
 
-  - [ ] 18.5 Implement the report renderer and CI enforcement
+  - [-] 18.5 Implement the report renderer and CI enforcement
     - Add the release report renderer (`scripts/release/*`, may use deps) and a CI enforcement workflow (extend `ci-cd-enforcement.yml`) that runs `buildReleaseReport` through `CommandRunner`, emits `release.scorecard.artifact.json`, and fails the release with a non-zero exit (not publishing) when semver/notes validation or an enforced control fails
     - _Design: Components → Release Engineering (CI enforcement); Error Handling 11.3_
     - _Requirements: 11.3, 11.5, 11.6_
