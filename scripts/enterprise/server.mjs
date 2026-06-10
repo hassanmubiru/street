@@ -285,14 +285,23 @@ async function main() {
       for (const [k, v] of Object.entries(req.headers)) {
         headers[k.toLowerCase()] = Array.isArray(v) ? v.join(',') : v;
       }
-      const body = await readBody(req);
+      const parsedBody = await readBody(req);
+      // The console request is decoupled from HTTP. For body-less methods (GET),
+      // the adapter maps the query string into the normalized request body so
+      // read operations that declare input (e.g. audit-export's from/to/format)
+      // are invokable by a standards-compliant client. A parsed JSON body always
+      // takes precedence when present.
+      let body = parsedBody;
+      if (body === undefined) {
+        const qs = url.includes('?') ? url.slice(url.indexOf('?') + 1) : '';
+        const params = Object.fromEntries(new URLSearchParams(qs));
+        if (Object.keys(params).length > 0) body = params;
+      }
       const response = await consoleApi.handle({
         method: req.method,
         path,
         headers,
-        // A body that failed to parse is surfaced as an invalid marker so the
-        // validators reject it (rather than silently treating it as empty).
-        body: body && body.__invalidJson ? body : body,
+        body,
       });
       return sendJson(res, response.status, response.body);
     } catch (err) {
