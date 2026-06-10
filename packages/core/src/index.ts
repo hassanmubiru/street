@@ -52,6 +52,8 @@ export {
   applyCodemods, listCodemods, getCodemod, renameIdentifierCodemod, BUILTIN_CODEMODS,
 } from './devx/codemods.js';
 export type { Codemod, CodemodResult, ApplyCodemodsResult } from './devx/codemods.js';
+export { resolveVersions, analyzeBreakingChanges } from './devx/upgrade.js';
+export type { VersionResolution, BreakingArea, BreakingChange } from './devx/upgrade.js';
 export { openApiToHtml } from './devx/playground.js';
 export type { PlaygroundOptions } from './devx/playground.js';
 export {
@@ -280,10 +282,12 @@ export {
 export type { RabbitMqOptions, ConsumerOptions, AmqpConnectionOptions, DeliveredMessage } from './transports/rabbitmq/index.js';
 export {
   KafkaClient, KafkaProtocolError, KafkaProducer, KafkaConsumer, KafkaStreamTransport,
+  CoordinatorReadinessGate,
   encodeRecordBatch, decodeRecordBatches,
 } from './transports/kafka/index.js';
 export type {
   KafkaClientOptions, ClusterMeta, TopicMeta, PartitionMeta, KafkaRecord,
+  CoordinatorGateResult, CoordinatorReadinessGateOptions,
   ProducerOptions as KafkaProducerOptions, ConsumerOptions as KafkaConsumerOptions,
   ConsumedMessage as KafkaConsumedMessage,
 } from './transports/kafka/index.js';
