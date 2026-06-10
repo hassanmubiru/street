@@ -216,7 +216,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Enterprise Console APIs; Error Handling 6.6/6.7/6.8_
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7, 6.8_
 
-  - [~] 10.2 Write property test for authentication/authorization gating
+  - [-] 10.2 Write property test for authentication/authorization gating
     - **Property 14: Every enterprise operation requires authn and authz, else state is unchanged** (fast-check, min 100 runs)
     - **Validates: Requirements 6.5, 6.6, 6.7**
 
@@ -251,7 +251,7 @@ Each property-based test is tagged with the comment format:
     - **Property 17: The route tree reflects exactly the registered routes** (fast-check, min 100 runs)
     - **Validates: Requirements 7.2**
 
-  - [~] 12.3 Write property test for the dependency graph
+  - [-] 12.3 Write property test for the dependency graph
     - **Property 18: The dependency graph is well-formed** (fast-check, min 100 runs)
     - **Validates: Requirements 7.3**
 
