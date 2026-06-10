@@ -43,9 +43,7 @@ export class RegistryStore {
 
   /** True iff `name@version` already exists (duplicate detection, Req 4.10). */
   hasVersion(name: string, version: string): boolean {
-    return this.plugins.get(name)?.versions.has(version) ?? true
-      ? (this.plugins.get(name)?.versions.has(version) ?? false)
-      : false;
+    return this.plugins.get(name)?.versions.has(version) ?? false;
   }
 
   /** Insert a fully-validated version. Indexes categories/tags + version history. */
