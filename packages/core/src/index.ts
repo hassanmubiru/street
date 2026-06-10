@@ -370,6 +370,9 @@ export {
 } from './platform/plugins/host.js';
 export type { PluginManifest, PluginPermission, PluginHostOptions, PluginState } from './platform/plugins/host.js';
 export {
+  normalizePageSize, DEFAULT_PAGE_SIZE, MIN_PAGE_SIZE, MAX_PAGE_SIZE,
+} from './platform/plugins/pagination.js';
+export {
   S3Plugin, s3PluginManifest, validateS3Config, S3_PLUGIN_NAME, S3_PLUGIN_VERSION,
 } from './platform/plugins/official/s3.js';
 export type { S3PluginConfig } from './platform/plugins/official/s3.js';
