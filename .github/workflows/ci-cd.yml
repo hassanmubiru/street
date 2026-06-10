@@ -275,6 +275,39 @@ jobs:
       - name: Run memory leak and wire protocol tests
         run: node --test packages/core/dist/tests/memory-leak.test.js packages/core/dist/tests/wire-protocol.test.js
 
+  # ── upgrade-codemods: Upgrade System codemod verification (Req 8.8) ─────
+  # Purpose:   Run the codemod test suite against the migration examples through
+  #            the zero-dependency CommandRunner, emitting the machine-readable
+  #            `upgrade.codemods` Verification Artifact. The runner assigns the
+  #            status and writes the artifact atomically; this job uploads it as
+  #            retained CI evidence.
+  # Depends:   Nothing (independent parallel job — pure logic, no services)
+  # Timeout:   10 minutes (well under the runner's 300s per-command bound)
+  upgrade-codemods:
+    name: Upgrade Codemods Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+
+      - name: Build core package
+        run: npm run build -w packages/core
+
+      - name: Run codemod test suite + emit upgrade.codemods artifact
+        run: npm run verify:codemods
+
+      - name: Upload upgrade.codemods Verification Artifact
+        if: success() || failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: upgrade-codemods-artifact-${{ github.sha }}
+          path: verification-artifacts/upgrade/
+
   # ── system-tests: Parallelized system-level test suites ────────────────
   # Purpose:   Run comprehensive system-level tests across all 6 suites in
   #            parallel via a matrix dimension. Each suite (security, memory-
