@@ -1444,3 +1444,143 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: \${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 `;
 }
+
+// ── Cloud Deployment Verifier — report builder ──────────────────────────────────
+//
+// `buildDeploymentReport()` produces the cross-target roll-up (Requirement 2.11)
+// from the per-target verification results gathered by the `scripts/cloud/*`
+// deploy/smoke scripts. It is a pure, zero-dependency function: every target is
+// re-classified against the published time/error bounds so the report — not the
+// caller — is the authority on a target's status. A target whose health probes
+// or smoke tests exceed their bounds is recorded PARTIAL with the failing output
+// retained (Requirement 2.13); a target with a missing deployment dependency is
+// recorded BLOCKED with that dependency (Requirement 2.14).
+
+/**
+ * Per-request health budget (Requirement 2.9): each of `/health/live` and
+ * `/health/ready` must return HTTP 200 with a healthy body within 5 seconds.
+ */
+export const HEALTH_LATENCY_BUDGET_MS = 5_000;
+
+/**
+ * Smoke-test completion budget (Requirement 2.10): the target's smoke tests must
+ * complete within 300 seconds with zero failed cases and zero errored cases.
+ */
+export const SMOKE_DURATION_BUDGET_MS = 300_000;
+
+/** The outcome of a target's smoke-test run. */
+export interface SmokeResult {
+  /** Smoke cases that passed. */
+  passed: number;
+  /** Smoke cases that failed (a non-200 / unexpected response). */
+  failed: number;
+  /** Smoke cases that errored (the case could not execute). */
+  errored: number;
+  /** Total wall-clock duration of the smoke run, in milliseconds. */
+  durationMs: number;
+  /** Retained stdout/stderr of the run (kept verbatim for PARTIAL — Req 2.13). */
+  output: string;
+}
+
+/**
+ * One target's verification result: the health-probe outcome, the optional
+ * smoke result, the assigned status, and — when blocked — the specific missing
+ * deployment dependency (Requirement 2.14). When a bound is exceeded the target
+ * is PARTIAL and the exceeded bounds are retained in {@link boundViolations}
+ * (Requirement 2.13).
+ */
+export interface TargetVerification {
+  target: DeploymentTarget;
+  status: VerificationStatus;
+  health: { live: boolean; ready: boolean; maxLatencyMs: number };
+  smoke?: SmokeResult;
+  blockedReason?: BlockedReason;
+  /** Human-readable descriptions of each exceeded bound (retained for PARTIAL). */
+  boundViolations?: string[];
+}
+
+/**
+ * The cross-target deployment verification report (Requirement 2.11): an
+ * ISO-8601 run timestamp and the per-target verification results.
+ */
+export interface DeploymentReport {
+  /** ISO-8601 timestamp of the report run (Requirement 2.11). */
+  timestamp: string;
+  targets: TargetVerification[];
+}
+
+/**
+ * Re-classify a single {@link TargetVerification} against the published bounds.
+ *
+ * Precedence:
+ *  - `NOT_IMPLEMENTED` is preserved (the target has no generated assets/source).
+ *  - A set `blockedReason` (or an incoming `BLOCKED` status) yields `BLOCKED`
+ *    — a missing deployment dependency takes precedence over the bounds
+ *    (Requirement 2.14).
+ *  - Otherwise the health (`/health/live` + `/health/ready` returning healthy
+ *    within {@link HEALTH_LATENCY_BUDGET_MS}) and smoke (present, ≤
+ *    {@link SMOKE_DURATION_BUDGET_MS}, zero failed/errored) bounds are checked:
+ *    all satisfied ⇒ `VERIFIED`; any exceeded ⇒ `PARTIAL` with each violation
+ *    retained in `boundViolations` (Requirements 2.9, 2.10, 2.13).
+ *
+ * Pure and idempotent: the status is recomputed from the measurements, so
+ * re-classifying an already-classified result yields the same status.
+ */
+export function classifyTargetVerification(tv: TargetVerification): TargetVerification {
+  // A target with no generated assets/source stays NOT_IMPLEMENTED.
+  if (tv.status === 'NOT_IMPLEMENTED') {
+    return { ...tv };
+  }
+
+  // A missing deployment dependency takes precedence over the bounds (Req 2.14).
+  if (tv.blockedReason !== undefined || tv.status === 'BLOCKED') {
+    return { ...tv, status: 'BLOCKED' };
+  }
+
+  const violations: string[] = [];
+
+  // Health bound (Req 2.9): both endpoints healthy, each within the latency budget.
+  if (!tv.health.live) violations.push('/health/live did not report healthy');
+  if (!tv.health.ready) violations.push('/health/ready did not report healthy');
+  if (tv.health.maxLatencyMs > HEALTH_LATENCY_BUDGET_MS) {
+    violations.push(
+      `health latency ${tv.health.maxLatencyMs}ms exceeded the ${HEALTH_LATENCY_BUDGET_MS}ms budget`,
+    );
+  }
+
+  // Smoke bound (Req 2.10): present, within the duration budget, 0 failed/0 errored.
+  if (tv.smoke === undefined) {
+    violations.push('smoke tests did not run');
+  } else {
+    if (tv.smoke.failed > 0) violations.push(`${tv.smoke.failed} smoke case(s) failed`);
+    if (tv.smoke.errored > 0) violations.push(`${tv.smoke.errored} smoke case(s) errored`);
+    if (tv.smoke.durationMs > SMOKE_DURATION_BUDGET_MS) {
+      violations.push(
+        `smoke duration ${tv.smoke.durationMs}ms exceeded the ${SMOKE_DURATION_BUDGET_MS}ms budget`,
+      );
+    }
+  }
+
+  if (violations.length === 0) {
+    // All bounds satisfied ⇒ VERIFIED; clear any stale violations.
+    const verified: TargetVerification = { ...tv, status: 'VERIFIED' };
+    delete verified.boundViolations;
+    return verified;
+  }
+
+  // Bounds exceeded ⇒ PARTIAL with the failing output retained (Req 2.13).
+  return { ...tv, status: 'PARTIAL', boundViolations: violations };
+}
+
+/**
+ * Build the cross-target deployment verification report from the per-target
+ * results (Requirement 2.11). Each target is re-classified against the bounds
+ * via {@link classifyTargetVerification}, and the report is stamped with an
+ * ISO-8601 run timestamp.
+ */
+export function buildDeploymentReport(results: TargetVerification[]): DeploymentReport {
+  return {
+    timestamp: new Date().toISOString(),
+    targets: results.map(classifyTargetVerification),
+  };
+}
