@@ -264,7 +264,8 @@ The following cross-cutting constraints apply to every requirement in this docum
 
 #### Acceptance Criteria
 
-1. THE Framework SHALL classify itself as Platform Leadership only WHEN all of the following capabilities hold the VERIFIED Verification Status simultaneously: DAST fully executed, cloud deployments verified, network plugin registry verified, official plugin ecosystem verified, enterprise APIs verified, Street Playground verified, Route Explorer verified, Dependency Graph Visualizer verified, Kafka chaos suite verified, observability packs verified, and release scorecards verified.
-2. IF any capability listed in acceptance criterion 1 holds a Verification Status other than VERIFIED, THEN THE Framework SHALL withhold the Platform Leadership classification.
-3. THE Platform Leadership classification decision SHALL be computed from the recorded Verification Artifacts and SHALL NOT be set by hand.
-4. WHEN the Platform Leadership classification is computed, THE Framework SHALL emit a report listing each required capability and its current Verification Status.
+1. WHERE all of the following capabilities simultaneously hold the VERIFIED Verification Status — DAST fully executed, cloud deployments verified, network plugin registry verified, official plugin ecosystem verified, enterprise APIs verified, Street Playground verified, Route Explorer verified, Dependency Graph Visualizer verified, Kafka chaos suite verified, observability packs verified, and release scorecards verified — THE Framework SHALL classify itself as Platform Leadership.
+2. IF any capability listed in acceptance criterion 1 holds a Verification Status other than VERIFIED, THEN THE Framework SHALL withhold the Platform Leadership classification and SHALL record each such capability together with its current Verification Status.
+3. IF any capability listed in acceptance criterion 1 has no recorded Verification Artifact, THEN THE Framework SHALL treat that capability as not VERIFIED and SHALL withhold the Platform Leadership classification.
+4. THE Platform Leadership classification decision SHALL be computed from the recorded Verification Artifacts and SHALL NOT be authored, set, or edited by hand.
+5. WHEN the Platform Leadership classification is computed, THE Framework SHALL emit a machine-readable report that records each required capability and its current Verification Status, the overall granted-or-withheld decision, and an ISO-8601 timestamp.
