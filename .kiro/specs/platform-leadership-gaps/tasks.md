@@ -352,7 +352,7 @@ Each property-based test is tagged with the comment format:
     - **Property 27: Provided dashboards and rules are structurally valid** (fast-check, min 100 runs)
     - **Validates: Requirements 10.3, 10.4, 10.5**
 
-  - [ ] 16.6 Implement the validation pipeline with promtool and emit the artifact + CI
+  - [-] 16.6 Implement the validation pipeline with promtool and emit the artifact + CI
     - Wire `validateMetricReferences`, `validatePrometheusRuleGroups`, `validateGrafanaDashboard`, and **promtool** over emitted rule files; author observability docs; run through `CommandRunner` emitting `observability.validate.artifact.json` (command, exit code, ISO-8601 timestamp) uploaded from the `observability.yml` workflow; fail recording the offending metric/asset or validation error
     - _Design: Components → Advanced Observability (validation pipeline); Error Handling 10.7/10.8_
     - _Requirements: 10.6, 10.8, 10.9_
