@@ -8,8 +8,8 @@
 
 import { createPublicKey, type KeyObject } from 'node:crypto';
 import {
-  verifyManifest, PluginError, PluginSignatureError, PluginStateError,
-  type PluginManifest, type PluginHost,
+  verifyManifest, PluginError, PluginSignatureError, PluginStateError, PluginManifestError,
+  type PluginManifest, type PluginHost, type PluginPermission,
 } from './host.js';
 import type { PluginModule } from './sdk.js';
 
