@@ -168,11 +168,13 @@ describe('CommandRunner timeout kills a sleeping command (Req 1.10)', () => {
     assert.notEqual(artifact.exitCode, 0);
 
     // The artifact's recorded duration reflects the timeout, not the full sleep.
+    assert.equal(typeof artifact.durationMs, 'number', 'the runner records a duration');
+    const durationMs = artifact.durationMs ?? Number.NaN;
     assert.ok(
-      artifact.durationMs < SLEEP_SECONDS * 1000,
-      `expected durationMs < ${SLEEP_SECONDS * 1000}, got ${artifact.durationMs}`,
+      durationMs < SLEEP_SECONDS * 1000,
+      `expected durationMs < ${SLEEP_SECONDS * 1000}, got ${durationMs}`,
     );
-    assert.ok(artifact.durationMs >= 0);
+    assert.ok(durationMs >= 0);
 
     // The artifact was persisted and is the same record returned in memory.
     const persisted = JSON.parse(await readFile(path, 'utf8')) as typeof artifact;
