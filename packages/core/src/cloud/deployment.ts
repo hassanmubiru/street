@@ -126,38 +126,81 @@ export function validateDeploymentManifest(platform: CloudPlatform, manifest: st
 }
 
 function generateKubernetes(config: DeployConfig): string {
-  const replicas = config.replicas ?? 1;
+  // A combined, production-grade manifest (Deployment + Service + HPA) for the
+  // legacy single-string API. The split-file production manifests and the Helm
+  // chart are produced by generateTargetAssets('kubernetes', ...).
+  return [
+    `# Kubernetes production manifests for ${config.name}`,
+    `# (Deployment + Service + HorizontalPodAutoscaler)`,
+    k8sDeploymentManifest(config),
+    k8sServiceManifest(config),
+    k8sHpaManifest(config),
+  ].join('\n---\n');
+}
+
+// ── Kubernetes production manifest pieces ───────────────────────────────────────
+
+function k8sEnvSection(config: DeployConfig, indent: string): string {
+  const entries = Object.entries(config.env ?? {});
+  if (entries.length === 0) return '';
+  const lines = entries
+    .map(([k, v]) => `${indent}  - name: ${k}\n${indent}    value: "${v}"`)
+    .join('\n');
+  return `\n${indent}env:\n${lines}`;
+}
+
+/** Production Deployment: rolling updates, non-root securityContext, and the
+ * startup/liveness/readiness probe trio (Requirement 2.2). */
+function k8sDeploymentManifest(config: DeployConfig): string {
+  const replicas = config.replicas ?? 2;
   const cpu = config.cpu ?? '250m';
   const memory = config.memory ?? '256Mi';
+  const envSection = k8sEnvSection(config, '            ');
 
-  const envVars = Object.entries(config.env ?? {})
-    .map(([k, v]) => `        - name: ${k}\n          value: "${v}"`)
-    .join('\n');
-
-  const envSection = envVars ? `\n        env:\n${envVars}` : '';
-
-  return `# Kubernetes Deployment, Service, and HPA for ${config.name}
-apiVersion: apps/v1
+  return `apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: ${config.name}
   labels:
-    app: ${config.name}
+    app.kubernetes.io/name: ${config.name}
+    app.kubernetes.io/managed-by: street
 spec:
   replicas: ${replicas}
+  revisionHistoryLimit: 5
+  minReadySeconds: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
-      app: ${config.name}
+      app.kubernetes.io/name: ${config.name}
   template:
     metadata:
       labels:
-        app: ${config.name}
+        app.kubernetes.io/name: ${config.name}
     spec:
+      terminationGracePeriodSeconds: 30
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: ${config.name}
           image: ${config.image}
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: ${config.port}
+            - name: http
+              containerPort: ${config.port}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
           resources:
             requests:
               cpu: ${cpu}
@@ -165,43 +208,66 @@ spec:
             limits:
               cpu: ${cpu}
               memory: ${memory}${envSection}
+          startupProbe:
+            httpGet:
+              path: /health/live
+              port: http
+            failureThreshold: 30
+            periodSeconds: 2
           livenessProbe:
             httpGet:
               path: /health/live
-              port: ${config.port}
+              port: http
             initialDelaySeconds: 10
             periodSeconds: 30
+            timeoutSeconds: 5
           readinessProbe:
             httpGet:
               path: /health/ready
-              port: ${config.port}
+              port: http
             initialDelaySeconds: 5
             periodSeconds: 10
----
-apiVersion: v1
+            timeoutSeconds: 5
+`;
+}
+
+function k8sServiceManifest(config: DeployConfig): string {
+  return `apiVersion: v1
 kind: Service
 metadata:
   name: ${config.name}
+  labels:
+    app.kubernetes.io/name: ${config.name}
 spec:
   selector:
-    app: ${config.name}
+    app.kubernetes.io/name: ${config.name}
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
-      targetPort: ${config.port}
+      targetPort: http
   type: ClusterIP
----
-apiVersion: autoscaling/v2
+`;
+}
+
+/** HorizontalPodAutoscaler autoscaling example (Requirement 2.2): scales on
+ * CPU and memory utilization with stabilized scale-down. */
+function k8sHpaManifest(config: DeployConfig): string {
+  const minReplicas = config.replicas ?? 2;
+  const maxReplicas = Math.max(minReplicas * 5, 10);
+  return `apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: ${config.name}-hpa
+  labels:
+    app.kubernetes.io/name: ${config.name}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: ${config.name}
-  minReplicas: ${replicas}
-  maxReplicas: ${Math.max(replicas * 3, 3)}
+  minReplicas: ${minReplicas}
+  maxReplicas: ${maxReplicas}
   metrics:
     - type: Resource
       resource:
@@ -209,6 +275,25 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 30
 `;
 }
 
