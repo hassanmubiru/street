@@ -1,0 +1,16 @@
+{
+  "name": "street-plugin-twilio",
+  "version": "1.0.0",
+  "capabilities": [
+    "sms",
+    "notifications",
+    "twilio"
+  ],
+  "permissions": [
+    "net",
+    "secrets",
+    "middleware"
+  ],
+  "checksum": "93b4f31477cce7a840a096509e4666af8b856d3d6f886474a8f77e1066b2e29e",
+  "signature": "kzbn4Kt0PG/SEQZ5qwNvxCK1YXoFAoF4E/XhdlifOQ3HHtd/95ynfEFjZXDLtyPjiMpTEGUVaAOXAqINfcntBA=="
+}
