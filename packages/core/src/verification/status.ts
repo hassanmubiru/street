@@ -76,16 +76,6 @@ export interface ClassifyInput {
   timedOut: boolean;
 }
 
-/** Returns the number of evidence components that are present. */
-function countPresentEvidence(evidence: EvidenceComponents): number {
-  let count = 0;
-  if (evidence.sourceCode) count++;
-  if (evidence.passingTests) count++;
-  if (evidence.documentation) count++;
-  if (evidence.artifact) count++;
-  return count;
-}
-
 /** Returns true iff all four evidence components are present. */
 function hasAllEvidence(evidence: EvidenceComponents): boolean {
   return (
