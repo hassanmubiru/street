@@ -45,7 +45,7 @@ describe('validateArtifact — required fields (Req 1.7)', () => {
       'timestamp',
       'generator',
     ] as const) {
-      const a = validBase() as Record<string, unknown>;
+      const a = validBase() as unknown as Record<string, unknown>;
       delete a[field];
       const result = validateArtifact(a);
       assert.equal(result.valid, false, `expected ${field} to be required`);
@@ -100,11 +100,11 @@ describe('validateArtifact — field constraints', () => {
 
   it('requires all four boolean evidence components', () => {
     const a = validBase();
-    (a.evidence as Record<string, unknown>).passingTests = 'yes';
+    (a.evidence as unknown as Record<string, unknown>).passingTests = 'yes';
     assert.equal(validateArtifact(a).valid, false);
 
     const b = validBase();
-    delete (b.evidence as Record<string, unknown>).documentation;
+    delete (b.evidence as unknown as Record<string, unknown>).documentation;
     assert.equal(validateArtifact(b).valid, false);
   });
 
@@ -143,7 +143,7 @@ describe('validateArtifact — field constraints', () => {
 
 describe('validateArtifact — generator marks command-produced artifacts (Req 1.8)', () => {
   it('rejects an artifact missing the generator field', () => {
-    const a = validBase() as Record<string, unknown>;
+    const a = validBase() as unknown as Record<string, unknown>;
     delete a.generator;
     const result = validateArtifact(a);
     assert.equal(result.valid, false);
