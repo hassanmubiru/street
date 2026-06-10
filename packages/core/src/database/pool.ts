@@ -76,6 +76,7 @@ export class PgPool {
     }
     try {
       await Promise.all(promises);
+      this.initialized = true;
     } catch (err) {
       const code = (err as NodeJS.ErrnoException).code;
       if (code === 'ECONNREFUSED') {
@@ -87,6 +88,31 @@ export class PgPool {
       }
       throw err;
     }
+  }
+
+  /**
+   * Idempotent, lazy warm-up guard.
+   *
+   * Ensures the pool's minimum connections are established exactly once. Safe to
+   * call repeatedly and concurrently: the first call performs the warm-up, later
+   * calls return immediately (or await the in-flight warm-up). This lets a pool be
+   * registered at bootstrap without a database, then warm up on first acquire/query.
+   *
+   * If warm-up fails (e.g. the database is unreachable), the cached promise is
+   * cleared so a subsequent call can retry once the database becomes available.
+   */
+  async ensureInitialized(): Promise<void> {
+    if (this.initialized) return;
+    if (this.closed) throw new Error('Pool is closed');
+    if (this.initPromise) return this.initPromise;
+
+    this.initPromise = this.initialize()
+      .catch((err) => {
+        // Allow a later call to retry once the database is reachable.
+        this.initPromise = null;
+        throw err;
+      });
+    return this.initPromise;
   }
 
   private async _createConnection(): Promise<PooledConnection> {
