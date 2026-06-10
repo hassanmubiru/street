@@ -378,7 +378,7 @@ Each property-based test is tagged with the comment format:
     - **Property 30: Release health deltas are exact** (fast-check, min 100 runs)
     - **Validates: Requirements 11.4**
 
-  - [ ] 18.5 Implement the report renderer and CI enforcement
+  - [-] 18.5 Implement the report renderer and CI enforcement
     - Add the release report renderer (`scripts/release/*`, may use deps) and a CI enforcement workflow (extend `ci-cd-enforcement.yml`) that runs `buildReleaseReport` through `CommandRunner`, emits `release.scorecard.artifact.json`, and fails the release with a non-zero exit (not publishing) when semver/notes validation or an enforced control fails
     - _Design: Components → Release Engineering (CI enforcement); Error Handling 11.3_
     - _Requirements: 11.3, 11.5, 11.6_
