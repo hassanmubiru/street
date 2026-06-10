@@ -255,7 +255,8 @@ describe('Property 11: a rejected version never becomes installable and prior va
         }
 
         // 4. The installable set is left unchanged — exactly v1 remains (Req 5.7).
-        const after = installableSet(service, [name, attemptedName].filter((n) => n !== ''));
+        const probeNames = [...new Set([name, attemptedName].filter((n) => n !== ''))];
+        const after = installableSet(service, probeNames);
         assert.deepEqual(after, before, 'the installable set must be unchanged by a rejected publish');
         assert.deepEqual(
           service.versions(name).map((v) => v.version),
