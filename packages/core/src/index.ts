@@ -55,6 +55,8 @@ export {
 export type { Codemod, CodemodArea, CodemodResult, ApplyCodemodsResult } from './devx/codemods.js';
 export { resolveVersions, analyzeBreakingChanges } from './devx/upgrade.js';
 export type { VersionResolution, BreakingArea, BreakingChange } from './devx/upgrade.js';
+export { MIGRATION_EXAMPLES } from './devx/migration-examples.js';
+export type { MigrationExample } from './devx/migration-examples.js';
 export { openApiToHtml } from './devx/playground.js';
 export type { PlaygroundOptions } from './devx/playground.js';
 export {
