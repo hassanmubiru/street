@@ -1,0 +1,16 @@
+{
+  "name": "street-plugin-r2",
+  "version": "1.0.0",
+  "capabilities": [
+    "storage",
+    "object-storage",
+    "r2"
+  ],
+  "permissions": [
+    "net",
+    "secrets",
+    "middleware"
+  ],
+  "checksum": "0c8d6246f47c429a493f2e1d601974eb8762bac7d1ef6dca7bc5fc4b77bf88a4",
+  "signature": "YIJBAB8uGYVgMEYYDdLYyXwlmGErOCfEiEiPbxLulnyZxrt6lIFVO+eLUdcnlY8p9ja8RsLjytXPTPgC4egXAQ=="
+}
