@@ -1,0 +1,6 @@
+{
+  "name": "street-plugin-r2",
+  "version": "1.0.0",
+  "capabilities": ["storage", "object-storage", "r2"],
+  "permissions": ["net", "secrets", "middleware"]
+}
