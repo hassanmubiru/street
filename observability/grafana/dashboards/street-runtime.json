@@ -1,0 +1,91 @@
+{
+  "uid": "street-runtime",
+  "title": "Street Runtime",
+  "schemaVersion": 39,
+  "version": 1,
+  "tags": [
+    "street",
+    "runtime",
+    "saturation"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Process heap (bytes)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "process_heap_bytes",
+          "legendFormat": "heap",
+          "refId": "A"
+        }
+      ],
+      "unit": "bytes"
+    },
+    {
+      "id": 2,
+      "title": "Request rate (req/s)",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 0,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "job:http_request_rate:rate5m",
+          "legendFormat": "rps",
+          "refId": "A"
+        }
+      ],
+      "unit": "reqps"
+    },
+    {
+      "id": 3,
+      "title": "Error ratio",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "job:http_error_rate:ratio5m",
+          "legendFormat": "error ratio",
+          "refId": "A"
+        }
+      ],
+      "unit": "percentunit"
+    },
+    {
+      "id": 4,
+      "title": "Latency p99",
+      "type": "timeseries",
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 12,
+        "h": 8
+      },
+      "targets": [
+        {
+          "expr": "job:http_request_latency:p99",
+          "legendFormat": "p99",
+          "refId": "A"
+        }
+      ],
+      "unit": "s"
+    }
+  ]
+}
