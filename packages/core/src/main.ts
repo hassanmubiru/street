@@ -12,6 +12,7 @@ import { TelemetryTracker } from './telemetry/tracker.js';
 import { StreetWebSocketServer } from './websocket/server.js';
 import { RateLimiter } from './security/ratelimit.js';
 import { streetApp } from './http/server.js';
+import { HealthCheckRegistry, registerHealthRoutes } from './observability/health.js';
 import { StreetMigrationRunner } from './database/migrations.js';
 import { UserRepository } from './services/user.repository.js';
 import { UserService } from './services/user.service.js';
@@ -123,6 +124,11 @@ async function bootstrap(): Promise<void> {
   container.register(HealthController, healthCtrl);
   app.registerController(HealthController);
   app.registerController(UserController);
+
+  // Kubernetes/orchestrator probe endpoints: GET /health/live and /health/ready
+  // (match the liveness/readiness probe paths emitted by generateManifest()).
+  const healthRegistry = new HealthCheckRegistry();
+  registerHealthRoutes(app, healthRegistry);
 
   // Inject OpenAPI spec into health controller's context via state
   const spec = app.openApiSpec();
