@@ -43,6 +43,8 @@ export declare class MetricsRegistry {
     histogram(name: string, help: string, buckets?: number[], labels?: string[]): Histogram;
     /** Whether a metric with `name` is already registered. */
     has(name: string): boolean;
+    /** The registered metric for `name`, or undefined if not registered. */
+    get(name: string): Counter | Gauge | Histogram | undefined;
     /** The names of every registered metric, in registration order. */
     names(): string[];
     collect(): string;
