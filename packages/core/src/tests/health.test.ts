@@ -273,8 +273,8 @@ describe('createDbReadinessCheck', () => {
     const check = createDbReadinessCheck({
       expected: true,
       probe: () => new Promise<void>((resolve) => {
-        const t = setTimeout(() => { resolve(); resolveProbe(); }, 80);
-        t.unref();
+        // Ref'd timer: keeps the loop alive until the slow probe settles.
+        setTimeout(() => { resolve(); resolveProbe(); }, 80);
       }),
       probeTimeoutMs: 20,
     });
