@@ -1,0 +1,54 @@
+# .github/workflows/registry-verify.yml
+# Network Plugin Registry publish→install end-to-end verification (Requirement
+# 4.8). The verifier runs the @streetjs/registry server IN A CONTAINER and drives
+# a full publish→install round trip through the zero-dependency `CommandRunner`,
+# which emits the machine-readable registry.publish-install.artifact.json.
+#
+# Honest BLOCKED: when no container runtime is available the harness skips and the
+# runner records an honest BLOCKED with the specific missing prerequisite, so the
+# step does not fail. GitHub-hosted Linux runners ship Docker, so this normally
+# runs the real E2E and earns VERIFIED.
+name: registry-verify
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'packages/registry-server/**'
+      - 'packages/core/src/platform/plugins/**'
+      - 'packages/core/src/verification/**'
+      - 'scripts/registry/**'
+      - 'scripts/verification/**'
+      - '.github/workflows/registry-verify.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  registry-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+
+      # The harness runs the server FROM THE BUILT dist mounted into a container,
+      # so both core and the registry server must be built first.
+      - name: Build core
+        run: npm run build -w packages/core
+      - name: Build registry server
+        run: npm run build -w packages/registry-server
+
+      # Publish→install E2E through CommandRunner → registry.publish-install.artifact.json.
+      # Exit is non-zero only on a genuine E2E failure; an honest BLOCKED is exit 0.
+      - name: Verify publish→install (CommandRunner)
+        run: node scripts/registry/verify.mjs
+
+      - name: Upload registry verification artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: registry-publish-install-verification
+          path: verification-artifacts/registry/
