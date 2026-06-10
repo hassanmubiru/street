@@ -18,27 +18,22 @@ Each property-based test is tagged with the comment format:
 ## Tasks
 
 - [ ] 1. Verification Artifact subsystem (foundation — built first)
-  - [-] 1.1 Implement the status engine and shared types
+  - [x] 1.1 Implement the status engine and shared types
     - Create `packages/core/src/verification/status.ts` with `VerificationStatus`, `EvidenceComponents`, `BlockedReason`, `ClassifyInput`, and `classify()` honoring precedence NOT_IMPLEMENTED → BLOCKED → VERIFIED → PARTIAL (pure, Node-core only)
     - _Design: Verification Artifact subsystem → Status engine_
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.6, 1.9_
 
-  - [~] 1.2 Write property test for status classification
-    - **Property 1: Status classification is deterministic and honors precedence** (fast-check, min 100 runs) — built first)
-  - [ ] 1.1 Implement the status engine and shared types
-    - Create `packages/core/src/verification/status.ts` with `VerificationStatus`, `EvidenceComponents`, `BlockedReason`, `ClassifyInput`, and `classify()` honoring precedence NOT_IMPLEMENTED → BLOCKED → VERIFIED → PARTIAL (pure, Node-core only)
-    - _Design: Verification Artifact subsystem → Status engine_
-    - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.6, 1.9_
-
+  - [-] 1.2 Write property test for status classification
+    - **Property 1: Status classification is deterministic and honors precedence** (fast-check, min 100 runs)
     - Use a `ClassifyInput` generator spanning `hasSourceCode`, all four evidence flags, `blocked`, `commandExitCode` (zero and non-zero), and `timedOut`
     - **Validates: Requirements 1.2, 1.3, 1.4, 1.6, 1.9, 1.10**
 
-  - [-] 1.3 Implement the artifact schema and validator
+  - [x] 1.3 Implement the artifact schema and validator
     - Create `packages/core/src/verification/artifact.ts` with `VerificationArtifact`, `validateArtifact()` enforcing the JSON Schema (required fields, BLOCKED ⇒ `blockedReason`), and the `generator` field that marks artifacts as command-produced
     - _Design: Verification Artifact subsystem → Artifact schema + validator; Data Models → Verification Artifact_
     - _Requirements: 1.7, 1.8_
 
-  - [~] 1.4 Implement the CommandRunner (spawn + 300s timeout + atomic write)
+  - [-] 1.4 Implement the CommandRunner (spawn + 300s timeout + atomic write)
     - Create `packages/core/src/verification/runner.ts` using only `node:child_process`/`node:fs`/`node:crypto`; enforce the 300s default timeout (SIGKILL on overrun ⇒ `timedOut`), run prerequisite probes, call `classify()`, and write the artifact atomically (`*.tmp-<pid>-<rand>` then `rename()`); on write failure throw, remove the temp file, and propagate a non-zero exit leaving no partial artifact
     - _Design: Verification Artifact subsystem → Command runner; Architecture → Artifact directory layout (atomic writes)_
     - _Requirements: 1.7, 1.9, 1.10, 1.11_
