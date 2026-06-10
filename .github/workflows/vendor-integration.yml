@@ -17,11 +17,35 @@ jobs:
   vendor:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    # A real Redis backs the storage plugin's Layer-B integration; when present
+    # the redis plugin earns VERIFIED, otherwise it is recorded BLOCKED honestly.
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
     # Secrets cannot be referenced in step-level `if:` conditions, so they are
     # mapped to env at the job level and the gates below test `env.*` instead.
     env:
+      REDIS_HOST: 127.0.0.1
+      REDIS_PORT: '6379'
       SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
       STRIPE_API_KEY: ${{ secrets.STRIPE_API_KEY }}
+      TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+      TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+      S3_BUCKET: ${{ secrets.S3_BUCKET }}
+      S3_REGION: ${{ secrets.S3_REGION }}
+      S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+      S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+      R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+      R2_BUCKET: ${{ secrets.R2_BUCKET }}
+      R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+      R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
       AUTH0_DOMAIN: ${{ secrets.AUTH0_DOMAIN }}
       AUTH0_CLIENT_ID: ${{ secrets.AUTH0_CLIENT_ID }}
       AUTH0_CLIENT_SECRET: ${{ secrets.AUTH0_CLIENT_SECRET }}
