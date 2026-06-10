@@ -64,7 +64,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Architecture → Lazy database initialization (Requirement 2.12)_
     - _Requirements: 2.12_
 
-  - [-] 3.2 Distinguish liveness from DB-readiness in health endpoints
+  - [x] 3.2 Distinguish liveness from DB-readiness in health endpoints
     - Update health handlers so `/health/live` never depends on the DB and `/health/ready` treats the DB as a declared provisioned dependency (up when no DB expected, down only when configured-but-unreachable), serving both 200 within 5s and completing startup within 30s with no provisioned PostgreSQL
     - _Design: Architecture → Lazy database initialization_
     - _Requirements: 2.12_
@@ -83,7 +83,7 @@ Each property-based test is tagged with the comment format:
     - **Property 4: Generated deployment manifests are structurally valid for every supported target** (fast-check, min 100 runs; kubernetes, cloudrun, ecs)
     - **Validates: Requirements 2.2, 2.3, 2.4**
 
-  - [~] 4.3 Implement remaining target assets and adapters
+  - [-] 4.3 Implement remaining target assets and adapters
     - Add Cloud Run profile (extend `generateCloudRun`), ECS task + service definitions (extend `generateEcs`), and deploy workflows/adapters for AWS Lambda (handler adapter + cold-start validation), Azure Functions (host config), Google Cloud Functions (entrypoint adapter), and Cloudflare Workers (`wrangler` + Worker adapter)
     - _Design: Components → Cloud Deployment Verifier (per-target deliverables table)_
     - _Requirements: 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
@@ -124,7 +124,7 @@ Each property-based test is tagged with the comment format:
     - **Property 5: The DAST severity gate fails iff a finding meets the threshold** (fast-check, min 100 runs; `DastFinding[]` generator across all five severities)
     - **Validates: Requirements 3.4, 3.5, 3.6**
 
-  - [-] 6.3 Write property test for severity counts
+  - [x] 6.3 Write property test for severity counts
     - **Property 6: Severity counts are an exact tally** (fast-check, min 100 runs)
     - **Validates: Requirements 3.7**
 
@@ -147,11 +147,11 @@ Each property-based test is tagged with the comment format:
     - **Property 12: Pagination is clamped to its bounds** (fast-check, min 100 runs)
     - **Validates: Requirements 4.6**
 
-  - [~] 7.3 Write property test for signature verification soundness
+  - [-] 7.3 Write property test for signature verification soundness
     - **Property 8: Signature verification is sound** (fast-check, min 100 runs; manifest + Ed25519 keypair generator with tamper mutations)
     - **Validates: Requirements 4.2, 5.7**
 
-  - [-] 7.4 Implement the `@streetjs/registry` server package
+  - [x] 7.4 Implement the `@streetjs/registry` server package
     - Create `packages/registry-server/` exposing `/api/v1` publish/download/verify/search/list/versions; bearer-token authn + namespace authz; manifest metadata validation (identity/name/version/dependencies/capabilities); `verifyManifest()` Ed25519 + checksum; storage of tarball + signed manifest + publisher key + indexed metadata; reject (preserving prior valid versions) on integrity failure, duplicate `name@version`, or malformed/missing field
     - _Design: Components → Network Plugin Registry; Sequence → publish → install; Error Handling 4.4/4.9/4.10_
     - _Requirements: 4.1, 4.2, 4.3, 4.5, 4.6, 4.9, 4.10_
@@ -275,7 +275,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Upgrade System; Error Handling 8.2_
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-  - [-] 13.2 Write property test for version resolution
+  - [x] 13.2 Write property test for version resolution
     - **Property 20: Version resolution prefers the explicit target, else latest** (fast-check, min 100 runs)
     - **Validates: Requirements 8.1, 8.2**
 
@@ -314,7 +314,7 @@ Each property-based test is tagged with the comment format:
     - **Property 24: A gate timeout preserves committed offsets and does not consume** (fast-check, min 100 runs)
     - **Validates: Requirements 9.2**
 
-  - [~] 15.3 Implement the chaos framework scenarios and lost-message accounting
+  - [-] 15.3 Implement the chaos framework scenarios and lost-message accounting
     - Extend `scripts/reliability/kafka-cold-start.sh` with broker-restart, network-interruption, connection-loss, and slow-broker (≥ 5000 ms delay) scenarios; accept parameterized `COLD_STARTS`/`RESTART_CYCLES` supporting the full-scale targets; implement lost-message accounting (`produced − deliveredToCommitted`)
     - _Design: Components → Kafka Reliability (chaos framework)_
     - _Requirements: 9.3, 9.4, 9.5, 9.6, 9.7, 9.8_
@@ -334,7 +334,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Advanced Observability (metrics-first table)_
     - _Requirements: 10.1, 10.2_
 
-  - [-] 16.2 Implement the metric-reference anti-fabrication guard
+  - [x] 16.2 Implement the metric-reference anti-fabrication guard
     - Add `exportedMetricNames()`, `referencedMetrics()`, and `validateMetricReferences()` returning the offending `(metric, asset)` pairs when an asset references a non-exported metric
     - _Design: Components → Advanced Observability (anti-fabrication guard); Error Handling 10.7_
     - _Requirements: 10.1, 10.7_
