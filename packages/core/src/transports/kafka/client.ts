@@ -381,5 +381,126 @@ export class KafkaClient {
   }
 }
 
+/** The internal Kafka topic that stores committed consumer-group offsets. */
+const CONSUMER_OFFSETS_TOPIC = '__consumer_offsets';
+
+export interface CoordinatorGateResult {
+  /** True only when both FindCoordinator succeeded and __consumer_offsets is stable within the budget. */
+  ready: boolean;
+  /** A successful FindCoordinator response was observed. */
+  findCoordinatorOk: boolean;
+  /** __consumer_offsets exists with every partition reporting a live leader. */
+  offsetsTopicStable: boolean;
+  /** Total time spent waiting, in milliseconds. */
+  waitedMs: number;
+  /** Committed consumer offsets were left untouched (always true: the gate never commits/fetches/resets). */
+  offsetsPreserved: boolean;
+}
+
+export interface CoordinatorReadinessGateOptions {
+  /** Total readiness budget. Defaults to 30_000 ms (Req 9.1). */
+  timeoutMs?: number;
+  /** Consumer group whose coordinator must be resolvable. */
+  group: string;
+  /** Poll backoff between readiness probes. Defaults to 250 ms. */
+  pollIntervalMs?: number;
+}
+
+/**
+ * Coordinator Readiness Gate (Req 9.1/9.2).
+ *
+ * Before a consumer begins consuming, wait up to `timeoutMs` (default 30s) for
+ * BOTH:
+ *   1. a successful `FindCoordinator` response for the consumer group, AND
+ *   2. `__consumer_offsets` stability — the topic exists and EVERY partition
+ *      has a live leader (error 0, leader >= 0).
+ *
+ * On success the result reports `ready: true`. On timeout the result reports
+ * `ready: false`: the caller MUST NOT begin consuming. The gate performs only
+ * read-only metadata/coordinator lookups and never commits, fetches, or resets
+ * offsets, so committed consumer offsets are always preserved
+ * (`offsetsPreserved: true`).
+ *
+ * Built on `KafkaClient.findCoordinator` + metadata partition-leader checks
+ * (mirrors `awaitTopicReady`).
+ */
+export class CoordinatorReadinessGate {
+  private readonly client: KafkaClient;
+  private readonly timeoutMs: number;
+  private readonly group: string;
+  private readonly pollIntervalMs: number;
+
+  constructor(client: KafkaClient, opts: CoordinatorReadinessGateOptions) {
+    this.client = client;
+    this.timeoutMs = opts.timeoutMs ?? 30_000;
+    this.group = opts.group;
+    this.pollIntervalMs = opts.pollIntervalMs ?? 250;
+  }
+
+  /**
+   * Wait for readiness within the budget. Resolves with a result describing
+   * what was observed; never throws on broker unavailability (a failed probe
+   * simply does not advance readiness). On timeout `ready` is false and no
+   * consuming should follow.
+   */
+  async await(): Promise<CoordinatorGateResult> {
+    const start = Date.now();
+    const deadline = start + this.timeoutMs;
+    let findCoordinatorOk = false;
+    let offsetsTopicStable = false;
+
+    for (;;) {
+      if (!findCoordinatorOk) {
+        try {
+          await this.client.findCoordinator(this.group);
+          findCoordinatorOk = true;
+        } catch {
+          findCoordinatorOk = false;
+        }
+      }
+      if (findCoordinatorOk && !offsetsTopicStable) {
+        offsetsTopicStable = await this._offsetsTopicStable();
+      }
+      if (findCoordinatorOk && offsetsTopicStable) {
+        return {
+          ready: true,
+          findCoordinatorOk,
+          offsetsTopicStable,
+          waitedMs: Date.now() - start,
+          offsetsPreserved: true,
+        };
+      }
+      if (Date.now() >= deadline) {
+        // Timeout: do not begin consuming. Committed offsets are untouched.
+        return {
+          ready: false,
+          findCoordinatorOk,
+          offsetsTopicStable,
+          waitedMs: Date.now() - start,
+          offsetsPreserved: true,
+        };
+      }
+      const remaining = deadline - Date.now();
+      await new Promise((r) => setTimeout(r, Math.min(this.pollIntervalMs, Math.max(0, remaining))));
+    }
+  }
+
+  /** __consumer_offsets is stable: topic exists, no error, and every partition has a live leader. */
+  private async _offsetsTopicStable(): Promise<boolean> {
+    try {
+      const meta = await this.client.metadata([CONSUMER_OFFSETS_TOPIC]);
+      const tm = meta.topics.find((t) => t.name === CONSUMER_OFFSETS_TOPIC);
+      return (
+        tm !== undefined &&
+        tm.error === 0 &&
+        tm.partitions.length >= 1 &&
+        tm.partitions.every((p) => p.error === 0 && p.leader >= 0)
+      );
+    } catch {
+      return false;
+    }
+  }
+}
+
 export { encodeRecordBatch, decodeRecordBatches };
 export type { KafkaRecord };

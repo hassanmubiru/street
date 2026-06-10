@@ -5,8 +5,11 @@
 import { KafkaClient, type KafkaClientOptions, type KafkaRecord } from './client.js';
 import type { StreamTransport } from '../../platform/event-streaming.js';
 
-export { KafkaClient, KafkaProtocolError } from './client.js';
-export type { KafkaClientOptions, ClusterMeta, TopicMeta, PartitionMeta, KafkaRecord } from './client.js';
+export { KafkaClient, KafkaProtocolError, CoordinatorReadinessGate } from './client.js';
+export type {
+  KafkaClientOptions, ClusterMeta, TopicMeta, PartitionMeta, KafkaRecord,
+  CoordinatorGateResult, CoordinatorReadinessGateOptions,
+} from './client.js';
 export { encodeRecordBatch, decodeRecordBatches } from './recordbatch.js';
 
 export interface ProducerOptions { batchSize?: number; lingerMs?: number; acks?: number; idempotent?: boolean; maxRetries?: number; retryBackoffMs?: number; }
