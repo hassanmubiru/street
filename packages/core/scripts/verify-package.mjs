@@ -115,7 +115,11 @@ function main() {
     } catch {
       continue; // listed but unreadable; pack would have surfaced this already
     }
+    const mask = buildMask(source);
     for (const m of source.matchAll(SPECIFIER_RE)) {
+      // Skip matches whose import/export keyword sits inside a string or comment
+      // (e.g. generated code emitted as a template literal) — not a real import.
+      if (mask[m.index]) continue;
       const spec = m[1] ?? m[2];
       if (!spec) continue;
       const candidates = resolveSpecifier(file, spec);
