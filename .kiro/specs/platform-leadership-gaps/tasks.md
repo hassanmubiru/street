@@ -304,7 +304,7 @@ Each property-based test is tagged with the comment format:
 - [ ] 14. Checkpoint - DX and upgrade
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 15. Kafka Coordinator Readiness Gate and Chaos
+- [x] 15. Kafka Coordinator Readiness Gate and Chaos
   - [x] 15.1 Implement the Coordinator Readiness Gate
     - Extend `packages/core/src/transports/kafka/client.ts` with `CoordinatorReadinessGate` that waits up to 30s for a successful `FindCoordinator` and `__consumer_offsets` stability (topic exists, every partition has a live leader); on timeout do not begin consuming and preserve committed offsets
     - _Design: Components → Kafka Reliability; Error Handling 9.2_
@@ -323,12 +323,12 @@ Each property-based test is tagged with the comment format:
     - **Property 25: Lost-message accounting is exact** (fast-check, min 100 runs)
     - **Validates: Requirements 9.8**
 
-  - [-] 15.5 Run the full-scale (100/100) chaos suite and emit artifacts (Layer B)
+  - [x] 15.5 Run the full-scale (100/100) chaos suite and emit artifacts (Layer B)
     - Run 100 cold starts and 100 broker restarts plus the network-interruption and slow-broker scenarios against `apache/kafka:3.7.1` (KRaft) in Docker through `CommandRunner`, emit `kafka.coldstart`/`kafka.chaos.*` artifacts (parameter values, pass count, lost-message count, ISO-8601 timestamp), upload from CI, and record BLOCKED honestly when the broker is unreachable
     - _Design: Testing Strategy → Layer B + Honest BLOCKED_
     - _Requirements: 9.4, 9.5, 9.6, 9.7, 9.8_
 
-- [ ] 16. Advanced Observability
+- [x] 16. Advanced Observability
   - [x] 16.1 Instrument and export the new subsystem metrics (metrics first)
     - Before any dashboard/alert references them, instrument and export the PostgreSQL, Kafka, RabbitMQ, and Plugin Host metrics listed in the design via the metrics endpoint
     - _Design: Components → Advanced Observability (metrics-first table)_
@@ -348,11 +348,11 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Advanced Observability_
     - _Requirements: 10.3, 10.4, 10.5_
 
-  - [-] 16.5 Write property test for dashboard and rule structural validity
+  - [x] 16.5 Write property test for dashboard and rule structural validity
     - **Property 27: Provided dashboards and rules are structurally valid** (fast-check, min 100 runs)
     - **Validates: Requirements 10.3, 10.4, 10.5**
 
-  - [-] 16.6 Implement the validation pipeline with promtool and emit the artifact + CI
+  - [x] 16.6 Implement the validation pipeline with promtool and emit the artifact + CI
     - Wire `validateMetricReferences`, `validatePrometheusRuleGroups`, `validateGrafanaDashboard`, and **promtool** over emitted rule files; author observability docs; run through `CommandRunner` emitting `observability.validate.artifact.json` (command, exit code, ISO-8601 timestamp) uploaded from the `observability.yml` workflow; fail recording the offending metric/asset or validation error
     - _Design: Components → Advanced Observability (validation pipeline); Error Handling 10.7/10.8_
     - _Requirements: 10.6, 10.8, 10.9_
@@ -384,7 +384,7 @@ Each property-based test is tagged with the comment format:
     - _Requirements: 11.3, 11.5, 11.6_
 
 - [ ] 19. Platform Leadership Exit-Criteria aggregator (built last)
-  - [ ] 19.1 Implement the exit-criteria aggregator
+  - [-] 19.1 Implement the exit-criteria aggregator
     - In `packages/core/src/verification/` add `PLATFORM_LEADERSHIP_CAPABILITIES`, `LeadershipReport`, and `computeLeadership()` that computes GRANTED iff every required capability is VERIFIED, else WITHHELD with the offending capabilities; a missing artifact is treated as not VERIFIED; the report records each required capability + status, the decision, ISO-8601 timestamp, and the artifact paths read
     - _Design: Components → Exit-criteria engine; Data Models → Exit-Criteria set + report_
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
