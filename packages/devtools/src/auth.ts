@@ -64,8 +64,15 @@ export function isSafeMethod(method: string): boolean {
 /** Extract the raw bearer token from an `Authorization` header value. */
 export function parseBearer(header: string | undefined | null): string | undefined {
   if (!header) return undefined;
-  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
-  return match ? match[1]!.trim() : undefined;
+  const trimmed = header.trim();
+  // Match only the "Bearer" prefix + a single whitespace char: anchored with no
+  // ambiguous repetition, so it is linear (ReDoS-safe). The remainder is taken
+  // by slice/trim rather than an ambiguous `\s+(.+)$` capture where `.` also
+  // matches whitespace (js/polynomial-redos).
+  const prefix = /^Bearer\s/i.exec(trimmed);
+  if (!prefix) return undefined;
+  const token = trimmed.slice(prefix[0].length).trim();
+  return token.length > 0 ? token : undefined;
 }
 
 /** Constant-time comparison of two hex digests of equal length. */
