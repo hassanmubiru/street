@@ -209,17 +209,24 @@ export function computeLeadership(
 
   for (const capabilityId of PLATFORM_LEADERSHIP_CAPABILITIES) {
     const artifact = byCapability.get(capabilityId);
-    const hasArtifact = artifact !== undefined;
-    const status: VerificationStatus = hasArtifact
-      ? artifact.status
-      : MISSING_ARTIFACT_STATUS;
 
-    const entry: CapabilityStatus = { capabilityId, status, hasArtifact };
+    let entry: CapabilityStatus;
+    if (artifact !== undefined) {
+      // A directly-recorded artifact for this exact capability takes precedence.
+      entry = { capabilityId, status: artifact.status, hasArtifact: true };
+    } else {
+      // No direct artifact: resolve a roll-up from its members, else treat the
+      // missing artifact as not VERIFIED (Req 12.3).
+      entry =
+        resolveRollup(capabilityId, byCapability) ??
+        { capabilityId, status: MISSING_ARTIFACT_STATUS, hasArtifact: false };
+    }
+
     required.push(entry);
 
-    // A capability is withheld when it is missing an artifact or its recorded
+    // A capability is withheld when it is missing an artifact or its resolved
     // status is anything other than VERIFIED (Req 12.2/12.3).
-    if (!hasArtifact || status !== 'VERIFIED') {
+    if (!entry.hasArtifact || entry.status !== 'VERIFIED') {
       withheld.push(entry);
     }
   }
