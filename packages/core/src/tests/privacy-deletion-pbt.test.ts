@@ -36,7 +36,6 @@ const NUM_RUNS = 200;
 // Small, fixed user id space so seeded data collides across sources and the
 // deletion fan-out is exercised densely rather than over a sparse id space.
 const USERS = ['u0', 'u1', 'u2', 'u3', 'u4'] as const;
-type UserId = (typeof USERS)[number];
 
 const userArb = fc.constantFrom(...USERS);
 
