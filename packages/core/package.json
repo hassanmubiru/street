@@ -346,7 +346,12 @@
     "mtls",
     "opentelemetry",
     "observability",
-    "message-queue"
+    "message-queue",
+    "input-validation",
+    "field-encryption",
+    "abuse-prevention",
+    "moderation",
+    "privacy"
   ],
   "author": "street contributors",
   "license": "MIT",
