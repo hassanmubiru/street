@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "lint": "tsc --noEmit -p tsconfig.json",
-    "test": "tsc -p tsconfig.test.json && node --test dist-test/**/*.test.js",
+    "test": "tsc -p tsconfig.test.json && node --test dist-test",
     "example": "npm run build && node examples/index.mjs",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true});require('fs').rmSync('dist-test',{recursive:true,force:true})\"",
     "prepublishOnly": "npm run clean && npm run build"
