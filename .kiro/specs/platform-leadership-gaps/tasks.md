@@ -389,20 +389,20 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Exit-criteria engine; Data Models → Exit-Criteria set + report_
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5_
 
-  - [-] 19.2 Write property test for the leadership decision
+  - [x] 19.2 Write property test for the leadership decision
     - **Property 31: The Platform Leadership decision is computed only from artifacts** (fast-check, min 100 runs; artifact-set generator across all status combinations and missing entries)
     - **Validates: Requirements 12.1, 12.2, 12.3, 12.4, 12.5**
 
-  - [-] 19.3 Implement `street verify --aggregate` report generation
+  - [x] 19.3 Implement `street verify --aggregate` report generation
     - Wire `street verify --aggregate` to read all artifacts under `verification-artifacts/`, call `computeLeadership`, and write `platform-leadership.report.json` (never hand-set)
     - _Design: Components → Exit-criteria engine (CLI surface)_
     - _Requirements: 12.4, 12.5_
 
-  - [-] 19.4 Write the governance unit test that only the aggregator writes the report
+  - [x] 19.4 Write the governance unit test that only the aggregator writes the report
     - Grep/lint assertion confirming `platform-leadership.report.json` is produced solely by `computeLeadership` (no hand-authored writes)
     - _Requirements: 12.4_
 
-  - [ ] 19.5 Wire the final platform-leadership CI aggregation job and exit-criteria docs
+  - [-] 19.5 Wire the final platform-leadership CI aggregation job and exit-criteria docs
     - Add the final `platform-leadership` GitHub Actions job that runs `street verify --aggregate`, uploads `platform-leadership.report.json`, and reflects (not sets) the computed decision in its pass/fail; author the exit-criteria docs published to GitHub Pages
     - _Design: Testing Strategy → CI integration and evidence retention_
     - _Requirements: 12.1, 12.5_
