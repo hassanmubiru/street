@@ -139,7 +139,7 @@ Per the Zero-Trust Standard, each feature's definition of done is: source implem
     - _Requirements: 8.1, 8.2, 8.3, 8.6_
 
 - [ ] 9. Implement Phase 8 — Secrets Management (builds on `security/vault.ts`)
-  - [-] 9.1 Implement `SecretProvider` in new `packages/core/src/security/secret-provider.ts`
+  - [x] 9.1 Implement `SecretProvider` in new `packages/core/src/security/secret-provider.ts`
     - Define the single `SecretProvider` interface and `GitHubSecretsProvider`, `AwsSecretsManagerProvider`, `AzureKeyVaultProvider`, `GcpSecretManagerProvider` adapters; implement `registerSecretForRedaction`/`redact` and `requireSecrets` (startup gate emitting only names, reusing vault's required-var behavior); refresh-on-read so rotated values appear without restart
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
   - [~] 9.2 Write integration tests for adapters against mocked SDKs
