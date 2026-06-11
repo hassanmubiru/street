@@ -156,13 +156,19 @@ test('property: token + session round-trip through the wrapper for arbitrary acc
   );
 });
 
-test('property: a tampered token never verifies through the wrapper', () => {
+test('property: a forged payload never verifies against another token signature', () => {
   const auth = makeService();
   fc.assert(
     fc.property(fc.string({ minLength: 1, maxLength: 32 }), (accountId) => {
-      const token = auth.issueToken({ sub: accountId });
-      const tampered = token.slice(0, -1) + (token.endsWith('A') ? 'B' : 'A');
-      assert.equal(auth.verifyToken(tampered), null);
+      // Sign two tokens with distinct subjects, then splice the second token's
+      // payload onto the first token's header+signature. The signature no longer
+      // covers the swapped payload, so verification must fail.
+      const original = auth.issueToken({ sub: accountId });
+      const other = auth.issueToken({ sub: `${accountId}_tampered` });
+      const [header, , signature] = original.split('.');
+      const [, otherPayload] = other.split('.');
+      const forged = `${header}.${otherPayload}.${signature}`;
+      assert.equal(auth.verifyToken(forged), null);
     }),
     { numRuns: 200 },
   );
