@@ -182,7 +182,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Network Plugin Registry (E2E harness); Testing Strategy → Layer B_
     - _Requirements: 4.8_
 
-- [ ] 8. Checkpoint - registry
+- [x] 8. Checkpoint - registry
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 9. Official Plugin Ecosystem
@@ -238,7 +238,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Enterprise Console APIs; Testing Strategy → Layer B_
     - _Requirements: 6.10_
 
-- [ ] 11. Checkpoint - enterprise APIs
+- [x] 11. Checkpoint - enterprise APIs
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 12. Interactive Developer Experience
@@ -301,7 +301,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Upgrade System_
     - _Requirements: 8.8_
 
-- [ ] 14. Checkpoint - DX and upgrade
+- [x] 14. Checkpoint - DX and upgrade
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 15. Kafka Coordinator Readiness Gate and Chaos
@@ -357,7 +357,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Components → Advanced Observability (validation pipeline); Error Handling 10.7/10.8_
     - _Requirements: 10.6, 10.8, 10.9_
 
-- [ ] 17. Checkpoint - reliability and observability
+- [x] 17. Checkpoint - reliability and observability
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 18. Release Engineering
@@ -407,7 +407,7 @@ Each property-based test is tagged with the comment format:
     - _Design: Testing Strategy → CI integration and evidence retention_
     - _Requirements: 12.1, 12.5_
 
-- [ ] 20. Final checkpoint
+- [x] 20. Final checkpoint
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes
