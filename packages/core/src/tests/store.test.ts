@@ -170,10 +170,11 @@ describe('InMemoryCounterStore (shares the sliding-window logic)', () => {
     assert.equal(await counter.increment('login', 100, WINDOW), 2);
     assert.equal(await counter.count('login', 200, WINDOW), 2);
 
-    // Roll-off applies identically to counter events.
-    assert.equal(await counter.count('login', 1500, WINDOW), 1);
+    // Roll-off applies identically to counter events: at t=1050 the cutoff is
+    // t=50, so the event at t=0 expires while the event at t=100 survives.
+    assert.equal(await counter.count('login', 1050, WINDOW), 1);
 
     await counter.reset('login');
-    assert.equal(await counter.count('login', 1500, WINDOW), 0);
+    assert.equal(await counter.count('login', 1050, WINDOW), 0);
   });
 });
