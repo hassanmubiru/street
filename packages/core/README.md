@@ -321,7 +321,7 @@ router.post('/users/:id', validate(schemas), async (ctx) => {
 router.use(rateLimit({ scope: 'ip', requests: 100, window: '1m' }));
 
 // Field-level encryption at rest (envelope encryption; rotate by adding KEK versions)
-const cipher = new FieldCipher(new Keyring([{ version: 1, kek: process.env.KEK_BYTES }]));
+const cipher = new FieldCipher(Keyring.fromKey(randomBytes(32)));   // 32-byte KEK
 const enc = cipher.encrypt('+1-555-0100');
 const plain = cipher.decrypt(enc);   // '+1-555-0100' — tamper throws, never returns plaintext
 ```
