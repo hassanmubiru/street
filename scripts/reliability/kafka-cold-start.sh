@@ -186,6 +186,7 @@ fi
 # client resumes and all messages produced after restoration are delivered.
 if want network-interruption; then
   echo "==> Network-interruption chaos"
+  LAST_PRODUCED=0; LAST_DELIVERED=0; LAST_LOST=0; LAST_OK=0
   NET="$(docker inspect -f '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}' "$CONTAINER" 2>/dev/null | awk '{print $1}')"
   if [ -n "$NET" ]; then
     echo "  disconnecting $CONTAINER from network '$NET' for 10s"
@@ -194,7 +195,6 @@ if want network-interruption; then
     docker network connect "$NET" "$CONTAINER" >/dev/null 2>&1 || true
     wait_healthy
     # Client must resume consuming within 60s of restoration (Req 9.6).
-    LAST_PRODUCED=0; LAST_DELIVERED=0; LAST_LOST=0; LAST_OK=0
     if account_messages "network-interruption"; then
       echo "  network-interruption: recovered, 0 lost"
       emit_scenario "network-interruption" true true 1 1
