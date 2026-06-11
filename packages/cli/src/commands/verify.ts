@@ -125,7 +125,7 @@ export class VerifyCommand {
 
     // Read and validate every recorded artifact under the root, pairing each
     // with the path it was read from for the report's `computedFrom` provenance.
-    const sources: Array<{ artifact: core.VerificationArtifact; path: string }> = [];
+    const sources: Array<{ artifact: VerificationArtifact; path: string }> = [];
     for (const filePath of this.collectArtifactFiles(rootDir)) {
       let parsed: unknown;
       try {
@@ -141,7 +141,7 @@ export class VerifyCommand {
         console.error(`[street]   skipping invalid artifact ${filePath}: ${errors.join('; ')}`);
         continue;
       }
-      sources.push({ artifact: parsed as core.VerificationArtifact, path: filePath });
+      sources.push({ artifact: parsed as VerificationArtifact, path: filePath });
     }
 
     // The aggregator is the ONLY thing that computes the decision (Req 12.4).
