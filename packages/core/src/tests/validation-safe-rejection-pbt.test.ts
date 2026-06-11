@@ -58,11 +58,6 @@ function makeCtx(parts: CtxParts): StreetContext {
 
 // ── Generators ────────────────────────────────────────────────────────────────
 
-const ALNUM = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
-const alnumStr: fc.Arbitrary<string> = fc
-  .array(fc.constantFrom(...ALNUM), { minLength: 1, maxLength: 8 })
-  .map((cs) => cs.join(''));
-
 // Per-field plan: each key is either conforming or guaranteed to violate its
 // schema. `violated` keys must produce a failing issue at path `<source>.<key>`.
 interface FieldPlan {
