@@ -12,13 +12,13 @@ Per the Zero-Trust Standard, each feature's definition of done is: source implem
 
 ## Tasks
 
-- [ ] 1. Implement the pluggable backing-store abstraction
+- [x] 1. Implement the pluggable backing-store abstraction
   - [x] 1.1 Create the shared store abstraction in new `packages/core/src/security/store.ts`
     - Define `KeyValueStore` and `CounterStore` interfaces and the `RateLimitStore` interface (`hit(key, nowMs, windowMs)`, `count(key, nowMs, windowMs)`) per the design
     - Implement `InMemoryRateLimitStore` by extracting/reusing the current Map-based sliding-window logic so it is interchangeable with a future Redis-backed store
     - Support an injected clock (now-provider) so window timing is deterministic in tests
     - _Requirements: 3.8_
-  - [-] 1.2 Write unit tests for `InMemoryRateLimitStore`
+  - [x] 1.2 Write unit tests for `InMemoryRateLimitStore`
     - Cover hit/count semantics, window roll-off, and clock injection in a new `packages/core/src/tests/store.test.ts`
     - _Requirements: 3.8_
 
@@ -29,17 +29,17 @@ Per the Zero-Trust Standard, each feature's definition of done is: source implem
     - Implement `validate(schemas): MiddlewareFn` that parses each declared source before calling `next()` so the handler never runs on failure, writing parsed values to `ctx.state.valid.<source>`
     - Implement `validated(ctx, schemas)` typed accessor (inferred handler types), `validateEnv` and `validateArgv` that collect failing names, print names to stderr, and `process.exit(1)` without emitting values
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
-  - [-] 2.2 Write property test for validation determinism and pass-through
+  - [x] 2.2 Write property test for validation determinism and pass-through
     - **Property 1: Validation determinism and conforming pass-through**
     - **Validates: Requirements 2.2, 2.9**
     - `packages/core/src/tests/validation-determinism-pbt.test.ts`, fast-check ≥100 runs
   - [ ] 2.3 Write property test for safe rejection before handler execution
     - **Property 2: Invalid input is rejected safely before the handler runs**
     - **Validates: Requirements 2.3, 2.4, 2.5**
-  - [~] 2.4 Write property test for startup never emitting secret/variable values
+  - [-] 2.4 Write property test for startup never emitting secret/variable values
     - **Property 3: Startup never emits secret/variable values**
     - **Validates: Requirements 2.8**
-  - [~] 2.5 Write unit tests for per-source acceptance, env/CLI happy path, and type inference
+  - [-] 2.5 Write unit tests for per-source acceptance, env/CLI happy path, and type inference
     - Cover each `InputSource` (body/query/params/headers/cookies), startup happy path, and schema-inferred handler parameter types
     - _Requirements: 2.1, 2.6, 2.7_
 
