@@ -80,6 +80,73 @@ export interface ArtifactSource {
  */
 const MISSING_ARTIFACT_STATUS: VerificationStatus = 'NOT_IMPLEMENTED';
 
+/**
+ * Roll-up capabilities are VERIFIED only when every one of their member
+ * capabilities is VERIFIED (design → Exit-Criteria set):
+ *  - `cloud.deploy`       iff every deployment-target artifact verified;
+ *  - `plugins.ecosystem`  iff every official-plugin artifact verified;
+ *  - `kafka.chaos`        iff cold-start and every chaos scenario verified.
+ *
+ * A roll-up's members are matched by capabilityId: an `isMember` predicate
+ * recognises the member ids each verifier actually emits (e.g.
+ * `cloud.deploy.kubernetes`, `plugin.redis`, `kafka.coldstart`,
+ * `kafka.chaos.broker-restart`). The bare roll-up id itself is never a member,
+ * so a directly-recorded roll-up artifact still takes precedence (below).
+ */
+const ROLLUPS: ReadonlyArray<{ id: string; isMember: (capabilityId: string) => boolean }> =
+  Object.freeze([
+    { id: 'cloud.deploy', isMember: (c) => c.startsWith('cloud.deploy.') },
+    { id: 'plugins.ecosystem', isMember: (c) => c.startsWith('plugin.') },
+    {
+      id: 'kafka.chaos',
+      isMember: (c) => c === 'kafka.coldstart' || c.startsWith('kafka.chaos.'),
+    },
+  ]);
+
+/** Severity order for reporting a roll-up's non-VERIFIED status (most severe first). */
+const ROLLUP_STATUS_SEVERITY: readonly VerificationStatus[] = [
+  'NOT_IMPLEMENTED',
+  'BLOCKED',
+  'PARTIAL',
+  'VERIFIED',
+];
+
+/**
+ * Resolve a roll-up capability's status from its member artifacts. Returns
+ * `null` when the capability is not a roll-up, so the caller falls back to a
+ * direct lookup. When it is a roll-up:
+ *  - no members recorded → not VERIFIED, `hasArtifact: false` (Req 12.3);
+ *  - every member VERIFIED → VERIFIED;
+ *  - otherwise the most severe member status, `hasArtifact: true`.
+ */
+function resolveRollup(
+  capabilityId: string,
+  artifacts: ReadonlyMap<string, VerificationArtifact>,
+): CapabilityStatus | null {
+  const rollup = ROLLUPS.find((r) => r.id === capabilityId);
+  if (!rollup) return null;
+
+  const members: VerificationStatus[] = [];
+  for (const [id, artifact] of artifacts) {
+    if (rollup.isMember(id)) members.push(artifact.status);
+  }
+
+  if (members.length === 0) {
+    return { capabilityId, status: MISSING_ARTIFACT_STATUS, hasArtifact: false };
+  }
+
+  const allVerified = members.every((s) => s === 'VERIFIED');
+  if (allVerified) {
+    return { capabilityId, status: 'VERIFIED', hasArtifact: true };
+  }
+
+  // Report the most severe non-VERIFIED member status for transparency.
+  const status =
+    ROLLUP_STATUS_SEVERITY.find((s) => s !== 'VERIFIED' && members.includes(s)) ??
+    'PARTIAL';
+  return { capabilityId, status, hasArtifact: true };
+}
+
 function isArtifactSource(
   entry: VerificationArtifact | ArtifactSource,
 ): entry is ArtifactSource {
