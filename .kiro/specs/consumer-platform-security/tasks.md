@@ -73,7 +73,7 @@ Per the Zero-Trust Standard, each feature's definition of done is: source implem
     - _Requirements: 4.3_
 
 - [ ] 5. Implement Phase 4 — Media Upload Security (wrap `multipart/parser.ts`)
-  - [~] 5.1 Implement `UploadGuard` in new `packages/core/src/multipart/upload-guard.ts`
+  - [-] 5.1 Implement `UploadGuard` in new `packages/core/src/multipart/upload-guard.ts`
     - Consume `ParsedFile[]` from `MultipartParser`; implement `detectFormat(head)` (magic bytes for JPEG/PNG/GIF/PDF), `guard(file)`, and `UploadRejected` (413 size, 415 type/mime/image-only/malware)
     - Enforce size cap (unlink temp file on rejection), declared-vs-true MIME match, image-only mode, EXIF stripping, malware-scan hook invoked before persistence (fail-closed), and a random `storedName` with no path separators or client filename
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9_
@@ -125,7 +125,7 @@ Per the Zero-Trust Standard, each feature's definition of done is: source implem
     - _Requirements: 7.5, 7.6, 7.7_
 
 - [ ] 8. Implement Phase 7 — Moderation Toolkit
-  - [~] 8.1 Implement `ModerationToolkit` in new `packages/core/src/security/moderation.ts`
+  - [-] 8.1 Implement `ModerationToolkit` in new `packages/core/src/security/moderation.ts`
     - Implement `ModerationStore` and an `InMemoryModerationStore` plus `ModerationToolkit` (`report`, `block`, `canMessage`, `mute`, `deliverable`, `queue`, `resolve`, `audit`); the audit log is append-only with no public mutation path, composing the patterns in `auth/audit-writer.ts`
     - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5, 8.6, 8.7_
   - [~] 8.2 Write property test for mute scoping
@@ -139,7 +139,7 @@ Per the Zero-Trust Standard, each feature's definition of done is: source implem
     - _Requirements: 8.1, 8.2, 8.3, 8.6_
 
 - [ ] 9. Implement Phase 8 — Secrets Management (builds on `security/vault.ts`)
-  - [~] 9.1 Implement `SecretProvider` in new `packages/core/src/security/secret-provider.ts`
+  - [-] 9.1 Implement `SecretProvider` in new `packages/core/src/security/secret-provider.ts`
     - Define the single `SecretProvider` interface and `GitHubSecretsProvider`, `AwsSecretsManagerProvider`, `AzureKeyVaultProvider`, `GcpSecretManagerProvider` adapters; implement `registerSecretForRedaction`/`redact` and `requireSecrets` (startup gate emitting only names, reusing vault's required-var behavior); refresh-on-read so rotated values appear without restart
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5, 9.6_
   - [~] 9.2 Write integration tests for adapters against mocked SDKs
@@ -147,7 +147,7 @@ Per the Zero-Trust Standard, each feature's definition of done is: source implem
     - _Requirements: 9.2, 9.3, 9.4, 9.6_
 
 - [ ] 10. Implement Phase 9 — Privacy Controls
-  - [~] 10.1 Implement `PrivacyControls` in new `packages/core/src/security/privacy.ts`
+  - [-] 10.1 Implement `PrivacyControls` in new `packages/core/src/security/privacy.ts`
     - Implement `PersonalDataSource` registration, `exportData`, `deleteAccount`, `enforceRetention` (one cycle), `setConsent`/`hasConsent`/`requireConsent` (latest decision wins, throws `ConsentRequiredError` when withdrawn)
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
   - [~] 10.2 Write property test for deletion removing all personal data
