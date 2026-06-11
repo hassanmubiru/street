@@ -2,9 +2,16 @@
 // Sliding-window rate limiter using BigInt nanosecond timestamps.
 // Bounded per-key request log with periodic stale-entry sweeping.
 
+import { randomBytes } from 'node:crypto';
 import type { StreetContext } from '../core/context.js';
 import type { MiddlewareFn } from '../core/types.js';
 import { StreetException } from '../http/exceptions.js';
+import {
+  type Clock,
+  type RateLimitStore,
+  InMemoryRateLimitStore,
+  systemClock,
+} from './store.js';
 
 const MAX_KEYS = 100_000;        // max distinct IPs/keys tracked
 const MAX_REQUESTS_PER_KEY = 1000; // max stored timestamps per key
