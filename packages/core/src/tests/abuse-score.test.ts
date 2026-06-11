@@ -136,15 +136,13 @@ describe('AbuseEngine — IP-reputation hook consultation (R7.7)', () => {
 });
 
 describe('AbuseEngine — configured response action triggering (R7.6)', () => {
-  it('triggers the response action and refuses once the score reaches the threshold', async () => {
+  it('refuses with SCORE_EXCEEDED once the score reaches the threshold', async () => {
     const store = new InMemoryCounterStore({ clock: fakeClock(0) });
-    const triggered: AbuseDecision[] = [];
     const engine = new AbuseEngine(
       // A single point of reputation reaches the threshold of 1.
       baseConfig({ scoreThreshold: 1 }),
       store,
       async () => 1,
-      {},
     );
 
     const decision = await engine.recordLoginAttempt({
@@ -157,7 +155,6 @@ describe('AbuseEngine — configured response action triggering (R7.6)', () => {
     assert.equal(decision.allowed, false);
     assert.equal(decision.reason, 'SCORE_EXCEEDED');
     assert.equal(decision.score, 1);
-    assert.equal(triggered.length, 0); // sanity: tracked via config below
   });
 
   it('passes the triggering decision to the configured response action', async () => {
