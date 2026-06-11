@@ -43,58 +43,49 @@ const SPECIFIER_RE =
   /(?:import|export)\b[^'"]*?\bfrom\s*['"](\.{1,2}\/[^'"]+)['"]|import\s*\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g;
 
 /**
- * Blank out comments and string/template literals so the import scanner only
- * sees real top-level `import`/`export` statements — never `import` text that
- * appears inside a string (e.g. generated deployment scaffolding emitted by
- * `cloud/deployment.js`). Replaces literal/comment bodies with spaces to keep
- * offsets and line structure intact.
+ * Build a byte mask over `src` where 1 marks a position inside a string
+ * literal, template literal, or comment. Used to discard `import`-looking text
+ * that appears INSIDE a string (e.g. the deployment scaffolding emitted as
+ * template literals by `cloud/deployment.js`) — only `import`/`export` keywords
+ * in real code positions count.
  */
-function stripStringsAndComments(src) {
-  let out = '';
-  let i = 0;
+function buildMask(src) {
   const n = src.length;
+  const mask = new Uint8Array(n);
+  let i = 0;
   while (i < n) {
     const ch = src[i];
     const next = src[i + 1];
-    // Line comment
     if (ch === '/' && next === '/') {
-      while (i < n && src[i] !== '\n') i++;
+      while (i < n && src[i] !== '\n') mask[i++] = 1;
       continue;
     }
-    // Block comment
     if (ch === '/' && next === '*') {
-      i += 2;
-      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) {
-        out += src[i] === '\n' ? '\n' : ' ';
-        i++;
-      }
-      i += 2;
+      mask[i++] = 1;
+      mask[i++] = 1;
+      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) mask[i++] = 1;
+      if (i < n) mask[i++] = 1;
+      if (i < n) mask[i++] = 1;
       continue;
     }
-    // String / template literal
     if (ch === '"' || ch === "'" || ch === '`') {
       const quote = ch;
-      out += ' ';
-      i++;
+      mask[i++] = 1; // opening quote
       while (i < n) {
         if (src[i] === '\\') {
-          i += 2;
+          mask[i++] = 1;
+          if (i < n) mask[i++] = 1;
           continue;
         }
-        if (src[i] === quote) {
-          i++;
-          break;
-        }
-        out += src[i] === '\n' ? '\n' : ' ';
-        i++;
+        const done = src[i] === quote;
+        mask[i++] = 1; // body char (and the closing quote)
+        if (done) break;
       }
-      out += ' ';
       continue;
     }
-    out += ch;
     i++;
   }
-  return out;
+  return mask;
 }
 
 /** Resolve a relative specifier from `fromFile` to a published-set candidate path. */
