@@ -53,6 +53,45 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.7] — 2026-06-11
+
+### Fixed
+- **Published package was un-importable.** The `streetjs` tarball's `files`
+  allow-list had drifted out of sync with the export surface: the root barrel
+  (and `router.js`) imported ~19 directories — `testing`, `devx`, `diagnostics`,
+  `observability`, `verification`, `release`, `config`, `dev`, `auth`, `jobs`,
+  `tenancy`, `microservices`, `transports`, `cloud`, `enterprise`, `platform`,
+  `versioning`, `sdk-gen`, `graphql` — that were never published, so a clean
+  `import('streetjs')` crashed with `ERR_MODULE_NOT_FOUND` (e.g.
+  `dist/testing/chaos.js`, `dist/diagnostics/reporter.js`). The `files` list now
+  ships every directory the public API references (tests still excluded).
+
+### Added
+- **Consumer Platform Security** subsystems (all exported from the package root):
+  runtime input validation (`validate`/`validated`/`validateEnv`/`validateArgv`,
+  Zod-backed), scoped rate limiting (`rateLimit` global/per-IP/per-user, in-memory
+  or Redis-backed), security-header override/disable, the `UploadGuard`
+  (magic-byte + size + MIME + image-only + EXIF-strip + malware hook), field-level
+  encryption (`Keyring`/`FieldCipher`, AES-256-GCM envelope encryption with KEK
+  rotation and tamper detection), the `AbuseEngine` (lockout / signup throttle /
+  password-spray / scoring), the `ModerationToolkit` (report/block/mute +
+  append-only audit), pluggable `SecretProvider` adapters with log redaction and a
+  required-secret startup gate, and `PrivacyControls` (export/delete/retention/
+  consent). Documented at `docs/security/consumer-platform.md`.
+- Official dating reference packages composing the above: `@streetjs/dating-auth`,
+  `@streetjs/dating-profiles`, `@streetjs/dating-messaging`,
+  `@streetjs/dating-moderation`.
+- `zod` added as a runtime dependency (used by the runtime input Validator).
+
+### CI
+- New `package-integrity` job (every PR/push) and publish-time gates that
+  `verify:pack` the tarball (every shipped module's relative imports must resolve
+  within the package) and run a clean-install `import` smoke test for `streetjs`,
+  `@streetjs/cli`, and the `@streetjs/core` compat shim — so a missing-from-tarball
+  regression can never reach npm again.
+
+---
+
 ## [1.0.4] — 2026-05-29
 
 ### Fixed
