@@ -111,7 +111,7 @@ Each property-based test is tagged with the comment format:
     - Cover VERIFIED/PARTIAL/BLOCKED mapping and retained failing output in the report
     - _Requirements: 2.11, 2.13, 2.14_
 
-- [ ] 5. Checkpoint - cloud verification
+- [x] 5. Checkpoint - cloud verification
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 6. DAST verification
