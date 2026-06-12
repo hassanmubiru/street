@@ -1,0 +1,9 @@
+{
+  "name": "pack-smoke-core",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clean-install smoke fixture: imports streetjs from the freshly packed local tarball. CI copies the packed tarball to ./streetjs.tgz and runs `npm ci` (pinned). See .github/workflows/ci-cd.yml package-integrity job.",
+  "dependencies": {
+    "streetjs": "file:streetjs.tgz"
+  }
+}

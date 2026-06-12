@@ -1,0 +1,10 @@
+{
+  "name": "pack-smoke-compat",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clean-install smoke fixture: the @streetjs/core compat shim re-exports the freshly packed local streetjs build. CI copies the packed tarballs to ./streetjs.tgz and ./street-core-compat.tgz, then runs `npm ci` (pinned). The compat package pins streetjs to the exact version, which the local core tarball satisfies.",
+  "dependencies": {
+    "streetjs": "file:streetjs.tgz",
+    "@streetjs/core": "file:street-core-compat.tgz"
+  }
+}
