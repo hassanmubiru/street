@@ -154,6 +154,7 @@ export class EnterpriseConsole {
 }
 
 function splitPath(path: string): string[] {
-  const clean = path.split('?')[0]!.replace(/\/+$/, '');
-  return clean.split('/').filter((s) => s.length > 0);
+  // No regex: empty segments from leading/trailing/duplicate '/' are dropped by
+  // the filter, so a trailing-slash strip is unnecessary (avoids `/\/+$/` ReDoS).
+  return path.split('?')[0]!.split('/').filter((s) => s.length > 0);
 }

@@ -37,8 +37,13 @@ export function namespaceOf(name: string): string {
 /** Extract the raw bearer token from an `Authorization` header value. */
 export function parseBearer(header: string | undefined): string | undefined {
   if (!header) return undefined;
-  const match = /^Bearer\s+(.+)$/i.exec(header.trim());
-  return match ? match[1]!.trim() : undefined;
+  const trimmed = header.trim();
+  // Anchored prefix test only (no unbounded backtracking); then slice off the
+  // 6-char "Bearer" word and the following whitespace. Avoids `/^Bearer\s+(.+)$/`
+  // polynomial ReDoS on inputs like "Bearer " + many spaces.
+  if (!/^Bearer\s/i.test(trimmed)) return undefined;
+  const token = trimmed.slice(6).trimStart();
+  return token.length > 0 ? token : undefined;
 }
 
 /**
