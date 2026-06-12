@@ -134,9 +134,7 @@ export class PgPool {
     // queued waiter with "Connection pool is closed". _doAcquire enqueues the
     // waiter synchronously (no await before waitQueue.push), so calling it in
     // the same tick keeps close()'s waiter-rejection contract correct.
-    if (!this.initialized) {
-      await this.ensureInitialized();
-    }
+    await this.ensureInitialized();
     const start = Date.now();
     const conn = await this._doAcquire();
     // Record only successful acquires so timeouts/failures don't skew the average
