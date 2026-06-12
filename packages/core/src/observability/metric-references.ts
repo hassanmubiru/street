@@ -67,6 +67,49 @@ const PROMQL_RESERVED = new Set<string>([
 ]);
 
 /**
+ * Replace every string literal in a PromQL expression with a single space,
+ * in a single O(n) pass. Handles double- and single-quoted strings (with
+ * backslash escapes) and backtick raw strings (no escapes), matching the
+ * three regexes this replaced. An unterminated literal is consumed to the
+ * end of input. Linear by construction, so it cannot be driven into the
+ * polynomial backtracking that `/"(?:[^"\\]|\\.)*"/g` and friends allow.
+ */
+function stripStringLiterals(expr: string): string {
+  let out = '';
+  const n = expr.length;
+  let i = 0;
+  while (i < n) {
+    const ch = expr[i];
+    if (ch === '"' || ch === "'") {
+      const quote = ch;
+      i += 1;
+      while (i < n) {
+        const c = expr[i];
+        if (c === '\\') {
+          i += 2; // skip the escaped character
+          continue;
+        }
+        if (c === quote) {
+          i += 1; // consume closing quote
+          break;
+        }
+        i += 1;
+      }
+      out += ' ';
+    } else if (ch === '`') {
+      i += 1;
+      while (i < n && expr[i] !== '`') i += 1;
+      if (i < n) i += 1; // consume closing backtick
+      out += ' ';
+    } else {
+      out += ch;
+      i += 1;
+    }
+  }
+  return out;
+}
+
+/**
  * Extract the set of metric names referenced by a single PromQL expression.
  * Conservative: function calls (identifier immediately followed by `(`),
  * reserved words, label names, durations, and numeric literals are excluded.
@@ -76,10 +119,9 @@ export function extractMetricsFromExpr(expr: string): Set<string> {
   if (typeof expr !== 'string' || expr.trim() === '') return out;
 
   // 1. Strip string literals so their contents never leak in as identifiers.
-  let s = expr
-    .replace(/"(?:[^"\\]|\\.)*"/g, ' ')
-    .replace(/'(?:[^'\\]|\\.)*'/g, ' ')
-    .replace(/`[^`]*`/g, ' ');
+  //    A single linear scan (instead of regexes like /"(?:[^"\\]|\\.)*"/g) avoids
+  //    the polynomial backtracking those patterns exhibit on unterminated quotes.
+  let s = stripStringLiterals(expr);
 
   // 2. Strip label matcher blocks `{ ... }` (label names + values).
   s = s.replace(/\{[^}]*\}/g, ' ');
