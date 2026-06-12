@@ -272,7 +272,9 @@ async function main() {
           await pool.query('SELECT 1');
           return sendJson(res, 200, { status: 'ready' });
         } catch (err) {
-          return sendJson(res, 503, { status: 'not-ready', error: String(err?.message ?? err) });
+          // Log the detail server-side; don't leak it to the client (CWE-209).
+          console.error(`[enterprise-server] readiness check failed: ${err instanceof Error ? err.stack : String(err)}`);
+          return sendJson(res, 503, { status: 'not-ready' });
         }
       }
       // Plain /health alias (live).
