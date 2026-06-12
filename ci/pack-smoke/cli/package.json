@@ -1,0 +1,10 @@
+{
+  "name": "pack-smoke-cli",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Clean-install smoke fixture: runs @streetjs/cli against the freshly packed local streetjs build. CI copies the packed tarballs to ./streetjs.tgz and ./street-cli.tgz, then runs `npm ci` (pinned). The local core tarball satisfies the CLI's streetjs range so the bin runs against THIS build, never a previously published one.",
+  "dependencies": {
+    "streetjs": "file:streetjs.tgz",
+    "@streetjs/cli": "file:street-cli.tgz"
+  }
+}
