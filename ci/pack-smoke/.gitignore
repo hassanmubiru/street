@@ -1,0 +1,5 @@
+# Clean-install smoke fixtures: only package.json + package-lock.json are
+# committed. CI copies the freshly packed tarballs in (with stable names) and
+# runs `npm ci`, which materialises node_modules. Both are build artifacts.
+*.tgz
+node_modules/
