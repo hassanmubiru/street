@@ -15,20 +15,20 @@
 # Zero runtime deps in core; the server's only dependency is `streetjs` itself,
 # installed from the npm registry at the version pinned in package.json.
 
-FROM node:20-alpine AS build
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS build
 WORKDIR /app
-COPY package.json ./
+COPY package.json package-lock.json ./
 COPY tsconfig.json ./
 COPY src ./src
-RUN npm install --no-audit --no-fund \
+RUN npm ci --no-audit --no-fund \
   && npm run build
 
-FROM node:20-alpine AS runtime
+FROM node:20-alpine@sha256:fb4cd12c85ee03686f6af5362a0b0d56d50c58a04632e6c0fb8363f609372293 AS runtime
 WORKDIR /app
 ENV NODE_ENV=production
 # Install only production dependencies (streetjs core, zero further runtime deps).
-COPY package.json ./
-RUN npm install --omit=dev --no-audit --no-fund
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev --no-audit --no-fund
 COPY --from=build /app/dist ./dist
 
 # Non-root for least privilege.
