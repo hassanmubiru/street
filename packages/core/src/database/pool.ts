@@ -126,7 +126,17 @@ export class PgPool {
   async acquire(): Promise<PgConnection> {
     // Lazy warm-up: the first acquire (or query/stream/transaction, which all
     // funnel through here) initializes the pool on demand. Idempotent thereafter.
-    await this.ensureInitialized();
+    //
+    // For an ALREADY-initialized pool we must not introduce an extra `await`
+    // boundary here: that microtask yield would let a concurrent close() run
+    // before _doAcquire enqueues this caller as a waiter, so the caller would
+    // hit the synchronous "Pool is closed" guard instead of being rejected as a
+    // queued waiter with "Connection pool is closed". _doAcquire enqueues the
+    // waiter synchronously (no await before waitQueue.push), so calling it in
+    // the same tick keeps close()'s waiter-rejection contract correct.
+    if (!this.initialized) {
+      await this.ensureInitialized();
+    }
     const start = Date.now();
     const conn = await this._doAcquire();
     // Record only successful acquires so timeouts/failures don't skew the average
