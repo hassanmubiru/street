@@ -184,16 +184,12 @@ export function extractMetricsFromExpr(expr: string): Set<string> {
   //    the polynomial backtracking those patterns exhibit on unterminated quotes.
   let s = stripStringLiterals(expr);
 
-  // 2. Strip label matcher blocks `{ ... }` (label names + values).
-  s = s.replace(/\{[^}]*\}/g, ' ');
+  // 2. Strip label-matcher blocks `{...}`, range selectors `[...]`, and
+  //    aggregation label lists (`by (le)`, ...) — also a single linear pass, for
+  //    the same ReDoS-avoidance reason as step 1.
+  s = stripSelectorsAndModifiers(s);
 
-  // 3. Strip range / subquery selectors `[ ... ]` (durations).
-  s = s.replace(/\[[^\]]*\]/g, ' ');
-
-  // 4. Strip aggregation / matching label lists: `by (le)`, `without (x)`, ...
-  s = s.replace(MODIFIER_WITH_LABELS, ' ');
-
-  // 5. Scan remaining identifiers.
+  // 3. Scan remaining identifiers.
   IDENT.lastIndex = 0;
   let m: RegExpExecArray | null;
   while ((m = IDENT.exec(s)) !== null) {
