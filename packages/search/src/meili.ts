@@ -34,7 +34,7 @@ export class MeilisearchProvider implements SearchProvider {
   readonly name = 'meilisearch';
   private readonly host: string;
   private readonly apiKey: string | undefined;
-  private readonly index: string;
+  private readonly indexName: string;
   private readonly filterable: string[];
   private readonly fetch: FetchLike;
   private readonly taskTimeoutMs: number;
@@ -43,7 +43,7 @@ export class MeilisearchProvider implements SearchProvider {
   constructor(options: MeilisearchProviderOptions) {
     this.host = options.host.replace(/\/$/, '');
     this.apiKey = options.apiKey;
-    this.index = options.index;
+    this.indexName = options.index;
     this.filterable = options.filterableAttributes ?? [];
     const g = (globalThis as { fetch?: unknown }).fetch;
     this.fetch = options.fetch ?? (g as FetchLike);
@@ -87,13 +87,13 @@ export class MeilisearchProvider implements SearchProvider {
       this.settingsReady = (async () => {
         // Create the index (idempotent) and declare filterable attributes.
         try {
-          await this.waitForTask(await this.call('POST', '/indexes', { uid: this.index, primaryKey: 'id' }));
+          await this.waitForTask(await this.call('POST', '/indexes', { uid: this.indexName, primaryKey: 'id' }));
         } catch {
           // index may already exist; ignore
         }
         if (this.filterable.length > 0) {
           await this.waitForTask(
-            await this.call('PUT', `/indexes/${this.index}/settings/filterable-attributes`, this.filterable),
+            await this.call('PUT', `/indexes/${this.indexName}/settings/filterable-attributes`, this.filterable),
           );
         }
       })();
@@ -109,18 +109,18 @@ export class MeilisearchProvider implements SearchProvider {
     if (docs.length === 0) return;
     await this.ensureSettings();
     const payload = docs.map((d) => ({ id: d.id, text: d.text, ...(d.attributes ?? {}) }));
-    await this.waitForTask(await this.call('POST', `/indexes/${this.index}/documents`, payload));
+    await this.waitForTask(await this.call('POST', `/indexes/${this.indexName}/documents`, payload));
   }
 
   async remove(id: string): Promise<boolean> {
     await this.ensureSettings();
-    await this.waitForTask(await this.call('DELETE', `/indexes/${this.index}/documents/${encodeURIComponent(id)}`));
+    await this.waitForTask(await this.call('DELETE', `/indexes/${this.indexName}/documents/${encodeURIComponent(id)}`));
     return true;
   }
 
   async clear(): Promise<void> {
     await this.ensureSettings();
-    await this.waitForTask(await this.call('DELETE', `/indexes/${this.index}/documents`));
+    await this.waitForTask(await this.call('DELETE', `/indexes/${this.indexName}/documents`));
   }
 
   async search(query: string, options: ResolvedSearchOptions): Promise<SearchResult> {
@@ -135,7 +135,7 @@ export class MeilisearchProvider implements SearchProvider {
     if (filter.length) body['filter'] = filter;
     if (options.facets.length) body['facets'] = options.facets;
 
-    const json = await this.call('POST', `/indexes/${this.index}/search`, body);
+    const json = await this.call('POST', `/indexes/${this.indexName}/search`, body);
     const rawHits = (json['hits'] as Array<Record<string, unknown>>) ?? [];
     const hits: SearchHit[] = rawHits.map((h, i) => ({
       id: String(h['id']),
@@ -165,7 +165,7 @@ export class MeilisearchProvider implements SearchProvider {
     const p = prefix.toLowerCase();
     if (p.length === 0) return [];
     await this.ensureSettings();
-    const json = await this.call('POST', `/indexes/${this.index}/search`, { q: prefix, limit: 50 });
+    const json = await this.call('POST', `/indexes/${this.indexName}/search`, { q: prefix, limit: 50 });
     const hits = (json['hits'] as Array<Record<string, unknown>>) ?? [];
     const freq = new Map<string, number>();
     for (const h of hits) {
