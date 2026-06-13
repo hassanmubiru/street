@@ -1,0 +1,34 @@
+name: Feature request
+description: Propose a new capability or enhancement for StreetJS
+labels: ["enhancement", "triage"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve? Who benefits?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the API/behaviour you'd like. Larger changes may need an RFC (see CONTRIBUTING.md).
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Backward compatibility
+      options:
+        - "Backward compatible"
+        - "Requires a breaking change"
+        - "Unsure"
+    validations:
+      required: true
