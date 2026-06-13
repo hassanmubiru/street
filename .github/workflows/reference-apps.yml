@@ -41,3 +41,6 @@ jobs:
 
       - name: Run reference-app smoke tests
         run: bash scripts/verify-reference-apps.sh
+
+      - name: Run reference-app domain benchmarks
+        run: node scripts/benchmark-reference-apps.mjs
