@@ -9,6 +9,22 @@ Security fixes are provided for the latest published `1.0.x` release line.
 | 1.0.x   | :white_check_mark: |
 | < 1.0   | :x:                |
 
+## Severity Classification
+
+We triage reports with CVSS v3.1 and target the following response/fix windows:
+
+| Severity | CVSS v3.1 | Examples | Target fix |
+| --- | --- | --- | --- |
+| Critical | 9.0–10.0 | Unauthenticated RCE, auth bypass, secret/key disclosure | ≤ 7 days |
+| High | 7.0–8.9 | Privilege escalation, SQL/command injection, stored XSS | ≤ 14 days |
+| Medium | 4.0–6.9 | Reflected XSS, CSRF, ReDoS, info leak requiring conditions | ≤ 30 days |
+| Low | 0.1–3.9 | Limited-impact issues, hardening gaps, verbose errors | best effort / next release |
+
+Severity may be adjusted based on exploitability, affected configurations
+(production-default vs opt-in), and real-world impact. Fixes for Critical/High
+issues are released as patch versions on the supported `1.0.x` line and noted in
+the changelog and a GitHub Security Advisory.
+
 ## Reporting a Vulnerability
 
 **Please do not report security vulnerabilities through public GitHub issues,
