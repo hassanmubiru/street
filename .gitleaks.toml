@@ -14,15 +14,20 @@ useDefault = true
 [allowlist]
 description = "Known public/test fixtures that are not real secrets."
 
-# Paths that only ever contain fixtures, fakes, or sample env templates.
+# Paths that only ever contain fixtures, fakes, sample env templates, docs, or
+# gitignored build artifacts / local env (never committed source secrets).
 paths = [
+  '''\.env$''',
   '''\.env\.example$''',
-  '''.*/tests/.*\.test\.ts$''',
+  '''(^|/)dist/''',
+  '''(^|/)docs/''',
+  '''.*/tests/.*\.test\.(ts|js)$''',
   '''.*/examples/.*''',
   '''packages/.*/example/.*''',
 ]
 
-# Specific well-known/public or obviously-fake values used in tests & docs.
+# Specific well-known/public or obviously-fake values used in tests, docs, and
+# sample compose files.
 regexes = [
   # Azurite's documented well-known development account key (public constant).
   '''Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==''',
@@ -31,6 +36,9 @@ regexes = [
   '''a-very-secret-key-1234''',
   '''street_test_key''',
   '''street_secret''',
+  # Placeholder dev-config values in sample docker-compose files.
+  '''change-me-in-production''',
+  '''0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef''',
   # Placeholder/sample tokens in docs.
   '''sk-\.\.\.''',
   '''sk-ant-\.\.\.''',
