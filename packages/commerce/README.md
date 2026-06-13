@@ -24,27 +24,44 @@ npm install @streetjs/commerce
 ```ts
 import { CommerceService } from '@streetjs/commerce';
 
-const shop = new CommerceService(); // uses a FakeGateway by default
+const shop = new CommerceService(); // in-memory store + FakeGateway by default
 
-const widget = shop.createProduct({ name: 'Widget', priceCents: 1500 });
-shop.restock(widget.id, 10);
+const widget = await shop.createProduct({ name: 'Widget', priceCents: 1500 });
+await shop.restock(widget.id, 10);
 
-shop.addToCart('cart-1', widget.id, 2);
-shop.createCoupon({ code: 'SAVE10', kind: 'percent', value: 10 });
+await shop.addToCart('cart-1', widget.id, 2);
+await shop.createCoupon({ code: 'SAVE10', kind: 'percent', value: 10 });
 
 const order = await shop.checkout('cart-1', { couponCode: 'SAVE10' });
 // order.subtotalCents 3000, discountCents 300, totalCents 2700, status 'paid'
-shop.availability(widget.id); // { onHand: 8, reserved: 0, available: 8 }
+await shop.availability(widget.id); // { onHand: 8, reserved: 0, available: 8 }
 ```
+
+All methods are async. Persistence is a pluggable async `CommerceStore`.
+
+## Postgres (atomic, concurrency-safe)
+
+```ts
+import { PgPool } from 'streetjs';
+import { CommerceService, PgCommerceStore, COMMERCE_MIGRATION_SQL } from '@streetjs/commerce';
+
+const pool = new PgPool({ /* … */ });
+await pool.query(COMMERCE_MIGRATION_SQL);
+const shop = new CommerceService({ store: new PgCommerceStore(pool) });
+```
+
+`PgCommerceStore.reserveStock` is a single atomic conditional `UPDATE`
+(`SET reserved = reserved + n WHERE on_hand - reserved >= n`), so **concurrent
+checkouts cannot oversell** — verified by a live-Postgres test that fires 12
+simultaneous checkouts at 3 units of stock and asserts exactly 3 succeed.
 
 ## No-oversell guarantee
 
 `checkout` reserves every line **all-or-nothing** before charging. If any line
 lacks stock, `InsufficientStockError` is thrown *before* the gateway is touched.
-If payment fails, the reservation is released. A property test
-(`commerce-pbt.test.ts`, 200 runs) asserts that across random interleavings of
-restocks and checkouts: availability is never negative, reservations settle to
-zero, and units sold never exceed units restocked.
+If payment fails, the reservation is released. A property test (200 runs) plus
+the live-PG concurrency test enforce: availability never negative, reservations
+settle to zero, units sold never exceed units restocked.
 
 ## Payments
 
@@ -72,9 +89,11 @@ without network access.
 
 ## Note on persistence
 
-State is in-memory for a single instance (the service is the seam for a
-persistent adapter; sibling `@streetjs/*` packages show the store-interface +
-Postgres pattern). A Postgres-backed adapter is a tracked follow-up.
+State lives behind a pluggable async `CommerceStore`: `InMemoryCommerceStore`
+(default) or `PgCommerceStore` (Postgres, via `COMMERCE_MIGRATION_SQL`). Carts
+are transient/in-process; products, stock, coupons, orders, and reviews persist
+through the store. The no-oversell guarantee depends on the store's atomic
+`reserveStock`, not on cart storage.
 
 ## Testing
 
