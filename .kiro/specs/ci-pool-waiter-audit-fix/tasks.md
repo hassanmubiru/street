@@ -21,7 +21,7 @@ can be implemented in either order.
     implementation (it currently describes the contract the old code violated).
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.4, 5.6_
 
-- [-] 2. Verify the pool fix against the failing suites
+- [x] 2. Verify the pool fix against the failing suites
   - Run `npm run build:app -w packages/core` to recompile.
   - Run `node --test packages/core/dist/tests/memory-leak.test.js packages/core/dist/tests/wire-protocol.test.js` and confirm all pass.
   - Run `node --test packages/core/dist/tests/system/memory-safety.test.js` and
@@ -30,7 +30,7 @@ can be implemented in either order.
     does not consume waiter", and "acquire after close throws synchronously".
   - _Requirements: 5.1, 5.2, 5.6_
 
-- [-] 3. Bump esbuild past the high-severity advisory
+- [x] 3. Bump esbuild past the high-severity advisory
   - In `packages/core/package.json`, raise the `esbuild` devDependency range to
     the first patched line outside the advisory range (e.g. `^0.29.0` or the
     current patched latest), keeping it in `devDependencies`.
