@@ -60,7 +60,8 @@ export class AzureBlobStorageProvider implements StorageProvider {
   /** Build SharedKey StringToSign and return the Authorization header value. */
   private authorize(
     method: string,
-    pathAndQuery: string,
+    fullPathname: string,
+    queryParams: Array<readonly [string, string]>,
     headers: Record<string, string>,
     contentLength: number,
   ): string {
@@ -73,19 +74,15 @@ export class AzureBlobStorageProvider implements StorageProvider {
       .map(([k, v]) => `${k}:${v}`)
       .join('\n');
 
-    // CanonicalizedResource: /account/path + sorted query params.
-    const [path, query = ''] = pathAndQuery.split('?');
-    const params = query
-      ? query.split('&').map((p) => {
-          const i = p.indexOf('=');
-          return [decodeURIComponent(p.slice(0, i)).toLowerCase(), decodeURIComponent(p.slice(i + 1))] as const;
-        })
-      : [];
-    params.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-    const canonResource =
-      `/${this.account}${path}` + params.map(([k, v]) => `\n${k}:${v}`).join('');
+    // CanonicalizedResource = "/" + account + the FULL request pathname + sorted
+    // query params. Using the full pathname (which, for emulators like Azurite,
+    // already contains the account segment) makes signing correct for both
+    // account-in-host (real Azure) and account-in-path (Azurite) endpoints.
+    const params = queryParams
+      .map(([k, v]) => [k.toLowerCase(), v] as const)
+      .sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+    const canonResource = `/${this.account}${fullPathname}` + params.map(([k, v]) => `\n${k}:${v}`).join('');
 
-    // Content-Length is "" when 0 (API 2015-02-21+).
     const clen = contentLength > 0 ? String(contentLength) : '';
     const stringToSign = [
       method,
@@ -113,13 +110,15 @@ export class AzureBlobStorageProvider implements StorageProvider {
     extraHeaders: Record<string, string> = {},
     body?: Uint8Array,
   ): ReturnType<AzureFetch> {
+    const url = new URL(`${this.endpoint}${pathAndQuery}`);
+    const queryParams = [...url.searchParams.entries()] as Array<readonly [string, string]>;
     const contentLength = body ? body.byteLength : 0;
     const headers: Record<string, string> = {
       'x-ms-date': new Date().toUTCString(),
       'x-ms-version': API_VERSION,
       ...extraHeaders,
     };
-    headers['authorization'] = this.authorize(method, pathAndQuery, headers, contentLength);
+    headers['authorization'] = this.authorize(method, decodeURIComponent(url.pathname), queryParams, headers, contentLength);
     return this.fetch(`${this.endpoint}${pathAndQuery}`, { method, headers, body });
   }
 
