@@ -1,0 +1,21 @@
+# Cloudflare Workers deployment for StreetJS via the @streetjs/edge adapter.
+# The edge adapter (packages/edge) maps a Worker fetch handler onto the Street
+# router. Build your worker entry to import the adapter, then:
+#   wrangler deploy
+name = "streetjs"
+main = "dist/worker.js"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Workers are request-scoped; set non-secret config here and secrets via
+# `wrangler secret put` (ALLOWED_ORIGINS, JWT_SECRET, SESSION_KEY, KEK, PG_*).
+[vars]
+NODE_ENV = "production"
+
+[observability]
+enabled = true
+
+# Example worker entry (dist/worker.js compiled from):
+#   import { createWorkerHandler } from '@streetjs/edge';
+#   import { buildApp } from './app.js';
+#   export default { fetch: createWorkerHandler(buildApp()) };
