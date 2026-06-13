@@ -39,7 +39,7 @@ describe('Property: in-memory search matches a reference model', () => {
           }));
           await svc.indexAll(docs);
 
-          const filter = colorFilter ? { color: colorFilter } : {};
+          const filter: Record<string, string> = colorFilter ? { color: colorFilter } : {};
           const res = await svc.search(term, { limit: 1000, filter, facets: ['color'] });
 
           // Reference: docs containing the term (and passing the filter), with tf.
