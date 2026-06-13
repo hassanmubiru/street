@@ -30,7 +30,7 @@ describe('Property: inventory never oversells', () => {
         const okGateway = new FakeGateway({ idGen: () => `p${++cnt}` });
         const failGateway = new FakeGateway({ declineAtOrAbove: 1 });
         const c = new CommerceService({ now: () => 1, idGen: () => `o${++cnt}` });
-        c.createProduct({ name: 'P', priceCents: 100, id: 'prod' });
+        await c.createProduct({ name: 'P', priceCents: 100, id: 'prod' });
 
         let restocked = 0;
         let sold = 0;
@@ -38,29 +38,26 @@ describe('Property: inventory never oversells', () => {
         for (let i = 0; i < ops.length; i++) {
           const op = ops[i]!;
           if (op.t === 'restock') {
-            c.restock('prod', op.qty);
+            await c.restock('prod', op.qty);
             restocked += op.qty;
           } else {
             const cartId = `cart${i}`;
-            c.addToCart(cartId, 'prod', op.qty);
-            const before = c.availability('prod');
+            await c.addToCart(cartId, 'prod', op.qty);
+            const before = await c.availability('prod');
             try {
               await c.checkout(cartId, { gateway: op.fail ? failGateway : okGateway });
-              sold += op.qty; // committed
+              sold += op.qty;
             } catch (err) {
               assert.ok(err instanceof InsufficientStockError || err instanceof PaymentError);
             }
-            // I1: availability never negative, before and after.
             assert.ok(before.available >= 0);
-            const after = c.availability('prod');
+            const after = await c.availability('prod');
             assert.ok(after.available >= 0, `available negative: ${JSON.stringify(after)}`);
-            // I2: nothing is mid-flight between checkouts → reserved settles to 0.
             assert.equal(after.reserved, 0, `reserved not settled: ${JSON.stringify(after)}`);
           }
         }
 
-        const final = c.availability('prod');
-        // I3: units sold never exceed units restocked; on-hand reconciles.
+        const final = await c.availability('prod');
         assert.ok(sold <= restocked, `sold ${sold} > restocked ${restocked}`);
         assert.equal(final.onHand, restocked - sold);
         assert.equal(final.reserved, 0);
