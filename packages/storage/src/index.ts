@@ -338,3 +338,5 @@ export function validateKey(key: string): string {
   if (parts.some((p) => p === '..')) throw new Error('storage: key must not contain ".." segments');
   return key;
 }
+
+export * from './pg.js';
