@@ -20,7 +20,7 @@ export type AzureFetch = (url: string, init?: {
 }) => Promise<{
   ok: boolean;
   status: number;
-  headers: { get(name: string): string | null };
+  headers: { get(name: string): string | null; forEach(cb: (value: string, key: string) => void): void };
   text(): Promise<string>;
   arrayBuffer(): Promise<ArrayBuffer>;
 }>;
@@ -160,11 +160,9 @@ export class AzureBlobStorageProvider implements StorageProvider {
     if (!res.ok) throw new Error(`azure: get blob failed ${res.status}`);
     const data = Buffer.from(await res.arrayBuffer());
     const metadata: Record<string, string> = {};
-    // x-ms-meta-* headers carry custom metadata (best-effort; header iteration
-    // is limited via get()).
-    for (const k of Object.keys((res.headers as unknown as { map?: Record<string, string> }).map ?? {})) {
-      if (k.toLowerCase().startsWith('x-ms-meta-')) metadata[k.slice('x-ms-meta-'.length)] = res.headers.get(k) ?? '';
-    }
+    res.headers.forEach((value, key) => {
+      if (key.toLowerCase().startsWith('x-ms-meta-')) metadata[key.slice('x-ms-meta-'.length)] = value;
+    });
     return {
       key,
       data,
