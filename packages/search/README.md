@@ -81,10 +81,11 @@ Start a local Meilisearch with `docker compose -f docker-compose.search.yml up -
 
 ## Roadmap
 
-An Elasticsearch provider implements the same `SearchProvider` interface and is
-tracked as a follow-up (its service container is already wired in
-`docker-compose.search.yml` and the Provider Integration CI workflow);
-application code does not change when swapping providers.
+All three external providers are implemented and verified against live services
+via the Provider Integration CI workflow + `docker-compose.search.yml`:
+in-memory, Postgres FTS, **Meilisearch**, and **Elasticsearch** (the latter two
+verified against `getmeili/meilisearch` and `docker.elastic.co/.../elasticsearch`).
+Application code is identical across providers.
 
 ## API
 

@@ -4,9 +4,10 @@ Official Street Framework storage module: a **unified file-storage API** with
 pluggable providers and cross-cutting concerns handled once at the service
 layer — upload limits, malware/scan hooks, transform hooks, and signed URLs.
 
-- Providers: `InMemoryStorageProvider` (default), `LocalStorageProvider` (FS, traversal-safe)
-- S3 / Cloudflare R2 / Azure Blob / GCS via adapters implementing `StorageProvider`
-  (the repo already ships `@streetjs/plugin-s3` and `@streetjs/plugin-r2`)
+- Providers: `InMemoryStorageProvider` (default), `LocalStorageProvider` (FS, traversal-safe),
+  `PgStorageProvider` (Postgres), `GcsStorageProvider` (Google Cloud Storage / fake-gcs) — all verified
+- `AzureBlobStorageProvider` is **experimental / unverified** (SharedKey auth not yet
+  confirmed against Azurite — see the file header). S3 / R2 ship as `@streetjs/plugin-s3` and `-r2`
 - Upload size limits, async scan hooks (malware), transform hooks (image opt.)
 - HMAC signed URLs with expiry + verification
 
