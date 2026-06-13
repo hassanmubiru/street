@@ -21,25 +21,36 @@ npm install @streetjs/admin
 ```ts
 import { AdminService } from '@streetjs/admin';
 
-const admin = new AdminService();
+const admin = new AdminService(); // in-memory store by default
 
-admin.createRole('system', { name: 'support', permissions: ['users:read', 'tickets:*'] });
-const jane = admin.createUser('system', { email: 'jane@acme.com', roles: ['support'] });
+await admin.createRole('system', { name: 'support', permissions: ['users:read', 'tickets:*'] });
+const jane = await admin.createUser('system', { email: 'jane@acme.com', roles: ['support'] });
 
-admin.can(jane.id, 'users:read');     // true
-admin.can(jane.id, 'tickets:close');  // true (tickets:* wildcard)
-admin.can(jane.id, 'users:delete');   // false
+await admin.can(jane.id, 'users:read');     // true
+await admin.can(jane.id, 'tickets:close');  // true (tickets:* wildcard)
+await admin.can(jane.id, 'users:delete');   // false
 
-admin.suspendUser('system', jane.id);
-admin.can(jane.id, 'users:read');     // false (suspended → denied all)
+await admin.suspendUser('system', jane.id);
+await admin.can(jane.id, 'users:read');     // false (suspended → denied all)
 
 // Audit viewer — newest first, filterable.
-admin.auditLog({ action: 'user.suspend' });
-admin.auditLog({ actorId: 'system', limit: 50 });
+await admin.auditLog({ action: 'user.suspend' });
+await admin.auditLog({ actorId: 'system', limit: 50 });
 ```
 
-The first argument to every mutating method is the **actor** id — recorded in
-the audit log so you always know who did what.
+All methods are async (the store is pluggable). The first argument to every
+mutating method is the **actor** id — recorded in the audit log.
+
+## Postgres
+
+```ts
+import { PgPool } from 'streetjs';
+import { AdminService, PgAdminStore, ADMIN_MIGRATION_SQL } from '@streetjs/admin';
+
+const pool = new PgPool({ /* … */ });
+await pool.query(ADMIN_MIGRATION_SQL);
+const admin = new AdminService({ store: new PgAdminStore(pool) });
+```
 
 ## Permissions
 
