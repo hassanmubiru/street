@@ -870,8 +870,6 @@ jobs:
         run: npm publish -w packages/cli --provenance --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # Mark @streetjs/core deprecated AFTER streetjs + the compat shim are
       # published, so the "install streetjs instead" message is actionable.
