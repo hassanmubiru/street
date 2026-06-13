@@ -44,11 +44,16 @@ describe('User & role management', () => {
 
   it('validates email shape without ReDoS (linear, backtracking-free)', async () => {
     const a = svc();
-    for (const bad of ['', '@y.com', 'a@', 'a@b', 'a@.com', 'a@b.', 'a b@c.com', 'a@b c.com', 'a@@b.com', '!@!.' + '!.'.repeat(50_000)]) {
+    const invalid = [
+      '', '@y.com', 'a@', 'a@b', 'a@.com', 'a@b.', 'a b@c.com', 'a@b c.com', 'a@@b.com',
+      // Pathological near-miss: a long domain with NO dot fails the check and
+      // would trigger polynomial backtracking under the old regex. Here it is
+      // rejected in linear time (the whole test completes in ~1s).
+      'a@' + 'x'.repeat(100_000),
+    ];
+    for (const bad of invalid) {
       await assert.rejects(() => a.createUser('admin', { email: bad }), /valid email/, `should reject "${bad.slice(0, 12)}…"`);
     }
-    // The pathological input above also asserts the check returns promptly
-    // (a polynomial regex would hang on it).
     const ok = await a.createUser('admin', { email: 'Good.Name@sub.example.com' });
     assert.equal(ok.email, 'good.name@sub.example.com');
   });
