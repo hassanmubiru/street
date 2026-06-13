@@ -215,6 +215,10 @@ export type { UploadPolicy, UploadGuardResult, UploadRejectionCode } from './mul
 // ── WebSocket + SSE ───────────────────────────────────────────────────────────
 export { StreetWebSocketServer, StreetSocket } from './websocket/server.js';
 export type { WsHandler, WsEvent, WsServerOptions, RawWsHandler } from './websocket/server.js';
+export { ChannelHub, ChannelEvents } from './websocket/channels.js';
+export type {
+  RealtimeConnection, ChannelHubOptions, PublishOptions, PresencePayload, TypingPayload,
+} from './websocket/channels.js';
 export { SseConnection, createSse } from './websocket/sse.js';
 export type { SseEvent } from './websocket/sse.js';
 
