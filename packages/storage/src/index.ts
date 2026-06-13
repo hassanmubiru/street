@@ -341,3 +341,4 @@ export function validateKey(key: string): string {
 
 export * from './pg.js';
 export * from './gcs.js';
+export * from './azure.js';
