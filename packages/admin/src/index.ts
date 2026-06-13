@@ -1,7 +1,7 @@
 // packages/admin/src/index.ts
 // Official Street Framework admin module: @streetjs/admin.
 //
-// A cohesive admin/back-office domain:
+// A cohesive admin/back-office domain over a pluggable async store:
 //   * User management   — create/list/suspend/activate/delete, role assignment.
 //   * Roles & permissions (RBAC) — wildcard-aware permission grants.
 //   * Authorization      — `can(userId, permission)` resolves a user's roles to
@@ -9,93 +9,44 @@
 //   * Audit log          — every mutating admin action appends an immutable
 //                          event; `auditLog` queries with filters + pagination.
 //
-// Permissions use a `domain:action` convention with `*` wildcards, e.g. a role
-// granting `users:*` satisfies `users:read`, and `*` satisfies anything.
-//
-// State is in-memory for a single instance; the service is the seam for a
-// persistent adapter (sibling @streetjs/* packages show the Postgres pattern).
+// Permissions use a `domain:action` convention with `*` wildcards. State lives
+// behind {@link AdminStore}: {@link InMemoryAdminStore} (default) or the
+// Postgres-backed adapter in ./pg.
 
 import { randomUUID } from 'node:crypto';
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+import type { AdminUser, Role, AuditEvent, AuditQuery, UserStatus } from './types.js';
+import { permissionMatches } from './types.js';
+import { InMemoryAdminStore, type AdminStore } from './store.js';
 
-export type UserStatus = 'active' | 'suspended';
-
-export interface AdminUser {
-  id: string;
-  email: string;
-  status: UserStatus;
-  roles: string[];
-  createdAt: number;
-}
-
-export interface Role {
-  name: string;
-  permissions: string[];
-}
-
-export interface AuditEvent {
-  id: string;
-  actorId: string;
-  action: string;
-  target: string | null;
-  metadata: Record<string, unknown>;
-  createdAt: number;
-  /** Monotonic ordering key. */
-  seq: number;
-}
-
-export interface AuditQuery {
-  actorId?: string;
-  action?: string;
-  target?: string;
-  /** Only events with createdAt >= since. */
-  since?: number;
-  /** Only events with createdAt <= until. */
-  until?: number;
-  limit?: number;
-  /** Only events with seq < before (older), for pagination. */
-  before?: number;
-}
+export * from './types.js';
+export * from './store.js';
+export * from './pg.js';
 
 export interface AdminServiceOptions {
+  store?: AdminStore;
   now?: () => number;
   idGen?: () => string;
 }
 
-/** Permission match: `granted` may use `*` wildcards (`users:*`, `*`, `*:read`). */
-export function permissionMatches(granted: string, requested: string): boolean {
-  if (granted === '*' || granted === requested) return true;
-  const g = granted.split(':');
-  const r = requested.split(':');
-  if (g.length !== r.length) return false;
-  return g.every((part, i) => part === '*' || part === r[i]);
-}
-
-// ── Service ─────────────────────────────────────────────────────────────────────
-
 export class AdminService {
-  private readonly users = new Map<string, AdminUser>();
-  private readonly emailIndex = new Map<string, string>(); // email -> userId
-  private readonly roles = new Map<string, Role>();
-  private readonly audit: AuditEvent[] = [];
-  private auditSeq = 0;
-
+  private readonly store: AdminStore;
   private readonly now: () => number;
   private readonly idGen: () => string;
 
   constructor(options: AdminServiceOptions = {}) {
+    this.store = options.store ?? new InMemoryAdminStore();
     this.now = options.now ?? (() => Date.now());
     this.idGen = options.idGen ?? (() => randomUUID());
   }
 
   // ── Users ──────────────────────────────────────────────────────────────────
 
-  createUser(actorId: string, input: { email: string; roles?: string[] }): AdminUser {
+  async createUser(actorId: string, input: { email: string; roles?: string[] }): Promise<AdminUser> {
     requireId(actorId, 'actorId');
     const email = requireEmail(input?.email);
-    if (this.emailIndex.has(email)) throw new Error(`A user with email "${email}" already exists`);
-    for (const r of input.roles ?? []) this.requireRole(r);
+    if (await this.store.getUserByEmail(email)) throw new Error(`A user with email "${email}" already exists`);
+    for (const r of input.roles ?? []) await this.requireRole(r);
     const user: AdminUser = {
       id: this.idGen(),
       email,
@@ -103,155 +54,159 @@ export class AdminService {
       roles: [...new Set(input.roles ?? [])],
       createdAt: this.now(),
     };
-    this.users.set(user.id, user);
-    this.emailIndex.set(email, user.id);
-    this.appendAudit(actorId, 'user.create', user.id, { email });
-    return clone(user);
+    await this.store.insertUser(user);
+    await this.appendAudit(actorId, 'user.create', user.id, { email });
+    return user;
   }
 
-  getUser(id: string): AdminUser | undefined {
-    const u = this.users.get(requireId(id, 'id'));
-    return u ? clone(u) : undefined;
+  async getUser(id: string): Promise<AdminUser | undefined> {
+    return this.store.getUser(requireId(id, 'id'));
   }
 
-  listUsers(filter: { status?: UserStatus; role?: string } = {}): AdminUser[] {
-    return [...this.users.values()]
+  async listUsers(filter: { status?: UserStatus; role?: string } = {}): Promise<AdminUser[]> {
+    const all = await this.store.listUsers();
+    return all
       .filter((u) => (!filter.status || u.status === filter.status) && (!filter.role || u.roles.includes(filter.role)))
-      .map(clone)
       .sort((a, b) => (a.email < b.email ? -1 : a.email > b.email ? 1 : 0));
   }
 
-  suspendUser(actorId: string, userId: string): AdminUser {
+  async suspendUser(actorId: string, userId: string): Promise<AdminUser> {
     requireId(actorId, 'actorId');
-    const u = this.requireUser(userId);
+    const u = await this.requireUser(userId);
     if (u.status !== 'suspended') {
       u.status = 'suspended';
-      this.appendAudit(actorId, 'user.suspend', userId, {});
+      await this.store.updateUser(u);
+      await this.appendAudit(actorId, 'user.suspend', userId, {});
     }
-    return clone(u);
+    return u;
   }
 
-  activateUser(actorId: string, userId: string): AdminUser {
+  async activateUser(actorId: string, userId: string): Promise<AdminUser> {
     requireId(actorId, 'actorId');
-    const u = this.requireUser(userId);
+    const u = await this.requireUser(userId);
     if (u.status !== 'active') {
       u.status = 'active';
-      this.appendAudit(actorId, 'user.activate', userId, {});
+      await this.store.updateUser(u);
+      await this.appendAudit(actorId, 'user.activate', userId, {});
     }
-    return clone(u);
+    return u;
   }
 
-  assignRole(actorId: string, userId: string, role: string): AdminUser {
+  async assignRole(actorId: string, userId: string, role: string): Promise<AdminUser> {
     requireId(actorId, 'actorId');
-    const u = this.requireUser(userId);
-    this.requireRole(role);
+    const u = await this.requireUser(userId);
+    await this.requireRole(role);
     if (!u.roles.includes(role)) {
       u.roles.push(role);
-      this.appendAudit(actorId, 'user.assignRole', userId, { role });
+      await this.store.updateUser(u);
+      await this.appendAudit(actorId, 'user.assignRole', userId, { role });
     }
-    return clone(u);
+    return u;
   }
 
-  revokeRole(actorId: string, userId: string, role: string): AdminUser {
+  async revokeRole(actorId: string, userId: string, role: string): Promise<AdminUser> {
     requireId(actorId, 'actorId');
-    const u = this.requireUser(userId);
+    const u = await this.requireUser(userId);
     const idx = u.roles.indexOf(role);
     if (idx >= 0) {
       u.roles.splice(idx, 1);
-      this.appendAudit(actorId, 'user.revokeRole', userId, { role });
+      await this.store.updateUser(u);
+      await this.appendAudit(actorId, 'user.revokeRole', userId, { role });
     }
-    return clone(u);
+    return u;
   }
 
-  deleteUser(actorId: string, userId: string): boolean {
+  async deleteUser(actorId: string, userId: string): Promise<boolean> {
     requireId(actorId, 'actorId');
-    const u = this.users.get(requireId(userId, 'userId'));
+    const u = await this.store.getUser(requireId(userId, 'userId'));
     if (!u) return false;
-    this.users.delete(u.id);
-    this.emailIndex.delete(u.email);
-    this.appendAudit(actorId, 'user.delete', userId, { email: u.email });
+    await this.store.deleteUser(u.id);
+    await this.appendAudit(actorId, 'user.delete', userId, { email: u.email });
     return true;
   }
 
   // ── Roles & permissions ───────────────────────────────────────────────────────
 
-  createRole(actorId: string, input: { name: string; permissions?: string[] }): Role {
+  async createRole(actorId: string, input: { name: string; permissions?: string[] }): Promise<Role> {
     requireId(actorId, 'actorId');
     const name = requireNonEmpty(input?.name, 'name');
-    if (this.roles.has(name)) throw new Error(`Role "${name}" already exists`);
-    const role: Role = { name, permissions: [...new Set((input.permissions ?? []).map((p) => requireNonEmpty(p, 'permission')))] };
-    this.roles.set(name, role);
-    this.appendAudit(actorId, 'role.create', name, { permissions: role.permissions });
-    return cloneRole(role);
+    if (await this.store.getRole(name)) throw new Error(`Role "${name}" already exists`);
+    const role: Role = {
+      name,
+      permissions: [...new Set((input.permissions ?? []).map((p) => requireNonEmpty(p, 'permission')))],
+    };
+    await this.store.insertRole(role);
+    await this.appendAudit(actorId, 'role.create', name, { permissions: role.permissions });
+    return role;
   }
 
-  getRole(name: string): Role | undefined {
-    const r = this.roles.get(requireNonEmpty(name, 'name'));
-    return r ? cloneRole(r) : undefined;
+  async getRole(name: string): Promise<Role | undefined> {
+    return this.store.getRole(requireNonEmpty(name, 'name'));
   }
 
-  listRoles(): Role[] {
-    return [...this.roles.values()].map(cloneRole).sort((a, b) => (a.name < b.name ? -1 : 1));
+  async listRoles(): Promise<Role[]> {
+    return (await this.store.listRoles()).sort((a, b) => (a.name < b.name ? -1 : 1));
   }
 
-  grantPermission(actorId: string, role: string, permission: string): Role {
+  async grantPermission(actorId: string, role: string, permission: string): Promise<Role> {
     requireId(actorId, 'actorId');
-    const r = this.requireRole(role);
+    const r = await this.requireRole(role);
     const perm = requireNonEmpty(permission, 'permission');
     if (!r.permissions.includes(perm)) {
       r.permissions.push(perm);
-      this.appendAudit(actorId, 'role.grant', role, { permission: perm });
+      await this.store.updateRole(r);
+      await this.appendAudit(actorId, 'role.grant', role, { permission: perm });
     }
-    return cloneRole(r);
+    return r;
   }
 
-  revokePermission(actorId: string, role: string, permission: string): Role {
+  async revokePermission(actorId: string, role: string, permission: string): Promise<Role> {
     requireId(actorId, 'actorId');
-    const r = this.requireRole(role);
+    const r = await this.requireRole(role);
     const idx = r.permissions.indexOf(permission);
     if (idx >= 0) {
       r.permissions.splice(idx, 1);
-      this.appendAudit(actorId, 'role.revoke', role, { permission });
+      await this.store.updateRole(r);
+      await this.appendAudit(actorId, 'role.revoke', role, { permission });
     }
-    return cloneRole(r);
+    return r;
   }
 
-  deleteRole(actorId: string, name: string): boolean {
+  async deleteRole(actorId: string, name: string): Promise<boolean> {
     requireId(actorId, 'actorId');
-    const role = this.roles.get(requireNonEmpty(name, 'name'));
+    const role = await this.store.getRole(requireNonEmpty(name, 'name'));
     if (!role) return false;
-    this.roles.delete(name);
+    await this.store.deleteRole(name);
     // Detach the role from any users that held it.
-    for (const u of this.users.values()) {
+    for (const u of await this.store.listUsers()) {
       const idx = u.roles.indexOf(name);
-      if (idx >= 0) u.roles.splice(idx, 1);
+      if (idx >= 0) {
+        u.roles.splice(idx, 1);
+        await this.store.updateUser(u);
+      }
     }
-    this.appendAudit(actorId, 'role.delete', name, {});
+    await this.appendAudit(actorId, 'role.delete', name, {});
     return true;
   }
 
   // ── Authorization ───────────────────────────────────────────────────────────
 
-  /** The effective (deduped) permission set a user has via its roles. */
-  permissionsOf(userId: string): string[] {
-    const u = this.users.get(requireId(userId, 'userId'));
+  async permissionsOf(userId: string): Promise<string[]> {
+    const u = await this.store.getUser(requireId(userId, 'userId'));
     if (!u) return [];
     const perms = new Set<string>();
     for (const roleName of u.roles) {
-      for (const p of this.roles.get(roleName)?.permissions ?? []) perms.add(p);
+      const role = await this.store.getRole(roleName);
+      for (const p of role?.permissions ?? []) perms.add(p);
     }
     return [...perms].sort();
   }
 
-  /**
-   * Whether `userId` may perform `permission`. Suspended or unknown users are
-   * always denied. Wildcards in granted permissions are honored.
-   */
-  can(userId: string, permission: string): boolean {
-    const u = this.users.get(requireId(userId, 'userId'));
+  async can(userId: string, permission: string): Promise<boolean> {
+    const u = await this.store.getUser(requireId(userId, 'userId'));
     if (!u || u.status !== 'active') return false;
     const requested = requireNonEmpty(permission, 'permission');
-    for (const granted of this.permissionsOf(userId)) {
+    for (const granted of await this.permissionsOf(userId)) {
       if (permissionMatches(granted, requested)) return true;
     }
     return false;
@@ -259,64 +214,34 @@ export class AdminService {
 
   // ── Audit viewer ──────────────────────────────────────────────────────────────
 
-  /** Query the audit log, newest first, with filters and pagination. */
-  auditLog(query: AuditQuery = {}): AuditEvent[] {
-    const limit = query.limit && query.limit > 0 ? Math.floor(query.limit) : 100;
-    const out: AuditEvent[] = [];
-    for (let i = this.audit.length - 1; i >= 0 && out.length < limit; i--) {
-      const e = this.audit[i]!;
-      if (query.before !== undefined && e.seq >= query.before) continue;
-      if (query.actorId && e.actorId !== query.actorId) continue;
-      if (query.action && e.action !== query.action) continue;
-      if (query.target && e.target !== query.target) continue;
-      if (query.since !== undefined && e.createdAt < query.since) continue;
-      if (query.until !== undefined && e.createdAt > query.until) continue;
-      out.push({ ...e, metadata: { ...e.metadata } });
-    }
-    return out;
+  async auditLog(query: AuditQuery = {}): Promise<AuditEvent[]> {
+    return this.store.queryAudit(query);
   }
 
-  /** Total number of audit events recorded. */
-  auditCount(): number {
-    return this.audit.length;
+  async auditCount(): Promise<number> {
+    return this.store.countAudit();
   }
 
   // ── internals ──────────────────────────────────────────────────────────────
 
-  private appendAudit(actorId: string, action: string, target: string | null, metadata: Record<string, unknown>): void {
-    this.audit.push({
-      id: this.idGen(),
-      actorId,
-      action,
-      target,
-      metadata: { ...metadata },
-      createdAt: this.now(),
-      seq: ++this.auditSeq,
-    });
+  private async appendAudit(actorId: string, action: string, target: string | null, metadata: Record<string, unknown>): Promise<void> {
+    await this.store.appendAudit({ id: this.idGen(), actorId, action, target, metadata, createdAt: this.now() });
   }
 
-  private requireUser(id: string): AdminUser {
-    const u = this.users.get(requireId(id, 'userId'));
+  private async requireUser(id: string): Promise<AdminUser> {
+    const u = await this.store.getUser(requireId(id, 'userId'));
     if (!u) throw new Error(`User "${id}" not found`);
     return u;
   }
 
-  private requireRole(name: string): Role {
-    const r = this.roles.get(requireNonEmpty(name, 'role'));
+  private async requireRole(name: string): Promise<Role> {
+    const r = await this.store.getRole(requireNonEmpty(name, 'role'));
     if (!r) throw new Error(`Role "${name}" not found`);
     return r;
   }
 }
 
 // ── helpers ─────────────────────────────────────────────────────────────────────
-
-function clone(u: AdminUser): AdminUser {
-  return { ...u, roles: [...u.roles] };
-}
-
-function cloneRole(r: Role): Role {
-  return { name: r.name, permissions: [...r.permissions] };
-}
 
 function requireId(value: unknown, field: string): string {
   if (typeof value !== 'string' || value.length === 0) {
