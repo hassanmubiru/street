@@ -518,6 +518,9 @@ export {
 } from './platform/plugins/host.js';
 export type { PluginManifest, PluginPermission, PluginHostOptions, PluginState } from './platform/plugins/host.js';
 export {
+  OFFICIAL_PLUGIN_PUBLIC_KEY_PEM, officialPluginPublicKey,
+} from './platform/plugins/official-key.js';
+export {
   normalizePageSize, DEFAULT_PAGE_SIZE, MIN_PAGE_SIZE, MAX_PAGE_SIZE,
 } from './platform/plugins/pagination.js';
 export {
