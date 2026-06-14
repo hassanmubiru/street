@@ -51,6 +51,13 @@ framework as a peer dep). `client` has zero framework assumptions.
 
 ## Phased plan (priority order)
 
+**Status:** prerequisites done — ORM relations + **model-driven migrations**
+shipped and `@streetjs/orm` **published with provenance**. **Phase 1
+(`@streetjs/client`) is now implemented** (0.1.0 preview, in-repo): typed
+requests, REST resources, auth, search, uploads, realtime channels, AI streaming;
+zero deps; browser + Node; 12 unit tests green (`client-ci.yml`). Phases 2–9
+below remain.
+
 **Prerequisites (before frontend work):**
 1. ORM model-driven migrations (this RFC's sibling work — in progress).
 2. Publish `@streetjs/orm`.
