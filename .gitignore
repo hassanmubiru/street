@@ -61,3 +61,4 @@ log.txt
 # package's prebuild/build:app scripts). The built dist/ tarball still bundles
 # it, so published consumers are unaffected.
 packages/core/src/database/sqlite/sqlite3.wasm
+
