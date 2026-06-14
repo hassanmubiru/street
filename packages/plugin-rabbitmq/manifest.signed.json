@@ -1,0 +1,15 @@
+{
+  "name": "street-plugin-rabbitmq",
+  "version": "1.0.0",
+  "capabilities": [
+    "messaging",
+    "queue",
+    "rabbitmq"
+  ],
+  "permissions": [
+    "net",
+    "middleware"
+  ],
+  "checksum": "53849bbb1c84f0cf182c9485dd7e930dd36264f582eaf93915aef50c6b672bb8",
+  "signature": "4UQBbcgssOHunga3QEZLzP55n9uMcGmo46c2H13J2ENwqhWgBbw7aJZiFW4TfiXkP78seo/zIAKwpe0YkhfPAQ=="
+}
