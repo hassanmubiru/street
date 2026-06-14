@@ -1,0 +1,6 @@
+{
+  "name": "street-plugin-mysql",
+  "version": "1.0.0",
+  "capabilities": ["database", "sql", "mysql"],
+  "permissions": ["net", "middleware"]
+}
