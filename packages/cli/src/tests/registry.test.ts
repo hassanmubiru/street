@@ -88,7 +88,7 @@ void describe('RegistryCommand', () => {
 
     // Start the real registry server, seeded with a publisher that owns `acme`.
     try {
-      const mod = (await import('../../../registry-server/dist/index.js')) as RegistryServerModule;
+      const mod = (await import(REGISTRY_SERVER_MODULE)) as RegistryServerModule;
       const publishers = new mod.PublisherDirectory();
       publishers.register('acme-co', API_KEY, [NAMESPACE]);
       const service = new mod.RegistryService({ publishers });
