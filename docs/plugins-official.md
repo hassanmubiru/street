@@ -2,7 +2,7 @@
 layout: default
 title: "Official Plugins"
 nav_exclude: true
-description: "Official StreetJS plugins — S3, SendGrid, Stripe, Twilio, Auth0, R2, NATS, Kafka and RabbitMQ integrations with signed, verified manifests."
+description: "Official StreetJS plugins — S3, SendGrid, Stripe, Twilio, Auth0, R2, NATS, Kafka, RabbitMQ, PostgreSQL, MySQL, MongoDB, PayPal, OpenAI, Clerk, Supabase and Firebase integrations with signed, verified manifests."
 ---
 
 # Official Plugins
@@ -35,6 +35,7 @@ credentials).
     <tr><td data-label="Plugin">Clerk</td><td data-label="Package symbol"><code>ClerkPlugin</code></td><td data-label="Capability">auth / identity</td><td data-label="Offline logic">bearer backend-API request building</td></tr>
     <tr><td data-label="Plugin">Supabase</td><td data-label="Package symbol"><code>SupabasePlugin</code></td><td data-label="Capability">database / postgrest</td><td data-label="Offline logic">apikey + bearer PostgREST request building</td></tr>
     <tr><td data-label="Plugin">Firebase</td><td data-label="Package symbol"><code>FirebasePlugin</code></td><td data-label="Capability">auth / identity</td><td data-label="Offline logic">Identity Toolkit REST request building</td></tr>
+    <tr><td data-label="Plugin">MongoDB</td><td data-label="Package symbol"><code>MongoDbPlugin</code></td><td data-label="Capability">database / document-store</td><td data-label="Offline logic">BSON + OP_MSG + SCRAM-SHA-256 (RFC 7677-verified)</td></tr>
   </tbody>
 </table>
 

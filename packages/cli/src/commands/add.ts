@@ -115,6 +115,11 @@ export const FEATURES: Record<string, FeatureSpec> = {
     description: 'Firebase Auth (Identity Toolkit) REST (dependency-free HTTPS client)',
     snippet: "import { FirebasePlugin } from '@streetjs/plugin-firebase';\nconst fb = new FirebasePlugin({ apiKey: process.env.FIREBASE_API_KEY });",
   },
+  mongodb: {
+    packages: ['@streetjs/plugin-mongodb'],
+    description: 'MongoDB (dependency-free BSON + OP_MSG + SCRAM-SHA-256 client)',
+    snippet: "import { MongoDbPlugin } from '@streetjs/plugin-mongodb';\nconst mongo = new MongoDbPlugin({ host: '127.0.0.1', port: 27017, database: 'app' });",
+  },
 };
 
 export class AddCommand {
