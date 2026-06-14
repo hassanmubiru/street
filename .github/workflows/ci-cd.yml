@@ -946,6 +946,10 @@ jobs:
       # keeps re-exporting streetjs. Runs last; a failure here does not unpublish
       # anything (re-run `npm deprecate` manually if the token lacks permission).
       - name: Deprecate @streetjs/core (renamed to streetjs)
+        # Best-effort and idempotent: the deprecation only needs to be applied
+        # once and already is. npm returns E422 when re-applying an unchanged
+        # deprecation, so this must never fail the release (per the note above).
+        continue-on-error: true
         run: npm deprecate @streetjs/core "Renamed to 'streetjs'. Install 'streetjs' instead; @streetjs/core re-exports it unchanged. See https://github.com/hassanmubiru/street/blob/main/docs/migration.md"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
