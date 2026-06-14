@@ -310,3 +310,24 @@ backlinks) rather than on-site markup.
   provenance gate then proves it on the next release).
 - Submit the sitemap to Google Search Console / Bing (verification assets present).
 - Enroll in GitHub Sponsors so the `FUNDING.yml` button renders.
+
+## Appendix B — Ecosystem: NATS plugin (shipped this cycle)
+
+First Phase-2 ecosystem item delivered: `@streetjs/plugin-nats`, an **official,
+dependency-free NATS pub/sub plugin** following the established plugin contract.
+
+| Aspect | Detail | Status |
+|--------|--------|--------|
+| Source | `packages/plugin-nats/src/index.ts` — `NatsPlugin extends PluginModule`, dependency-free NATS text-protocol client on `node:net` | VERIFIED (builds) |
+| Protocol | CONNECT, PUB, SUB, UNSUB, PING/PONG (auto-reply), MSG, INFO, +OK, -ERR; codec exported as testable seams | VERIFIED |
+| Tests | 24 codec/config unit tests | VERIFIED (24/24 pass) |
+| Structure + signature | Registered in `OFFICIAL_PLUGIN_PACKAGES`; Ed25519 manifest verifies | VERIFIED (97/97 structure tests pass) |
+| CLI | `street add nats` wired into the feature catalog | VERIFIED (CLI suite passes) |
+| Docs | README + `docs/plugins-official.md` row + runnable `example/` | IMPLEMENTED |
+
+This takes official plugins from 7 → **8** and fills the messaging/pubsub gap
+(NATS had zero support). The same pattern now applies to the remaining P0/P1
+backlog (MongoDB, Meilisearch/OpenSearch, Clerk/Supabase/Firebase, PayPal).
+Note: Kafka and RabbitMQ are already implemented inside core
+(`KafkaClient/Producer/Consumer`, `RabbitMqTransport`), so they need packaging,
+not new protocol work.
