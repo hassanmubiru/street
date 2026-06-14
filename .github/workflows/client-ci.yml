@@ -1,0 +1,39 @@
+name: Client SDK CI
+
+# Builds and tests @streetjs/client (zero-dependency, framework-agnostic SDK).
+# Offline only — no services needed.
+
+on:
+  push:
+    paths:
+      - 'packages/client/**'
+      - '.github/workflows/client-ci.yml'
+  pull_request:
+    paths:
+      - 'packages/client/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  client-ci:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Build @streetjs/client
+        run: npm run build -w packages/client
+      - name: Type-check (no emit)
+        run: npm run lint -w packages/client
+      - name: Unit tests
+        run: npm test -w packages/client
