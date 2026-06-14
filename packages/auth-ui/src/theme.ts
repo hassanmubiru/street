@@ -82,7 +82,7 @@ export function Field(props: FieldProps): ReactNode {
 }
 
 export interface ButtonProps {
-  children: ReactNode;
+  children?: ReactNode;
   type?: 'submit' | 'button';
   disabled?: boolean;
   onClick?: () => void;
