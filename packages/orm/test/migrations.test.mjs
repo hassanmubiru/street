@@ -3,12 +3,6 @@ import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { Entity, PrimaryKey, Column, EntityRegistry, planMigration, OrmError } from '../dist/index.js';
 
-class Widget {}
-PrimaryKey()(Widget.prototype, 'id');                         // integer PK
-Column('name')(Widget.prototype, 'name');                     // text
-Column('price', { type: 'numeric(10,2)' })(Widget.prototype, 'price'); // typed (will reject — has comma)
-Entity('widgets')(Widget);
-
 describe('decorator type validation', () => {
   it('rejects an unsafe SQL type', () => {
     // numeric(10,2) contains a comma → rejected by isSafeSqlType
