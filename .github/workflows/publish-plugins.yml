@@ -80,9 +80,11 @@ jobs:
       # Skip every matrix entry except the requested one (manual single publish).
       - name: Resolve target
         id: target
+        env:
+          WANT: ${{ github.event.inputs.plugin }}
+          PLUGIN: ${{ matrix.plugin }}
         run: |
-          WANT="${{ github.event.inputs.plugin }}"
-          if [ -n "$WANT" ] && [ "$WANT" != "${{ matrix.plugin }}" ]; then
+          if [ -n "$WANT" ] && [ "$WANT" != "$PLUGIN" ]; then
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
@@ -94,42 +96,48 @@ jobs:
 
       - name: Build + sign ${{ matrix.plugin }}
         if: steps.target.outputs.skip == 'false'
-        run: npm run build -w packages/${{ matrix.plugin }}
         env:
+          PLUGIN: ${{ matrix.plugin }}
           STREET_PLUGIN_SIGNING_KEY: ${{ secrets.STREET_PLUGIN_SIGNING_KEY }}
+        run: npm run build -w "packages/$PLUGIN"
 
       - name: Run plugin tests (if present)
         if: steps.target.outputs.skip == 'false'
+        env:
+          PLUGIN: ${{ matrix.plugin }}
         run: |
-          if node -e "process.exit(require('./packages/${{ matrix.plugin }}/package.json').scripts.test?0:1)"; then
-            npm test -w packages/${{ matrix.plugin }}
+          if node -e "process.exit(require('./packages/'+process.env.PLUGIN+'/package.json').scripts.test?0:1)"; then
+            npm test -w "packages/$PLUGIN"
           else
-            echo "no test script for ${{ matrix.plugin }} — skipping"
+            echo "no test script for $PLUGIN — skipping"
           fi
 
       - name: Publish ${{ matrix.plugin }} (idempotent, with provenance)
         if: steps.target.outputs.skip == 'false'
-        run: |
-          set -euo pipefail
-          NAME=$(node -p "require('./packages/${{ matrix.plugin }}/package.json').name")
-          VERSION=$(node -p "require('./packages/${{ matrix.plugin }}/package.json').version")
-          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
-            echo "$NAME@$VERSION already published — skipping."
-          else
-            npm publish -w packages/${{ matrix.plugin }} --provenance --access public
-            echo "Published $NAME@$VERSION"
-          fi
         env:
+          PLUGIN: ${{ matrix.plugin }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           # Required because each plugin's prepublishOnly re-runs build → sign;
           # without the key here the manifest would be re-signed with an
           # ephemeral key, clobbering the official signature.
           STREET_PLUGIN_SIGNING_KEY: ${{ secrets.STREET_PLUGIN_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          NAME=$(node -p "require('./packages/'+process.env.PLUGIN+'/package.json').name")
+          VERSION=$(node -p "require('./packages/'+process.env.PLUGIN+'/package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION already published — skipping."
+          else
+            npm publish -w "packages/$PLUGIN" --provenance --access public
+            echo "Published $NAME@$VERSION"
+          fi
 
       # Fail loud if the packed manifest is not signed by the official key — this
       # catches a prepublishOnly re-sign clobbering the signature.
       - name: Verify packed manifest is officially signed
         if: steps.target.outputs.skip == 'false'
+        env:
+          PLUGIN: ${{ matrix.plugin }}
         run: |
           node -e "
             const { execFileSync } = require('node:child_process');
@@ -137,16 +145,17 @@ jobs:
             const { join } = require('node:path');
             const { tmpdir } = require('node:os');
             (async () => {
+              const plugin = process.env.PLUGIN;
               const { verifyManifest, officialPluginPublicKey } = await import('streetjs');
               const dir = mkdtempSync(join(tmpdir(), 'verify-'));
-              const tgz = execFileSync('npm', ['pack', '-w', 'packages/${{ matrix.plugin }}', '--silent', '--pack-destination='+dir], { encoding: 'utf8' }).trim().split('\n').pop().trim();
+              const tgz = execFileSync('npm', ['pack', '-w', 'packages/'+plugin, '--silent', '--pack-destination='+dir], { encoding: 'utf8' }).trim().split('\n').pop().trim();
               execFileSync('tar', ['-xzf', join(dir, tgz), '-C', dir]);
               const signed = JSON.parse(readFileSync(join(dir, 'package', 'manifest.signed.json'), 'utf8'));
               rmSync(dir, { recursive: true, force: true });
               if (!verifyManifest(signed, officialPluginPublicKey())) {
-                console.error('::error::${{ matrix.plugin }} manifest is NOT signed by the official key');
+                console.error('::error::'+plugin+' manifest is NOT signed by the official key');
                 process.exit(1);
               }
-              console.log('${{ matrix.plugin }} manifest verified against the official key');
+              console.log(plugin+' manifest verified against the official key');
             })();
           "
