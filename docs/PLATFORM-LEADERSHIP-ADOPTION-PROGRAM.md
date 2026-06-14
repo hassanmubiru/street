@@ -347,3 +347,37 @@ Both registered in `OFFICIAL_PLUGIN_PACKAGES`; the structure suite now runs
 
 Official plugins: 7 → **10** (NATS, Kafka, RabbitMQ added this cycle). The
 messaging/streaming/queue category is now covered end-to-end.
+
+## Appendix D — Ecosystem gap closed: databases, SaaS APIs, MongoDB
+
+Completed the remaining ecosystem backlog as official, signed, dependency-free
+plugins. All unit tests pass with **zero skips**; the core plugin-structure suite
+now runs **217/217** across **18 official plugins**.
+
+| Plugin | Approach | Tests (0 skips) |
+|--------|----------|-----------------|
+| `@streetjs/plugin-postgres` (`PostgresPlugin`) | wraps native core `PgPool` | 9/9 |
+| `@streetjs/plugin-mysql` (`MysqlPlugin`) | wraps native core `MysqlPool` | 9/9 |
+| `@streetjs/plugin-paypal` (`PayPalPlugin`) | dependency-free HTTPS (OAuth2 + Orders v2) | 9/9 |
+| `@streetjs/plugin-openai` (`OpenAiPlugin`) | dependency-free HTTPS (chat + embeddings) | 8/8 |
+| `@streetjs/plugin-clerk` (`ClerkPlugin`) | dependency-free HTTPS (backend API) | 8/8 |
+| `@streetjs/plugin-supabase` (`SupabasePlugin`) | dependency-free HTTPS (PostgREST) | 7/7 |
+| `@streetjs/plugin-firebase` (`FirebasePlugin`) | dependency-free HTTPS (Identity Toolkit) | 9/9 |
+| `@streetjs/plugin-mongodb` (`MongoDbPlugin`) | **from-scratch BSON + OP_MSG + SCRAM-SHA-256** | 25/25 |
+
+**MongoDB note (honest scope):** the BSON codec, OP_MSG framing, and SCRAM-SHA-256
+client are pure and **offline-verified — including against the RFC 7677 SCRAM
+test vector**. The live `connect`/`find`/`insertOne` network path requires a
+running `mongod` (not exercised in CI here); it is implemented, not stubbed.
+
+**Search backends** (Meilisearch / Elasticsearch / OpenSearch) were already
+covered by the in-framework `@streetjs/search` package (`meili.ts`, `elastic.ts`
+with integration tests); OpenSearch reuses the Elasticsearch-compatible provider.
+
+### Ecosystem status
+
+Official plugins: **7 → 18**. Every database, messaging, payments, identity, AI,
+and storage category from the program's plugin wishlist now has an official,
+Ed25519-signed, dependency-free plugin wired into `street add` and the docs.
+None are published to npm yet — that is a deliberate release step (CI publish
+with provenance once the npm Automation token is in place).
