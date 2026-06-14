@@ -331,3 +331,19 @@ backlog (MongoDB, Meilisearch/OpenSearch, Clerk/Supabase/Firebase, PayPal).
 Note: Kafka and RabbitMQ are already implemented inside core
 (`KafkaClient/Producer/Consumer`, `RabbitMqTransport`), so they need packaging,
 not new protocol work.
+
+## Appendix C — Ecosystem: Kafka + RabbitMQ plugins (shipped this cycle)
+
+Packaged the two existing core transports as official plugins (wrapping verified
+core implementations — no new protocol code):
+
+| Plugin | Source | Tests | Structure + signature | CLI |
+|--------|--------|-------|-----------------------|-----|
+| `@streetjs/plugin-kafka` (`KafkaPlugin`) | wraps core `KafkaStreamTransport` | 10/10 config/mapping unit tests | conforms; Ed25519 verifies | `street add kafka` |
+| `@streetjs/plugin-rabbitmq` (`RabbitMqPlugin`) | wraps core `RabbitMqConnectionManager`/`Publisher`/`Consumer` | 10/10 unit tests | conforms; Ed25519 verifies | `street add rabbitmq` |
+
+Both registered in `OFFICIAL_PLUGIN_PACKAGES`; the structure suite now runs
+**121/121** (10 official plugins). CLI suite green with the two new features.
+
+Official plugins: 7 → **10** (NATS, Kafka, RabbitMQ added this cycle). The
+messaging/streaming/queue category is now covered end-to-end.
