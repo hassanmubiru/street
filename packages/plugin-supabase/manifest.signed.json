@@ -1,0 +1,16 @@
+{
+  "name": "street-plugin-supabase",
+  "version": "1.0.0",
+  "capabilities": [
+    "database",
+    "postgrest",
+    "supabase"
+  ],
+  "permissions": [
+    "net",
+    "secrets",
+    "middleware"
+  ],
+  "checksum": "fcf553e2aa582551ac704f4cccf366d1c40ff5b7ccd59ab25bf72ea376becad8",
+  "signature": "BF2mPKafTbzE+auO3shmSCeENPZdfBYJPceWeOzQYbImBnE94RtGd9ofLZvu/Pbw6ukVI/QWCUZn3sRNzGrmCg=="
+}
