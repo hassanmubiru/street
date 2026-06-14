@@ -16,10 +16,24 @@ import { generateKeyPairSync } from 'node:crypto';
 import { RegistryCommand } from '../commands/registry.js';
 import type { CliContext } from '../index.js';
 
-// The real registry server lives in a sibling package. Import its compiled
-// output by relative path so the CLI package needn't depend on it at runtime.
-// eslint-disable-next-line @typescript-eslint/consistent-type-imports
-type RegistryServerModule = typeof import('../../../registry-server/dist/index.js');
+// The real registry server lives in a sibling package. We import its compiled
+// output by relative path at RUNTIME only — the CLI must not have a build-time
+// dependency on it (it may not be built yet, e.g. when the CLI is built first
+// in the publish job). A minimal structural type avoids `typeof import(...)`,
+// and the dynamic import below uses a string-typed specifier so tsc does not
+// resolve the path at compile time.
+interface RegistryServerModule {
+  PublisherDirectory: new () => { register(id: string, apiKey: string, namespaces: string[]): void };
+  RegistryService: new (opts: { publishers: unknown }) => unknown;
+  startRegistryServer: (
+    service: unknown,
+    port: number,
+    host: string,
+  ) => Promise<{ server: import('node:http').Server; close: () => Promise<void> }>;
+}
+
+// String-typed so tsc treats it as an opaque module specifier (no path resolution).
+const REGISTRY_SERVER_MODULE: string = '../../../registry-server/dist/index.js';
 
 interface Captured {
   logs: string[];
