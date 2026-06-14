@@ -67,12 +67,19 @@ function readBody(req: IncomingMessage): Promise<string> {
 }
 
 /** Build the request handler for a given service (usable in tests without a socket). */
+/** Remove trailing '/' characters without a backtracking regex (ReDoS-safe). */
+function stripTrailingSlashes(s: string): string {
+  let end = s.length;
+  while (end > 0 && s.charCodeAt(end - 1) === 47 /* '/' */) end--;
+  return s.slice(0, end);
+}
+
 export function createRequestHandler(service: RegistryService) {
   return async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     try {
       const url = new URL(req.url ?? '/', 'http://localhost');
       const method = (req.method ?? 'GET').toUpperCase();
-      const path = url.pathname.replace(/\/+$/, '');
+      const path = stripTrailingSlashes(url.pathname);
 
       const PREFIX = '/api/v1/plugins';
       if (!path.startsWith(PREFIX)) {

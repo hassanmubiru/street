@@ -59,8 +59,15 @@ export function validateClerkConfig(input: unknown): ClerkPluginConfig {
   };
 }
 
+/** Remove trailing '/' characters without a backtracking regex (ReDoS-safe). */
+function stripTrailingSlashes(s: string): string {
+  let end = s.length;
+  while (end > 0 && s.charCodeAt(end - 1) === 47 /* '/' */) end--;
+  return s.slice(0, end);
+}
+
 function base(cfg: ClerkPluginConfig): string {
-  return (cfg.baseUrl ?? 'https://api.clerk.com/v1').replace(/\/+$/, '');
+  return stripTrailingSlashes(cfg.baseUrl ?? 'https://api.clerk.com/v1');
 }
 
 function authHeaders(cfg: ClerkPluginConfig): Record<string, string> {
