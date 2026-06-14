@@ -733,10 +733,13 @@ jobs:
     timeout-minutes: 15
     needs: [build-and-test, migration-integration]
     # Publish only on a semver tag push. The workflow trigger (tags: v*.*.*)
-    # already enforces the MAJOR.MINOR.PATCH shape; this gate independently
-    # confirms the ref is a tag (not a branch/PR) so the job can never publish
-    # off a branch even if the trigger is later loosened.
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    # Publish on a semver tag push OR on a push to main. The publish steps are
+    # idempotent (skip a version already on npm), so main only actually publishes
+    # after a version bump — normal commits are a no-op. A tag push always
+    # targets that tag's version.
+    if: >-
+      (github.ref_type == 'tag' && startsWith(github.ref_name, 'v')) ||
+      github.ref == 'refs/heads/main'
 
     concurrency:
       group: publish-${{ github.ref }}
@@ -761,34 +764,45 @@ jobs:
           EVENT: ${{ github.event_name }}
           REF: ${{ github.ref }}
           REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
         run: |
           echo "Event:  $EVENT"
-          echo "Ref:    $REF"
-          echo "Tag:    $REF_NAME"
-          echo "This job runs only for refs/tags/v* — publishing ${REF_NAME} to npm."
+          echo "Ref:    $REF ($REF_TYPE)"
+          echo "Name:   $REF_NAME"
+          if [ "$REF_TYPE" = "tag" ]; then
+            echo "→ tag push: publishing $REF_NAME to npm."
+          else
+            echo "→ main push: publish steps run but skip any version already on npm"
+            echo "  (so this only publishes after a version bump)."
+          fi
 
-      - name: Verify version matches tag
+      - name: Verify version is in lockstep (and matches tag on a tag push)
         run: |
-          TAG_VERSION="${GITHUB_REF_NAME#v}"
           CORE_VERSION=$(node -p "require('./packages/core/package.json').version")
           COMPAT_VERSION=$(node -p "require('./packages/core-compat/package.json').version")
           CLI_VERSION=$(node -p "require('./packages/cli/package.json').version")
 
-          # packages/core is the renamed primary package `streetjs`.
-          if [ "$TAG_VERSION" != "$CORE_VERSION" ]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match streetjs (packages/core/package.json: $CORE_VERSION)"
+          # On a tag push the expected version is the tag; on a main push it is
+          # whatever core declares (the source of truth for this commit).
+          if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+            EXPECTED="${GITHUB_REF_NAME#v}"
+          else
+            EXPECTED="$CORE_VERSION"
+          fi
+
+          if [ "$EXPECTED" != "$CORE_VERSION" ]; then
+            echo "::error::Expected version ($EXPECTED) does not match streetjs (packages/core/package.json: $CORE_VERSION)"
             exit 1
           fi
-          # packages/core-compat is the @streetjs/core backward-compat shim.
-          if [ "$TAG_VERSION" != "$COMPAT_VERSION" ]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match @streetjs/core (packages/core-compat/package.json: $COMPAT_VERSION)"
+          if [ "$EXPECTED" != "$COMPAT_VERSION" ]; then
+            echo "::error::Expected version ($EXPECTED) does not match @streetjs/core (packages/core-compat/package.json: $COMPAT_VERSION)"
             exit 1
           fi
-          if [ "$TAG_VERSION" != "$CLI_VERSION" ]; then
-            echo "::error::Tag version ($TAG_VERSION) does not match packages/cli/package.json ($CLI_VERSION)"
+          if [ "$EXPECTED" != "$CLI_VERSION" ]; then
+            echo "::error::Expected version ($EXPECTED) does not match packages/cli/package.json ($CLI_VERSION)"
             exit 1
           fi
-          echo "Version match: $TAG_VERSION ✔ (streetjs, @streetjs/core, @streetjs/cli)"
+          echo "Version lockstep: $EXPECTED ✔ (streetjs, @streetjs/core, @streetjs/cli)"
 
       - name: Build @streetjs/core
         run: npm run clean -w packages/core && npm run build -w packages/core
@@ -945,7 +959,7 @@ jobs:
         run: |
           set -euo pipefail
           sleep 20
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION=$(node -p "require('./packages/core/package.json').version")
           fail=0
           for spec in "streetjs@$VERSION" "@streetjs/core@$VERSION" "@streetjs/cli@$VERSION"; do
             att=$(npm view "$spec" dist.attestations --json 2>/dev/null || echo "")
