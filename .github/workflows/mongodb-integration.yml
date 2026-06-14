@@ -1,0 +1,66 @@
+name: MongoDB Integration
+
+# Runs the @streetjs/plugin-mongodb live integration test against a real mongod
+# service container, exercising the from-scratch BSON + OP_MSG + SCRAM-SHA-256
+# wire path (connect, authenticated insert, find). Complements the offline codec
+# tests (RFC 7677 vector) which always run.
+
+on:
+  push:
+    paths:
+      - 'packages/plugin-mongodb/**'
+      - '.github/workflows/mongodb-integration.yml'
+  pull_request:
+    paths:
+      - 'packages/plugin-mongodb/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mongodb-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      mongodb:
+        image: mongo:7
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: admin
+          MONGO_INITDB_ROOT_PASSWORD: secret123
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.runCommand({ping:1}).ok' -u admin -p secret123"
+          --health-interval 5s
+          --health-timeout 10s
+          --health-retries 20
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          node-version: '20'
+
+      - name: Build core (plugin compiles against streetjs)
+        run: npm run build -w packages/core
+
+      - name: Build @streetjs/plugin-mongodb
+        run: npm run build -w packages/plugin-mongodb
+
+      - name: Offline codec tests (BSON + OP_MSG + SCRAM RFC 7677)
+        run: node --test packages/plugin-mongodb/test/bson.test.mjs packages/plugin-mongodb/test/scram.test.mjs packages/plugin-mongodb/test/opmsg.test.mjs
+
+      - name: Live integration test (authenticated SCRAM-SHA-256)
+        env:
+          MONGO_HOST: 127.0.0.1
+          MONGO_PORT: '27017'
+          MONGO_DB: street_live
+          MONGO_USER: admin
+          MONGO_PASS: secret123
+          MONGO_AUTHSOURCE: admin
+        run: node --test --test-timeout=30000 packages/plugin-mongodb/test/live.test.mjs
