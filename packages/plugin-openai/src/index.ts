@@ -72,8 +72,15 @@ function authHeaders(cfg: OpenAiPluginConfig): Record<string, string> {
   };
 }
 
+/** Remove trailing '/' characters without a backtracking regex (ReDoS-safe). */
+function stripTrailingSlashes(s: string): string {
+  let end = s.length;
+  while (end > 0 && s.charCodeAt(end - 1) === 47 /* '/' */) end--;
+  return s.slice(0, end);
+}
+
 function base(cfg: OpenAiPluginConfig): string {
-  return (cfg.baseUrl ?? 'https://api.openai.com/v1').replace(/\/+$/, '');
+  return stripTrailingSlashes(cfg.baseUrl ?? 'https://api.openai.com/v1');
 }
 
 /** Build a chat-completions request. */

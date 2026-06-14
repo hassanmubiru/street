@@ -36,6 +36,13 @@ export function supabasePluginManifest(): PluginManifest {
   };
 }
 
+/** Remove trailing '/' characters without a backtracking regex (ReDoS-safe). */
+function stripTrailingSlashes(s: string): string {
+  let end = s.length;
+  while (end > 0 && s.charCodeAt(end - 1) === 47 /* '/' */) end--;
+  return s.slice(0, end);
+}
+
 export function validateSupabaseConfig(input: unknown): SupabasePluginConfig {
   if (typeof input !== 'object' || input === null) {
     throw new PluginError('Supabase plugin config must be an object');
@@ -51,7 +58,7 @@ export function validateSupabaseConfig(input: unknown): SupabasePluginConfig {
     throw new PluginError('Supabase plugin config: "stateKey" must be a string');
   }
   return {
-    url: (o['url'] as string).replace(/\/+$/, ''),
+    url: stripTrailingSlashes(o['url'] as string),
     apiKey: o['apiKey'] as string,
     ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}),
   };
