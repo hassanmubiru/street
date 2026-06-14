@@ -1,0 +1,65 @@
+name: ORM Integration
+
+# Runs @streetjs/orm offline unit tests (always) plus a live PostgreSQL
+# integration suite against a postgres service container, exercising eager
+# (1:1, 1:N, N:M), lazy, and relation-filtered loading via the native PgPool.
+
+on:
+  push:
+    paths:
+      - 'packages/orm/**'
+      - '.github/workflows/orm-integration.yml'
+  pull_request:
+    paths:
+      - 'packages/orm/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  orm-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_DB: street_test
+          POSTGRES_USER: street
+          POSTGRES_PASSWORD: street_secret
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          node-version: '20'
+
+      - name: Build core (orm compiles against streetjs)
+        run: npm run build -w packages/core
+
+      - name: Build @streetjs/orm
+        run: npm run build -w packages/orm
+
+      - name: Offline unit tests (metadata, planner, repository)
+        run: node --test packages/orm/test/metadata.test.mjs packages/orm/test/dialect.test.mjs packages/orm/test/repository.test.mjs
+
+      - name: Live PostgreSQL integration
+        env:
+          PG_HOST: 127.0.0.1
+          PG_PORT: '5432'
+          PG_USER: street
+          PG_PASSWORD: street_secret
+          PG_DATABASE: street_test
+        run: node --test --test-timeout=30000 packages/orm/test/live-pg.test.mjs
