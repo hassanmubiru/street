@@ -5,9 +5,22 @@ parameterized query planner**, and a relation-aware repository with **eager
 (batched, N+1-safe) and lazy loading**. Built on the native `streetjs` PostgreSQL
 driver; no third-party ORM.
 
-> **Status: 0.x preview.** Relations + eager/lazy loading + querying are
-> implemented and tested (offline + live Postgres in CI). **Model-driven
-> migration generation is the next milestone** (tracked in RFC 0001).
+> **Status: 0.x preview.** Relations + eager/lazy loading + querying + **model-driven
+> migration generation** are implemented and tested (offline + live Postgres in CI).
+
+## Migrations (model-driven)
+
+```ts
+// Diff entity metadata against the live schema → up/down SQL (does not apply it):
+const plan = await orm.makeMigration(User);          // { up: string[], down: string[] }
+for (const sql of plan.up) await pool.query(sql, []); // apply when ready
+// Re-running against the updated schema yields an empty plan (idempotent).
+```
+
+`@Column`/`@PrimaryKey` accept an optional SQL type: `@Column('age', { type: 'integer' })`
+(default `text` for columns, `integer` for primary keys). Types are validated as
+safe tokens. By default migrations are **additive** (CREATE TABLE, ADD COLUMN);
+pass `{ dropColumns: true }` to also drop columns the model no longer declares.
 
 ## Install
 
