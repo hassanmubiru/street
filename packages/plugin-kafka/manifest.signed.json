@@ -1,0 +1,15 @@
+{
+  "name": "street-plugin-kafka",
+  "version": "1.0.0",
+  "capabilities": [
+    "messaging",
+    "streaming",
+    "kafka"
+  ],
+  "permissions": [
+    "net",
+    "middleware"
+  ],
+  "checksum": "c44cc7709bc653524679ea791ad9970bddf0027070e5dc21406f30e9b712535d",
+  "signature": "JIDI8S3bRKEmzSMa1TiDO3uQmnrSZkDqGPxvM4oAIwz1F6oroI0enrE6f6WcvGI7GyWKJN1JmrZDXhJj2axVCw=="
+}
