@@ -25,6 +25,7 @@ credentials).
     <tr><td data-label="Plugin">Twilio</td><td data-label="Package symbol"><code>TwilioPlugin</code></td><td data-label="Capability">sms</td><td data-label="Offline logic">Basic-auth + form-encoded request</td></tr>
     <tr><td data-label="Plugin">Auth0</td><td data-label="Package symbol"><code>Auth0Plugin</code></td><td data-label="Capability">auth</td><td data-label="Offline logic">client-credentials token request (JSON)</td></tr>
     <tr><td data-label="Plugin">R2</td><td data-label="Package symbol"><code>R2Plugin</code></td><td data-label="Capability">object-storage</td><td data-label="Offline logic">S3-compatible SigV4 (<code>region=auto</code>)</td></tr>
+    <tr><td data-label="Plugin">NATS</td><td data-label="Package symbol"><code>NatsPlugin</code></td><td data-label="Capability">messaging / pubsub</td><td data-label="Offline logic">dependency-free NATS text protocol (PUB/SUB/MSG codec)</td></tr>
   </tbody>
 </table>
 
