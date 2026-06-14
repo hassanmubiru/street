@@ -1,0 +1,16 @@
+{
+  "name": "street-plugin-clerk",
+  "version": "1.0.0",
+  "capabilities": [
+    "auth",
+    "identity",
+    "clerk"
+  ],
+  "permissions": [
+    "net",
+    "secrets",
+    "middleware"
+  ],
+  "checksum": "0a8d782119243155ef3e56e317cfe8fa4d05693a2cc2e712282a5ae4f1eea9e5",
+  "signature": "r4vKaIB30Kr6CEbz7gLOo437HpD+0OfCmmkCt4xPnsemO4m0usG6YyA100mdR/Yok2E3hgJzouIzvP+MbifbDA=="
+}
