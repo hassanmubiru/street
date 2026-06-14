@@ -1,0 +1,67 @@
+// Realtime (fake WebSocket) + AI SSE parsing tests. Pure/offline.
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
+import { RealtimeClient, toWsUrl, parseSseChunk } from '../dist/index.js';
+
+// Minimal fake WebSocket capturing sent frames and allowing injected messages.
+class FakeWebSocket {
+  constructor(url) { this.url = url; this.sent = []; this._listeners = {}; FakeWebSocket.last = this; }
+  send(data) { this.sent.push(data); }
+  close() { this.closed = true; }
+  addEventListener(type, cb) { (this._listeners[type] ??= []).push(cb); }
+  emit(type, ev) { for (const cb of this._listeners[type] ?? []) cb(ev); }
+}
+
+describe('toWsUrl', () => {
+  it('maps http(s) base to ws(s)', () => {
+    assert.equal(toWsUrl('https://h.co/api', '/realtime'), 'wss://h.co/api/realtime');
+    assert.equal(toWsUrl('http://h.co', 'rt'), 'ws://h.co/rt');
+  });
+});
+
+describe('RealtimeClient', () => {
+  it('subscribes, routes channel messages, and unsubscribes', () => {
+    const rt = new RealtimeClient('ws://x/rt', FakeWebSocket);
+    rt.connect();
+    const got = [];
+    const off = rt.subscribe('room:1', (m) => got.push(m.data));
+
+    // The subscribe envelope was sent.
+    assert.deepEqual(JSON.parse(FakeWebSocket.last.sent[0]), { type: 'subscribe', channel: 'room:1' });
+
+    // Inbound message on the channel is routed.
+    FakeWebSocket.last.emit('message', { data: JSON.stringify({ type: 'event', channel: 'room:1', data: 'hi' }) });
+    assert.deepEqual(got, ['hi']);
+
+    // A message on another channel is not routed here.
+    FakeWebSocket.last.emit('message', { data: JSON.stringify({ channel: 'room:2', data: 'no' }) });
+    assert.deepEqual(got, ['hi']);
+
+    off();
+    assert.deepEqual(JSON.parse(FakeWebSocket.last.sent.at(-1)), { type: 'unsubscribe', channel: 'room:1' });
+  });
+
+  it('publish sends a publish envelope; ignores non-JSON frames', () => {
+    const rt = new RealtimeClient('ws://x/rt', FakeWebSocket);
+    rt.connect();
+    rt.publish('room:1', { x: 1 });
+    assert.deepEqual(JSON.parse(FakeWebSocket.last.sent[0]), { type: 'publish', channel: 'room:1', data: { x: 1 } });
+    // Non-JSON inbound must not throw.
+    assert.doesNotThrow(() => FakeWebSocket.last.emit('message', { data: 'not-json' }));
+    rt.close();
+    assert.equal(FakeWebSocket.last.closed, true);
+  });
+});
+
+describe('parseSseChunk', () => {
+  it('extracts complete data events and keeps the remainder', () => {
+    const { events, rest } = parseSseChunk('data: hello\n\ndata: wor');
+    assert.deepEqual(events, ['hello']);
+    assert.equal(rest, 'data: wor');
+  });
+
+  it('joins multi-line data and detects the [DONE] sentinel value', () => {
+    const { events } = parseSseChunk('data: a\ndata: b\n\ndata: [DONE]\n\n');
+    assert.deepEqual(events, ['a\nb', '[DONE]']);
+  });
+});
