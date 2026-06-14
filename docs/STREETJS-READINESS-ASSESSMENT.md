@@ -58,11 +58,12 @@ So the honest verdict is **conditional readiness**, segmented below.
 - **Data-layer ergonomics. GAP vs. competitors.** The query-builder + repository
   is solid but is not a relations/migrations-from-models ORM like Prisma,
   TypeORM, or Eloquent. Teams used to those will feel friction.
-- **The 18 plugins are not published to npm yet. GAP.** They are built, signed,
-  and unit-tested locally, but `npm install @streetjs/plugin-*` will not work
-  until a release. MongoDB's live path also needs a real `mongod` to validate
-  end-to-end (its codec/auth are offline-verified against RFC 7677, but the wire
-  I/O is not exercised in CI).
+- **The 18 plugins are published. VERIFIED.** All `@streetjs/plugin-*` are live on
+  npm at 1.0.0 with Sigstore provenance, installable and importable. MongoDB's
+  live path (connect + **SCRAM-SHA-256 auth** + insert/find with BSON round-trip)
+  is now **verified against a real `mongod`** (both unauthenticated and
+  authenticated), in addition to the offline RFC 7677 codec verification. It is
+  not yet exercised in CI (no Mongo service container in the pipeline).
 - **1.0.7 shipped without provenance. GAP (minor).** It was published manually to
   bypass an npm 2FA token issue; the CI provenance gate now prevents recurrence,
   but the current release lacks the attestation.
