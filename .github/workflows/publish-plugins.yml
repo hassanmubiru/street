@@ -1,0 +1,123 @@
+name: Publish Plugins
+
+# Publishes the official @streetjs/plugin-* packages to npm with provenance.
+#
+# Trigger:
+#   • workflow_dispatch  — publish all plugins (or a single one via the input)
+#   • push of a tag matching plugins-v*  — publish all plugins
+#
+# Each plugin is built, its manifest is Ed25519-signed with the STABLE signing
+# key from the STREET_PLUGIN_SIGNING_KEY secret (NOT an ephemeral dev key), and
+# published with npm provenance. Publishing is idempotent: a version already on
+# the registry is skipped instead of failing with E409.
+#
+# Required secrets:
+#   • NPM_TOKEN                 — npm Automation token (bypasses 2FA OTP)
+#   • STREET_PLUGIN_SIGNING_KEY — PKCS#8 PEM Ed25519 private key (stable)
+
+on:
+  push:
+    tags: ['plugins-v*']
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: 'Single plugin dir to publish (e.g. plugin-nats). Leave blank for all.'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: publish-plugins-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Publish ${{ matrix.plugin }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    permissions:
+      contents: read
+      id-token: write   # required for npm provenance
+
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        plugin:
+          - plugin-redis
+          - plugin-s3
+          - plugin-r2
+          - plugin-stripe
+          - plugin-sendgrid
+          - plugin-twilio
+          - plugin-auth0
+          - plugin-nats
+          - plugin-kafka
+          - plugin-rabbitmq
+          - plugin-postgres
+          - plugin-mysql
+          - plugin-mongodb
+          - plugin-paypal
+          - plugin-openai
+          - plugin-clerk
+          - plugin-supabase
+          - plugin-firebase
+
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      # Skip every matrix entry except the requested one (manual single publish).
+      - name: Resolve target
+        id: target
+        run: |
+          WANT="${{ github.event.inputs.plugin }}"
+          if [ -n "$WANT" ] && [ "$WANT" != "${{ matrix.plugin }}" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build core (plugins compile against streetjs)
+        if: steps.target.outputs.skip == 'false'
+        run: npm run build -w packages/core
+
+      - name: Build + sign ${{ matrix.plugin }}
+        if: steps.target.outputs.skip == 'false'
+        run: npm run build -w packages/${{ matrix.plugin }}
+        env:
+          STREET_PLUGIN_SIGNING_KEY: ${{ secrets.STREET_PLUGIN_SIGNING_KEY }}
+
+      - name: Run plugin tests (if present)
+        if: steps.target.outputs.skip == 'false'
+        run: |
+          if node -e "process.exit(require('./packages/${{ matrix.plugin }}/package.json').scripts.test?0:1)"; then
+            npm test -w packages/${{ matrix.plugin }}
+          else
+            echo "no test script for ${{ matrix.plugin }} — skipping"
+          fi
+
+      - name: Publish ${{ matrix.plugin }} (idempotent, with provenance)
+        if: steps.target.outputs.skip == 'false'
+        run: |
+          set -euo pipefail
+          NAME=$(node -p "require('./packages/${{ matrix.plugin }}/package.json').name")
+          VERSION=$(node -p "require('./packages/${{ matrix.plugin }}/package.json').version")
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "$NAME@$VERSION already published — skipping."
+          else
+            npm publish -w packages/${{ matrix.plugin }} --provenance --access public
+            echo "Published $NAME@$VERSION"
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
