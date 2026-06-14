@@ -48,7 +48,7 @@ moderation log). Appeals go to the Steering Committee (see `GOVERNANCE.md`).
 |-----------|-------|
 | Security vulnerability | **Private** — `SECURITY.md` disclosure process (never a public thread) |
 | Code of Conduct violation | email the maintainers listed in `CODE_OF_CONDUCT.md` |
-| Disputed technical decision | open/ągreference an RFC; unresolved → Steering Committee vote |
+| Disputed technical decision | open or reference an RFC; unresolved → Steering Committee vote |
 | Urgent production-impacting bug | open an issue labeled `priority:critical` + post in Help |
 
 ## Where to go
