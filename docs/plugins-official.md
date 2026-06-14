@@ -28,6 +28,13 @@ credentials).
     <tr><td data-label="Plugin">NATS</td><td data-label="Package symbol"><code>NatsPlugin</code></td><td data-label="Capability">messaging / pubsub</td><td data-label="Offline logic">dependency-free NATS text protocol (PUB/SUB/MSG codec)</td></tr>
     <tr><td data-label="Plugin">Kafka</td><td data-label="Package symbol"><code>KafkaPlugin</code></td><td data-label="Capability">messaging / streaming</td><td data-label="Offline logic">wraps the dependency-free core Kafka protocol client</td></tr>
     <tr><td data-label="Plugin">RabbitMQ</td><td data-label="Package symbol"><code>RabbitMqPlugin</code></td><td data-label="Capability">messaging / queue</td><td data-label="Offline logic">wraps the dependency-free core AMQP 0-9-1 transport</td></tr>
+    <tr><td data-label="Plugin">PostgreSQL</td><td data-label="Package symbol"><code>PostgresPlugin</code></td><td data-label="Capability">database / sql</td><td data-label="Offline logic">wraps the native core PgPool (wire v3 + SCRAM)</td></tr>
+    <tr><td data-label="Plugin">MySQL</td><td data-label="Package symbol"><code>MysqlPlugin</code></td><td data-label="Capability">database / sql</td><td data-label="Offline logic">wraps the native core MysqlPool</td></tr>
+    <tr><td data-label="Plugin">PayPal</td><td data-label="Package symbol"><code>PayPalPlugin</code></td><td data-label="Capability">payments</td><td data-label="Offline logic">OAuth2 token + Orders v2 JSON request building</td></tr>
+    <tr><td data-label="Plugin">OpenAI</td><td data-label="Package symbol"><code>OpenAiPlugin</code></td><td data-label="Capability">ai / llm</td><td data-label="Offline logic">bearer + JSON chat/embeddings request building</td></tr>
+    <tr><td data-label="Plugin">Clerk</td><td data-label="Package symbol"><code>ClerkPlugin</code></td><td data-label="Capability">auth / identity</td><td data-label="Offline logic">bearer backend-API request building</td></tr>
+    <tr><td data-label="Plugin">Supabase</td><td data-label="Package symbol"><code>SupabasePlugin</code></td><td data-label="Capability">database / postgrest</td><td data-label="Offline logic">apikey + bearer PostgREST request building</td></tr>
+    <tr><td data-label="Plugin">Firebase</td><td data-label="Package symbol"><code>FirebasePlugin</code></td><td data-label="Capability">auth / identity</td><td data-label="Offline logic">Identity Toolkit REST request building</td></tr>
   </tbody>
 </table>
 
