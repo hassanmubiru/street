@@ -10,11 +10,13 @@ tracking-issue:
 # RFC 0001 — First-party ORM (`@streetjs/orm`)
 
 > **Implementation status (0.1.0 preview):** relations (1:1/1:N/N:M), eager
-> (batched, N+1-safe) + lazy loading, relation filtering, and the safe
-> parameterized query planner are **implemented and tested** — 23 offline unit
-> tests + 4 live-PostgreSQL integration tests (CI: `orm-integration.yml`).
-> **Model-driven migration generation remains the next milestone** (not yet
-> implemented).
+> (batched, N+1-safe) + lazy loading, relation filtering, the safe parameterized
+> query planner, **and model-driven migration generation** (`Orm.makeMigration`
+> diffs entity metadata against the live schema → up/down SQL) are **implemented
+> and tested** — 29 offline unit tests + 5 live-PostgreSQL integration tests
+> (incl. a generate→apply→idempotent migration round-trip) in CI
+> (`orm-integration.yml`). All sub-items of this RFC are now implemented; the next
+> step is publishing `@streetjs/orm`.
 
 ## Summary
 
