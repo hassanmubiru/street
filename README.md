@@ -59,6 +59,15 @@ curl http://localhost:3000/api/hello
 
 [📖 Full documentation site](https://hassanmubiru.github.io/street) — hosted Jekyll site with guides, examples, and API reference.
 
+## Community & Support
+
+- 💬 [GitHub Discussions](https://github.com/hassanmubiru/street/discussions) — questions, ideas, and show-and-tell
+- 🐛 [Issue tracker](https://github.com/hassanmubiru/street/issues) — bug reports and feature requests
+- 🔒 [Security policy](SECURITY.md) — report vulnerabilities privately
+- 🧭 [Migrating from Express, NestJS, or Fastify?](docs/migration-from-express.md) — side-by-side guides
+- 🤝 [Contributing guide](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Governance](GOVERNANCE.md)
+
+
 | Category | Key Pages |
 |---|---|
 | **Getting started** | [Installation & setup](docs/getting-started/installation.md) · [Your first server](docs/getting-started/first-server.md) · [Configuration](docs/getting-started/configuration.md) · [Project structure](docs/getting-started/project-structure.md) |
