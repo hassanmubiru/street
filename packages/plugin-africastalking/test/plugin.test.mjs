@@ -100,14 +100,14 @@ test('Mobile Money request builders', async (t) => {
 
 test('USSD router', async (t) => {
   const router = at.createUssdRouter()
-    .menu('CON Welcome\n1. Balance\n2. Airtime')
+    .menu('Welcome\n1. Balance\n2. Airtime')
     .input('1', () => at.end('Balance: KES 500'))
     .input('2', (_r, segs) => (segs.length === 1 ? at.con('Enter amount:') : at.end(`Buying KES ${segs[1]}`)))
     .end('Invalid choice.');
 
   await t.test('root menu when no input', () => {
     assert.equal(router.handle({ sessionId: 's', serviceCode: '*1#', phoneNumber: '+254', text: '' }),
-      'CON CON Welcome\n1. Balance\n2. Airtime'.replace('CON CON', 'CON'));
+      'CON Welcome\n1. Balance\n2. Airtime');
   });
   await t.test('routes top-level choices and nested input', () => {
     assert.equal(router.handle({ sessionId: 's', serviceCode: '*1#', phoneNumber: '+254', text: '1' }), 'END Balance: KES 500');
