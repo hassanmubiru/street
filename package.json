@@ -41,7 +41,8 @@
     "verify:devtools": "node scripts/devtools/verify.mjs",
     "verify:kafka-chaos": "node scripts/reliability/verify.mjs",
     "test:kafka-chaos-harness": "node --test scripts/tests/kafka-chaos-harness.test.mjs",
-    "verify:observability": "node scripts/observability/run-validate.mjs"
+    "verify:observability": "node scripts/observability/run-validate.mjs",
+    "verify:runtime": "node scripts/audit/verify-runtime.mjs"
   },
   "keywords": [
     "typescript",

@@ -10,7 +10,7 @@
 import type {
   SearchProvider, SearchDocument, SearchResult, SearchHit, FacetValue, ResolvedSearchOptions, AttributeValue,
 } from './index.js';
-import { tokenize } from './index.js';
+import { tokenize } from './internal.js';
 import type { FetchLike } from './meili.js';
 
 export interface ElasticsearchProviderOptions {
