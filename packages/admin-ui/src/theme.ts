@@ -45,7 +45,7 @@ export function StreetAdminStyles(): ReactNode {
 }
 
 /** Generic loading / error / empty wrapper shared by the table views. */
-export function AsyncState(props: { loading: boolean; error?: unknown; empty: boolean; emptyText?: string; children: ReactNode }): ReactNode {
+export function AsyncState(props: { loading: boolean; error?: unknown; empty: boolean; emptyText?: string; children?: ReactNode }): ReactNode {
   if (props.loading) return h('p', { className: 'st-muted', role: 'status' }, 'Loading…');
   if (props.error) {
     const msg = props.error instanceof Error ? props.error.message : String(props.error);
