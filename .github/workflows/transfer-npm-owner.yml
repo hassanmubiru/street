@@ -1,0 +1,61 @@
+name: Transfer npm Owner
+
+# Adds an npm user as a maintainer (co-owner) of the @streetjs frontend/UI
+# packages, using the existing NPM_TOKEN secret (the current owner's token).
+#
+# Notes / safety:
+#   • This ADDS an owner (it does NOT remove the existing one). A full handoff
+#     (removing the current owner) is intentionally NOT automated — the token
+#     used by CI to publish belongs to the current owner; removing it would break
+#     publishing. Remove the old owner manually only after confirming the new
+#     owner can publish.
+#   • The target username MUST be a registered npm account, and NPM_TOKEN must be
+#     a token with owner-management permission (classic Automation token, or a
+#     granular token granted the right). Each package is attempted independently.
+
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: 'npm username to add as maintainer'
+        required: true
+        default: 'hassanmubiru'
+
+permissions:
+  contents: read
+
+jobs:
+  add-owner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Add maintainer to each @streetjs frontend/UI package
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NEW_OWNER: ${{ github.event.inputs.username }}
+        run: |
+          set -uo pipefail
+          fail=0
+          for p in client react next vue nuxt auth-ui ai-ui admin-ui; do
+            pkg="@streetjs/$p"
+            echo "::group::npm owner add $NEW_OWNER $pkg"
+            if npm owner add "$NEW_OWNER" "$pkg"; then
+              echo "added $NEW_OWNER to $pkg"
+            else
+              echo "::warning::could not add $NEW_OWNER to $pkg (invalid npm user, or token lacks owner-management permission)"
+              fail=1
+            fi
+            echo "::endgroup::"
+          done
+          echo "Current owners after the run:"
+          for p in client react next vue nuxt auth-ui ai-ui admin-ui; do
+            echo "  @streetjs/$p:"; npm owner ls "@streetjs/$p" || true
+          done
+          exit "$fail"
