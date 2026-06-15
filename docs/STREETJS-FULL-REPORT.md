@@ -79,9 +79,11 @@ avoids). This is a stated tradeoff, not a silent skip. The framework adapters
 declare React/Vue/Next as **peer** deps; a root `.npmrc` (`legacy-peer-deps=true`)
 keeps monorepo dev installs deterministic and has no effect on published packages.
 
-> Not yet published to npm: the nine packages above are in-repo 0.1.0 previews.
-> Publishing them (so `street create --frontend` installs cleanly for end users)
-> is the remaining release step.
+> **Published (VERIFIED):** all nine packages are live on npm at **0.1.0 with
+> provenance attestations**, published in dependency order via
+> `.github/workflows/publish-frontend.yml` (build → test → publish → attestation
+> check, all green). `street create --frontend <react|next>` therefore resolves
+> its `@streetjs/*` dependencies for end users.
 
 ## 5. Ecosystem (VERIFIED)
 

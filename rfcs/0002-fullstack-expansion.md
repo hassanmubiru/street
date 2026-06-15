@@ -98,6 +98,11 @@ is a deliberate, stated tradeoff — not a silent skip.
 9. Starter kits via `street create --frontend <react|next>` wiring backend +
    chosen frontend (`web/`) + Docker (already scaffolded) + a `ci.yml` workflow.
 
+**Published (VERIFIED):** all nine packages are live on npm at **0.1.0 with
+provenance**, published in dependency order by
+`.github/workflows/publish-frontend.yml` (build → test → publish → attestation
+check, green).
+
 ### Install note (monorepo)
 
 A root `.npmrc` sets `legacy-peer-deps=true`. The framework adapters declare
