@@ -19,7 +19,7 @@
   "keywords": ["street", "edge", "runtime", "adapter", "cloudflare", "vercel"],
   "license": "MIT",
   "peerDependencies": {
-    "@streetjs/core": "*"
+    "streetjs": "^1.0.9"
   },
   "devDependencies": {
     "typescript": "^6.0.3"
