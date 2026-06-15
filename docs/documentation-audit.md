@@ -48,8 +48,10 @@ no nav entry, SEO `title`, or `description`.
 
 - `jekyll-seo-tag`, `jekyll-sitemap`, `jekyll-feed` enabled (`_config.yml`);
   canonical URLs, Open Graph, and Twitter cards emitted per page.
-- **JSON-LD added:** `SoftwareApplication` schema on the Home page; `FAQPage`
-  schema on the FAQ page; `FAQPage` already present on the five comparison pages.
+- **JSON-LD is centralized** in `_includes/head_custom.html` and emitted
+  conditionally: `SoftwareApplication` (home), `FAQPage` (FAQ), `BreadcrumbList`
+  (nested pages with a parent), and `APIReference` (api-reference). No page should
+  add duplicate inline JSON-LD.
 - `robots.txt` and a generated `sitemap.xml` are served.
 
 ## Recommendations (ranked)
