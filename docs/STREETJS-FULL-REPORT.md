@@ -33,7 +33,7 @@ proven longevity.
 Repo: **47 packages**, **31 CI workflows**. Latest full `ci-cd` run on `main`:
 **success (VERIFIED)**. Frontend packages additionally gated by `frontend-ci.yml`
 (Node 20/22) and published via `publish-frontend.yml`. **Workspace build is
-reproducible:** `import-smoke` reports **46/46 packages load, 0 fail, 0 skip**;
+reproducible:** `import-smoke` reports **47/47 packages load, 0 fail, 0 skip**;
 circular-dependency scan **0 cycles** repo-wide (after fixing barrel cycles in
 `storage` and `search`); the former publish-only `@streetjs/core` shim is now
 workspace-buildable and its dependents were migrated to `streetjs`. **47/47**
