@@ -30,7 +30,7 @@ proven longevity.
 | `@streetjs/{client,react,next,vue,nuxt}` | **0.1.0** (published) | ✅ |
 | `@streetjs/{auth-ui,ai-ui,admin-ui}` | **0.1.0** (published) | ✅ |
 
-Repo: **46 packages**, **31 CI workflows**. Latest full `ci-cd` run on `main`:
+Repo: **47 packages**, **31 CI workflows**. Latest full `ci-cd` run on `main`:
 **success (VERIFIED)**. Frontend packages additionally gated by `frontend-ci.yml`
 (Node 20/22) and published via `publish-frontend.yml`. **Workspace build is
 reproducible:** `import-smoke` reports **46/46 packages load, 0 fail, 0 skip**;
