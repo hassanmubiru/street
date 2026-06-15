@@ -1,0 +1,95 @@
+name: Soak / Scale / Chaos
+
+# Phases 3-5 long-running reliability suite. Scheduled (not on every push) because
+# these jobs are minutes-long. Manually dispatchable with custom parameters.
+# Artifacts (soak.json/csv, ws-scale.json) are uploaded for trend analysis.
+
+on:
+  schedule:
+    - cron: '17 3 * * *'   # nightly 03:17 UTC
+  workflow_dispatch:
+    inputs:
+      soak_minutes:
+        description: 'Soak duration in minutes'
+        default: '30'
+      ws_connections:
+        description: 'WebSocket connections to certify'
+        default: '5000'
+
+permissions:
+  contents: read
+
+jobs:
+  soak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with: { persist-credentials: false }
+      - uses: ./.github/actions/setup
+        with: { node-version: '20' }
+      - name: Build core + client
+        run: |
+          npm run build -w packages/core
+          npm run build -w packages/client
+      - name: Soak test
+        env:
+          SOAK_MINUTES: ${{ github.event.inputs.soak_minutes || '30' }}
+        run: node --expose-gc scripts/audit/soak.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with: { name: soak-artifacts, path: artifacts/* }
+
+  ws-scale:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        connections: [1000, 5000, 10000]
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with: { persist-credentials: false }
+      - uses: ./.github/actions/setup
+        with: { node-version: '20' }
+      - name: Raise file-descriptor limit
+        run: ulimit -n 65535 || true
+      - name: Build core + client
+        run: |
+          npm run build -w packages/core
+          npm run build -w packages/client
+      - name: WebSocket scale certification
+        env:
+          WS_CONNECTIONS: ${{ matrix.connections }}
+        run: node scripts/audit/ws-scale.mjs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with: { name: ws-scale-${{ matrix.connections }}, path: artifacts/ws-scale.json }
+
+  chaos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with: { persist-credentials: false }
+      - uses: ./.github/actions/setup
+        with: { node-version: '20' }
+      - name: Build core
+        run: npm run build -w packages/core
+      - name: Start a dedicated Postgres for chaos
+        run: |
+          docker run -d --name chaos_pg \
+            -e POSTGRES_USER=street -e POSTGRES_PASSWORD=street_secret -e POSTGRES_DB=street_test \
+            -p 5433:5432 postgres:16-alpine
+          for i in $(seq 1 30); do
+            if docker exec chaos_pg pg_isready -U street -d street_test >/dev/null 2>&1; then break; fi
+            sleep 2
+          done
+      - name: Chaos — Postgres restart recovery
+        env:
+          CHAOS_DB_CONTAINER: chaos_pg
+          PG_PORT: '5433'
+        run: node scripts/audit/chaos.mjs
+      - name: Teardown
+        if: always()
+        run: docker rm -f chaos_pg || true
