@@ -136,6 +136,12 @@ export class CreateCommand {
     // Apply the template overlay (extra deps + starter module + notes).
     await this.applyTemplate(targetDir, template);
 
+    // Scaffold an optional frontend app + a CI workflow that builds both tiers.
+    if (frontend !== 'none') {
+      await this.scaffoldFrontend(targetDir, frontend, projectName);
+    }
+    await this.scaffoldCI(targetDir, frontend);
+
     console.log(`\n[street] Project "${projectName}" created successfully!\n`);
 
     // Optional: auto-install dependencies
