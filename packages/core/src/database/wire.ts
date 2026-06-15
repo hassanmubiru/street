@@ -988,16 +988,27 @@ export class PgConnection {
     const wasOpen = this.state !== 'closed';
     this.state = 'closed';
     if (!socket) return;
-    // Always destroy the socket, even if state was already 'closed' (e.g. a peer
-    // reset/restart set state via the error/close handler without tearing the
-    // socket down). Otherwise the half-open socket leaks past pool.close().
     if (socket.destroyed) { this.socket = null; return; }
     return new Promise((resolve) => {
-      const done = (): void => { try { socket.destroy(); } catch { /* already gone */ } this.socket = null; resolve(); };
+      let settled = false;
+      const done = (): void => {
+        if (settled) return;
+        settled = true;
+        try { socket.destroy(); } catch { /* already gone */ }
+        this.socket = null;
+        resolve();
+      };
+      // Always destroy promptly. For a healthy socket we send a graceful
+      // Terminate first; but a ghost socket (peer vanished without FIN/RST) may
+      // never flush the write callback, so a short fallback timer guarantees the
+      // socket is destroyed and never leaks past close().
+      const fallback = setTimeout(done, 250);
+      fallback.unref?.();
       if (wasOpen) {
-        try { socket.write(buildTerminateMessage(), () => done()); }
-        catch { done(); }
+        try { socket.write(buildTerminateMessage(), () => { clearTimeout(fallback); done(); }); }
+        catch { clearTimeout(fallback); done(); }
       } else {
+        clearTimeout(fallback);
         done();
       }
     });
