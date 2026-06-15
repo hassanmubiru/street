@@ -1,0 +1,81 @@
+name: Runtime Certification
+
+# Phase 1 (signing hygiene) + Phase 2 (runtime certification):
+#   1. Build every workspace and assert `git diff --exit-code` is clean — proves a
+#      plain build never mutates tracked files (e.g. re-signs plugin manifests).
+#   2. Run `npm run verify:runtime` against live Postgres + MySQL services and
+#      upload the generated docs/runtime-certification.md.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: street
+          POSTGRES_PASSWORD: street_secret
+          POSTGRES_DB: street_test
+        ports: ['5433:5432']
+        options: >-
+          --health-cmd "pg_isready -U street -d street_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: testpass
+          MYSQL_DATABASE: street_test
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -ptestpass"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PG_HOST: 127.0.0.1
+      PG_PORT: '5433'
+      PG_USER: street
+      PG_PASSWORD: street_secret
+      PG_DATABASE: street_test
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: '3306'
+      MYSQL_USER: root
+      MYSQL_PASSWORD: testpass
+      MYSQL_DATABASE: street_test
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          node-version: '20'
+
+      - name: Build all workspaces
+        run: npm run build --workspaces --if-present
+
+      - name: Assert build leaves the tree clean (no manifest re-signing on build)
+        run: |
+          if ! git diff --exit-code; then
+            echo "::error::Build mutated tracked files. Plugin signing must run only at publish (with STREET_PLUGIN_SIGNING_KEY), never during build."
+            exit 1
+          fi
+          echo "Build is clean — no tracked files mutated."
+
+      - name: Runtime certification (verify:runtime)
+        run: npm run verify:runtime
+
+      - name: Upload certificate
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: runtime-certification
+          path: docs/runtime-certification.md
