@@ -61,13 +61,14 @@ jobs:
 
       - name: Build all workspaces
         run: |
-          # Build in dependency order first: package names don't match the
-          # alphabetical `--workspaces` order, so foundational packages (core =
-          # "streetjs", client, react, next, vue) must be built before the
-          # dependents (orm, ui kits, nuxt) that import them. The final
-          # `--workspaces` pass then rebuilds everything with deps resolvable.
-          for p in core cli client react next vue nuxt; do
-            npm run build -w "packages/$p"
+          # The monorepo has cross-package imports that alphabetical `--workspaces`
+          # ordering can't satisfy (e.g. ui-kits before client/react; dating-* before
+          # dating-profiles), and `--workspaces` stops at the first failure. Use a
+          # fixpoint: iterate per-package builds tolerating failures to warm up dist,
+          # then a final STRICT `--workspaces` pass that must succeed once all deps exist.
+          pkgs=$(ls -d packages/*/ | sed 's#/$##')
+          for i in 1 2 3 4; do
+            for p in $pkgs; do npm run build -w "$p" --if-present || true; done
           done
           npm run build --workspaces --if-present
 
