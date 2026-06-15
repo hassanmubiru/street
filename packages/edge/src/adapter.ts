@@ -1,7 +1,7 @@
 // packages/edge/src/adapter.ts
 // Edge Runtime adapter: maps Web Fetch Request → StreetContext → Response.
 
-import type { StreetApp } from '@streetjs/core';
+import type { StreetApp } from 'streetjs';
 
 /**
  * Handles an incoming Web Fetch API `Request` using a StreetApp instance.

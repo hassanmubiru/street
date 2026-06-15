@@ -4,7 +4,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { streetApp } from '@streetjs/core';
+import { streetApp } from 'streetjs';
 import { createLambdaHandler, eventToRequest, type ApiGatewayProxyEvent } from './lambda.js';
 
 function appWithRoutes() {

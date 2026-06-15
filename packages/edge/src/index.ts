@@ -12,4 +12,4 @@ export { EdgeRuntimeStub } from './stubs.js';
 export type { EdgeRequest, EdgeResponse } from './stubs.js';
 
 // Re-export the edge-runtime error from core for convenience.
-export { FeatureUnavailableInEdgeRuntimeError } from '@streetjs/core';
+export { FeatureUnavailableInEdgeRuntimeError } from 'streetjs';

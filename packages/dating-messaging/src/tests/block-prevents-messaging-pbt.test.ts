@@ -29,7 +29,7 @@ import assert from 'node:assert/strict';
 import { randomBytes } from 'node:crypto';
 import fc from 'fast-check';
 
-import { FieldCipher, Keyring, ModerationToolkit } from '@streetjs/core';
+import { FieldCipher, Keyring, ModerationToolkit } from 'streetjs';
 import { ProfileService } from '@streetjs/dating-profiles';
 import { MessageService, InMemoryMessageStore } from '../index.js';
 

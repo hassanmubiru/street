@@ -5,7 +5,7 @@
 // dependency — a minimal structural request type is accepted so the adapter is
 // usable and testable without the Azure runtime installed.
 
-import type { StreetApp } from '@streetjs/core';
+import type { StreetApp } from 'streetjs';
 import { handleEdgeRequest } from './adapter.js';
 
 /** Minimal structural shape of an Azure Functions v4 HttpRequest. */
@@ -57,7 +57,7 @@ export async function responseToAzure(res: Response): Promise<AzureHttpResponseI
  *
  * ```ts
  * import { app } from '@azure/functions';
- * import { streetApp } from '@streetjs/core';
+ * import { streetApp } from 'streetjs';
  * import { createAzureHandler } from '@streetjs/edge';
  * const street = streetApp();
  * app.http('api', { route: '{*path}', handler: createAzureHandler(street) });

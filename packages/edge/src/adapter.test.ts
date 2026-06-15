@@ -3,7 +3,7 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { streetApp } from '@streetjs/core';
+import { streetApp } from 'streetjs';
 import { handleEdgeRequest } from './adapter.js';
 
 describe('handleEdgeRequest', () => {

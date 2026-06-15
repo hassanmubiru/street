@@ -26,7 +26,7 @@ import {
   type ModerationAuditEvent,
   type Report,
   type Clock,
-} from '@streetjs/core';
+} from 'streetjs';
 
 /** Options for {@link DatingModeration}. */
 export interface DatingModerationOptions {
@@ -135,5 +135,5 @@ export class DatingModeration {
 
 // Re-export the core moderation types this package's surface uses, so consumers
 // can type their code without importing `@streetjs/core` directly.
-export type { ModerationAuditEvent, Report, ModerationStore, Clock } from '@streetjs/core';
-export { ModerationToolkit, InMemoryModerationStore, UnknownReportError } from '@streetjs/core';
+export type { ModerationAuditEvent, Report, ModerationStore, Clock } from 'streetjs';
+export { ModerationToolkit, InMemoryModerationStore, UnknownReportError } from 'streetjs';

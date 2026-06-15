@@ -5,7 +5,7 @@
 // and writes the `Response` back onto `res`. No firebase/functions-framework
 // dependency — minimal structural types make it usable and testable standalone.
 
-import type { StreetApp } from '@streetjs/core';
+import type { StreetApp } from 'streetjs';
 import { handleEdgeRequest } from './adapter.js';
 
 /** Minimal Express-like request shape provided by the Functions Framework. */
@@ -54,7 +54,7 @@ export function gcfRequestToRequest(req: GcfRequest): Request {
  *
  * ```ts
  * import { http } from '@google-cloud/functions-framework';
- * import { streetApp } from '@streetjs/core';
+ * import { streetApp } from 'streetjs';
  * import { createGcfHandler } from '@streetjs/edge';
  * const street = streetApp();
  * http('api', createGcfHandler(street));
