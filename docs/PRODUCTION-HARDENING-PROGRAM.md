@@ -69,6 +69,18 @@ circular scanner is a custom 80-line zero-dependency tool (no madge dependency).
 the runtime `tokenize` import). Extracted `tokenize` into `search/src/internal.ts`;
 scanner now reports **0 cycles** repo-wide; 11/11 search tests pass.
 
+### Finding (documented, separately tracked): publish-only `@streetjs/core` shim
+`@streetjs/core` (in `packages/core-compat`) is a deprecated, **publish-only** shim
+that re-exports `streetjs`: it has no source, no build script, and no workspace
+`dist`. It resolves only against the *published* npm package, so ~4 packages that
+import it (`dating-messaging`, `dating-moderation`, `edge`) cannot cold-build or
+import in a pure workspace context. `verify:runtime`'s import-smoke marks these
+**SKIP** with the reason "unresolved workspace dep: @streetjs/core" — explicitly,
+never silent-passed. This is a pre-existing limitation (the repo's own CI builds
+only core+cli, never all 46 workspaces). **Recommendation:** repoint those packages
+from `@streetjs/core` → `streetjs`, or give the shim a minimal build that emits
+re-export stubs, so the full workspace becomes cold-buildable.
+
 ## Phase 3 — Soak testing — PARTIAL
 
 `scripts/audit/soak.mjs` drives steady traffic for `SOAK_MINUTES`, sampling RSS,
