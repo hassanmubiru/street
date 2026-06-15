@@ -1,0 +1,19 @@
+{
+  "name": "street-plugin-africastalking",
+  "version": "1.0.0",
+  "capabilities": [
+    "sms",
+    "voice",
+    "ussd",
+    "airtime",
+    "mobile-money",
+    "africastalking"
+  ],
+  "permissions": [
+    "net",
+    "secrets",
+    "middleware"
+  ],
+  "checksum": "07c90352ccdbf11484fca683bc9b4c5bd4786de42b5a6e56958b6ed46f1da9c4",
+  "signature": "WoSuxZypKryO4gkpQXww9Yl8ir5IMeyJs3G6Q+TVwI4UrL/HwEJSR/Gjny1KFS6PeNccjWbreDTdyQVQARRlBQ=="
+}
