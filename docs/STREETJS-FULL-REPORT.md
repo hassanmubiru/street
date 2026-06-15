@@ -207,8 +207,9 @@ Caddy TLS, R2 zero-egress storage) with a managed-vs-self-hosted cost comparison
 ## 12. Bottom line
 
 Engineering and process maturity are **done and verified**: published with
-provenance, signed ecosystem, green CI across 25 workflows, governance + RFC +
-enterprise + compliance docs in place. What remains is **social** adoption —
-community, contributors, and real-world production usage — which is people-and-
-time work, tracked with measurable targets in
-`docs/adoption/adoption-scorecard.md`. Nothing material is blocked on code.
+provenance, signed ecosystem, green CI across 31 workflows, runtime certification
+(9/9), reproducible 46/46 workspace build, governance + RFC + enterprise +
+compliance docs in place. What remains is **social** adoption — community,
+contributors, and real-world production usage — which is people-and-time work,
+tracked with measurable targets in `docs/adoption/adoption-scorecard.md`. Nothing
+material is blocked on code.
