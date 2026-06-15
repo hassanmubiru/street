@@ -47,7 +47,7 @@
     "url": "https://github.com/hassanmubiru/street/issues"
   },
   "dependencies": {
-    "@streetjs/core": "^1.0.6",
+    "streetjs": "^1.0.9",
     "@streetjs/dating-profiles": "^1.0.0"
   },
   "devDependencies": {
