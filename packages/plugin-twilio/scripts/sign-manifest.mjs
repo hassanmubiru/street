@@ -1,13 +1,14 @@
 // Build step: produce manifest.signed.json from manifest.json.
 //
 // Signs the plugin manifest with an Ed25519 private key using the framework's
-// `signManifest()` (checksum + signature). The signing key is taken from
-// STREET_PLUGIN_SIGNING_KEY (a PEM-encoded PKCS#8 Ed25519 private key) when
-// present; otherwise an ephemeral keypair is generated for local/dev builds and
-// its public key is written next to the signed manifest so the signature can be
-// verified. Pure Node — no third-party dependencies.
+// `signManifest()`. The signing key is taken from STREET_PLUGIN_SIGNING_KEY (a
+// PEM-encoded PKCS#8 Ed25519 private key) when present. Otherwise, if a committed
+// signed manifest already exists, the build PRESERVES it (verifies and exits) so a
+// plain `npm run build` never clobbers tracked, officially signed artifacts. An
+// ephemeral dev keypair is only generated to BOOTSTRAP when no signed manifest
+// exists yet. Pure Node — no third-party dependencies.
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { generateKeyPairSync, createPrivateKey, createPublicKey } from 'node:crypto';
@@ -20,15 +21,36 @@ const pubPath = join(pkgRoot, 'manifest.pub');
 
 const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
 
+const envKey = process.env.STREET_PLUGIN_SIGNING_KEY;
+const hasKey = !!(envKey && envKey.trim() !== '');
+
+// Keyless build with an existing signed manifest: do NOT overwrite the committed
+// (official) artifacts. Validate them and exit. Set STREET_PLUGIN_SIGNING_KEY to
+// (re)sign — that path is taken by the publish workflow.
+if (!hasKey && existsSync(signedPath) && existsSync(pubPath)) {
+  try {
+    const existing = JSON.parse(readFileSync(signedPath, 'utf8'));
+    const pub = createPublicKey(readFileSync(pubPath, 'utf8'));
+    if (!verifyManifest(existing, pub)) {
+      console.error('[sign-manifest] FATAL: committed manifest.signed.json fails verification.');
+      process.exit(1);
+    }
+    console.log('[sign-manifest] STREET_PLUGIN_SIGNING_KEY not set — preserving committed signed manifest (verified).');
+    process.exit(0);
+  } catch (err) {
+    console.error('[sign-manifest] FATAL: could not validate committed manifest:', err?.message ?? err);
+    process.exit(1);
+  }
+}
+
 let privateKey;
 let publicKey;
-const envKey = process.env.STREET_PLUGIN_SIGNING_KEY;
-if (envKey && envKey.trim() !== '') {
+if (hasKey) {
   privateKey = createPrivateKey(envKey);
   publicKey = createPublicKey(privateKey);
 } else {
   ({ privateKey, publicKey } = generateKeyPairSync('ed25519'));
-  console.warn('[sign-manifest] STREET_PLUGIN_SIGNING_KEY not set — using an ephemeral dev keypair.');
+  console.warn('[sign-manifest] STREET_PLUGIN_SIGNING_KEY not set and no signed manifest present — bootstrapping with an ephemeral dev keypair.');
 }
 
 const signed = signManifest(manifest, privateKey);
