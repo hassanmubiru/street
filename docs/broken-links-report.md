@@ -25,7 +25,7 @@ description: "Internal link + navigation audit of the StreetJS site."
 
 ## What was checked
 
-- Every `](/…)` markdown link and `href="/…"` (including `{{ site.baseurl }}/…`).
+- Every markdown link (`](…)`) and HTML `href` attribute (including `site.baseurl`).
 - A link resolves if it matches a page `permalink` **or** an existing file path
   (`docs/<path>.md|.html` or `docs/<path>/index.md`) — Jekyll serves both.
 - Asset links (`.png/.svg/.css/.js/…`) are excluded from link resolution.
