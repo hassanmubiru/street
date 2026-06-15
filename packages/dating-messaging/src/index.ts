@@ -22,7 +22,7 @@ import {
   FieldCipher,
   ModerationToolkit,
   type EncryptedField,
-} from '@streetjs/core';
+} from 'streetjs';
 import { ProfileService } from '@streetjs/dating-profiles';
 
 /**
@@ -201,8 +201,8 @@ export class MessageService {
 
 // Re-export the composed types so consumers can type their code without
 // importing the underlying packages directly.
-export type { EncryptedField } from '@streetjs/core';
-export { FieldCipher, ModerationToolkit, Keyring } from '@streetjs/core';
+export type { EncryptedField } from 'streetjs';
+export { FieldCipher, ModerationToolkit, Keyring } from 'streetjs';
 export { ProfileService } from '@streetjs/dating-profiles';
 
 function requireId(value: unknown, field: string): string {

@@ -4,7 +4,7 @@
 // through Street via `handleEdgeRequest`, and converts the `Response` back into
 // an API Gateway proxy result. No aws-sdk dependency — pure event shaping.
 
-import type { StreetApp } from '@streetjs/core';
+import type { StreetApp } from 'streetjs';
 import { handleEdgeRequest } from './adapter.js';
 
 /** Minimal API Gateway proxy event shape (v1 and v2 fields, all optional). */
@@ -74,7 +74,7 @@ export async function responseToResult(res: Response): Promise<ApiGatewayProxyRe
  * a StreetApp. Works with both REST API (v1) and HTTP API (v2) payload formats.
  *
  * ```ts
- * import { streetApp } from '@streetjs/core';
+ * import { streetApp } from 'streetjs';
  * import { createLambdaHandler } from '@streetjs/edge/lambda';
  * const app = streetApp();
  * app.use(async (ctx) => ctx.json({ ok: true }));
