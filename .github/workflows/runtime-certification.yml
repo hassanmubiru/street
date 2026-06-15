@@ -72,6 +72,10 @@ jobs:
           for i in 1 2 3 4; do
             for p in $pkgs; do npm run build -w "$p" --if-present >/dev/null 2>&1 || true; done
           done
+          # Strict final pass: with the @streetjs/core shim now buildable and the
+          # dating-*/edge packages migrated to `streetjs`, the full workspace build
+          # is reproducible. This pass must succeed — it catches any build regression.
+          npm run build --workspaces --if-present
 
       - name: Assert build leaves the tree clean (no manifest re-signing on build)
         run: |
