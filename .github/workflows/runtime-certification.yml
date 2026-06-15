@@ -61,11 +61,14 @@ jobs:
 
       - name: Build all workspaces
         run: |
-          # Build core first: its package name is "streetjs", which other
-          # workspaces import. `--workspaces` builds alphabetically (admin before
-          # core), so core must be built up front or dependents fail to resolve it.
-          npm run build -w packages/core
-          npm run build -w packages/cli
+          # Build in dependency order first: package names don't match the
+          # alphabetical `--workspaces` order, so foundational packages (core =
+          # "streetjs", client, react, next, vue) must be built before the
+          # dependents (orm, ui kits, nuxt) that import them. The final
+          # `--workspaces` pass then rebuilds everything with deps resolvable.
+          for p in core cli client react next vue nuxt; do
+            npm run build -w "packages/$p"
+          done
           npm run build --workspaces --if-present
 
       - name: Assert build leaves the tree clean (no manifest re-signing on build)
