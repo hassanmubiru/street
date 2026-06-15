@@ -11,7 +11,7 @@
 import type {
   SearchProvider, SearchDocument, SearchResult, SearchHit, FacetValue, ResolvedSearchOptions, AttributeValue,
 } from './index.js';
-import { tokenize } from './index.js';
+import { tokenize } from './internal.js';
 
 export type FetchLike = (url: string, init?: {
   method?: string;

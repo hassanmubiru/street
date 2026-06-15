@@ -106,12 +106,10 @@ export interface ResolvedSearchOptions {
   facets: string[];
 }
 
-// ── Tokenization (shared) ───────────────────────────────────────────────────────
+// ── Tokenization (shared; defined in ./internal.js to avoid a barrel cycle) ─────
 
-/** Lowercase alphanumeric tokens of length >= 1. */
-export function tokenize(text: string): string[] {
-  return (text.toLowerCase().match(/[a-z0-9]+/g) ?? []);
-}
+export { tokenize } from './internal.js';
+import { tokenize } from './internal.js';
 
 // ── In-memory provider (default) ───────────────────────────────────────────────
 
