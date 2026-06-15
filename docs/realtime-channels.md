@@ -1,3 +1,11 @@
+---
+layout:    default
+title:     "Realtime Channels"
+nav_order: 40
+permalink: /realtime-channels/
+description: "StreetJS realtime channels — named rooms, reference-counted presence, typing indicators, and scoped broadcasting over the built-in WebSocket server."
+---
+
 # Realtime Channels, Presence & Typing
 
 StreetJS's realtime layer adds named channels (rooms), reference-counted presence,
