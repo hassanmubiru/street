@@ -15,17 +15,47 @@ interface WsLike {
 }
 type WsCtor = new (url: string) => WsLike;
 
+/**
+ * Remove every trailing '/' from a string in linear time.
+ *
+ * Regex-free by design: the previous `/\/+$/` is a polynomial-ReDoS risk on
+ * uncontrolled input (CodeQL js/polynomial-redos). This scans from the end with
+ * `charCodeAt` (47 === '/') and a single `slice`, giving O(n) deterministic
+ * behavior with no backtracking.
+ */
+function trimTrailingSlashes(value: string): string {
+  let end = value.length;
+  while (end > 0 && value.charCodeAt(end - 1) === 47 /* '/' */) end -= 1;
+  return end === value.length ? value : value.slice(0, end);
+}
+
+/**
+ * Rewrite a leading http(s) scheme to the matching ws(s) scheme:
+ * `http://` → `ws://`, `https://` → `wss://`. Only the leading `http` (4 chars)
+ * is replaced, so the trailing `s` of `https` is preserved — matching the old
+ * `replace(/^http/, 'ws')` exactly, but with `startsWith` + `slice` (O(n), no
+ * regex). Inputs not starting with `http` are returned unchanged.
+ */
+function httpToWs(url: string): string {
+  return url.startsWith('http') ? `ws${url.slice(4)}` : url;
+}
+
+/** True when `url` begins with an absolute http(s) scheme. Regex-free. */
+function isAbsoluteHttp(url: string): boolean {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
 /** Convert an http(s) base + path into a ws(s) URL. */
 export function toWsUrl(baseUrl: string, path: string): string {
   const p = path.startsWith('/') ? path : `/${path}`;
-  if (/^https?:\/\//.test(baseUrl)) {
-    return baseUrl.replace(/\/+$/, '').replace(/^http/, 'ws') + p;
+  if (isAbsoluteHttp(baseUrl)) {
+    return httpToWs(trimTrailingSlashes(baseUrl)) + p;
   }
   // Relative base — only resolvable in a browser with location.
   const loc = (globalThis as { location?: { origin: string } }).location;
   if (!loc) throw new StreetClientError('Realtime needs an absolute baseUrl (or a browser location) to build a ws:// URL.');
-  const origin = loc.origin.replace(/^http/, 'ws');
-  return origin + baseUrl.replace(/\/+$/, '') + p;
+  const origin = httpToWs(loc.origin);
+  return origin + trimTrailingSlashes(baseUrl) + p;
 }
 
 /**
