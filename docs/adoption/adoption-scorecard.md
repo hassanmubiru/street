@@ -6,15 +6,19 @@ permalink: /adoption/adoption-scorecard/
 description: "Measurable StreetJS adoption KPIs across community, ecosystem, enterprise, and documentation, with quarterly targets."
 ---
 
-# Adoption Scorecard
+{% include doc-styles.html %}
 
-Measurable KPIs, updated quarterly. Values are **measured signals**, not
-estimates — where a value is not yet measurable it is marked `n/a (no signal)`
-rather than guessed. Honesty over optics.
+<div class="doc-header">
+<span class="dh-label">Adoption</span>
+<h1>Adoption Scorecard</h1>
+<p>Measurable KPIs, refreshed quarterly. Values are <strong>measured signals</strong>, not estimates — where a value is not yet measurable it is marked <code>n/a (no signal)</code> rather than guessed. Honesty over optics.</p>
+</div>
 
 > **Baseline (2026-Q2):** the project is technically mature but early on
 > adoption. Most community/ecosystem signals are at or near zero — that is the
 > accurate starting point, not a failure.
+
+<p class="scorecard-legend">In each table the <span class="sc-base">baseline</span> is the honest starting point and the highlighted <span class="sc-goal">Q+4</span> column is the one-year target.</p>
 
 ## KPIs and targets
 
@@ -26,6 +30,7 @@ rather than guessed. Honesty over optics.
 | Active Discussions threads / quarter | 0 | 20 | 50 | 150 | GitHub Discussions |
 | Discord members | 0 | 100 | 300 | 1000 | Discord |
 | Active release-capable maintainers (bus factor) | 1 | 2 | 3 | 3+ | MAINTAINERS |
+{: .scorecard}
 
 ### Ecosystem
 | Metric | Baseline | Q+1 | Q+2 | Q+4 | Source |
@@ -34,6 +39,7 @@ rather than guessed. Honesty over optics.
 | Verified (3rd-party) plugins | 0 | 2 | 5 | 15 | registry |
 | Community plugins listed | 0 | 5 | 15 | 40 | registry |
 | `streetjs` weekly npm downloads | measure | +50% | +150% | +500% | npm |
+{: .scorecard}
 
 ### Enterprise
 | Metric | Baseline | Q+1 | Q+2 | Q+4 | Source |
@@ -42,6 +48,7 @@ rather than guessed. Honesty over optics.
 | Pilots | 0 | 1 | 3 | 6 | inbound |
 | Production deployments (reported) | n/a (no signal) | 1 | 3 | 8 | case studies |
 | Compliance evidence requests served | 0 | 2 | 5 | 12 | inbound |
+{: .scorecard}
 
 ### Documentation
 | Metric | Baseline | Q+1 | Q+2 | Q+4 | Source |
@@ -50,6 +57,7 @@ rather than guessed. Honesty over optics.
 | Docs search usage (queries/mo) | measure | grow | grow | grow | site analytics |
 | Migration guides | 3 | 3 | 4 | 5 | docs |
 | Reproducible case studies | 0 | 1 | 3 | 6 | `docs/case-studies/` |
+{: .scorecard}
 
 ## How metrics are collected
 
