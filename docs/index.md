@@ -1,7 +1,10 @@
 ---
 layout:      default
-title:       Home
-nav_order:   1
+# SEO: the homepage <title> is the single most valuable ranking signal, so it
+# leads with the primary keyword instead of "Home". The header logo links home,
+# so the page is excluded from the sidebar nav to avoid a long, redundant label.
+title:       "TypeScript Backend Framework"
+nav_exclude: true
 permalink:   /
 description: "StreetJS — production-grade, memory-safe TypeScript backend framework. Native PostgreSQL, JWT, WebSockets, clustering. 2 dependencies."
 ---
