@@ -260,8 +260,8 @@ auth, full-stack, and native realtime).
   "@context": "https://schema.org",
   "@type": "Organization",
   "name": "StreetJS",
-  "url": "https://hassanmubiru.github.io/street/",
-  "logo": "https://hassanmubiru.github.io/street/assets/images/logo.svg",
+  "url": "https://hassanmubiru.github.io/StreetJS/",
+  "logo": "https://hassanmubiru.github.io/StreetJS/assets/images/logo.svg",
   "sameAs": [
     "https://github.com/hassanmubiru/StreetJS",
     "https://www.npmjs.com/package/streetjs"
@@ -363,9 +363,9 @@ unpredictable. Plan for steady compounding, treat virality as upside.
 > #1 prerequisite — without it you're flying blind on impressions/clicks/queries.
 
 ### Google Search Console
-1. Add property: `https://hassanmubiru.github.io/street/` (URL-prefix property — a project subpath can't use a Domain property).
+1. Add property: `https://hassanmubiru.github.io/StreetJS/` (URL-prefix property — a project subpath can't use a Domain property).
 2. Verify via the **HTML tag** method → copy the `content="..."` token → paste into `google_site_verification:` in `_config.yml` (`jekyll-seo-tag` then emits the meta tag). Commit + let Pages rebuild → click Verify.
-3. Submit the sitemap: `https://hassanmubiru.github.io/street/sitemap.xml`.
+3. Submit the sitemap: `https://hassanmubiru.github.io/StreetJS/sitemap.xml`.
 4. Use **URL Inspection** on the homepage, `/getting-started/`, and each comparison page → **Request Indexing**.
 
 ### Bing Webmaster Tools

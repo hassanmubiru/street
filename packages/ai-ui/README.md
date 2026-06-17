@@ -1,7 +1,7 @@
 # @streetjs/ai-ui
 
 Accessible, themeable React AI components for
-[StreetJS](https://hassanmubiru.github.io/street/), built on
+[StreetJS](https://hassanmubiru.github.io/StreetJS/), built on
 [`@streetjs/react`](https://www.npmjs.com/package/@streetjs/react). CSS-variable
 theming with dark mode; no CSS-in-JS runtime. React is a peer dependency.
 

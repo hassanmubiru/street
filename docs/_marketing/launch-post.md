@@ -10,7 +10,7 @@
 
 > **TL;DR** — StreetJS is a memory-safe TypeScript backend framework built straight on Node.js core. Native PostgreSQL wire driver, JWT, sessions, WebSockets, clustering, Kafka and RabbitMQ — no Express, no `pg`, no Prisma. Two runtime dependencies.
 >
-> `npm install streetjs` · [Docs](https://hassanmubiru.github.io/street/) · [GitHub](https://github.com/hassanmubiru/StreetJS) · [npm](https://www.npmjs.com/package/streetjs)
+> `npm install streetjs` · [Docs](https://hassanmubiru.github.io/StreetJS/) · [GitHub](https://github.com/hassanmubiru/StreetJS) · [npm](https://www.npmjs.com/package/streetjs)
 
 ## Why another framework?
 
@@ -52,15 +52,15 @@ await app.listen();
 
 ## How it compares
 
-In a `node:http` loopback benchmark (concurrency 50, 3 runs), StreetJS sustains **~27.5k req/s** — about **2.1× Express** and **2.3× NestJS** — while keeping its 2-dependency footprint. Full methodology and run-by-run numbers: [Performance report](https://hassanmubiru.github.io/street/performance/).
+In a `node:http` loopback benchmark (concurrency 50, 3 runs), StreetJS sustains **~27.5k req/s** — about **2.1× Express** and **2.3× NestJS** — while keeping its 2-dependency footprint. Full methodology and run-by-run numbers: [Performance report](https://hassanmubiru.github.io/StreetJS/performance/).
 
 ## Production-ready, honestly reported
 
-StreetJS publishes a [certification summary](https://hassanmubiru.github.io/street/certification/): 10/10 automated gates (lint, build, 1,100+ tests, and security/observability/deployment/enterprise suites), with open follow-ups listed rather than hidden.
+StreetJS publishes a [certification summary](https://hassanmubiru.github.io/StreetJS/certification/): 10/10 automated gates (lint, build, 1,100+ tests, and security/observability/deployment/enterprise suites), with open follow-ups listed rather than hidden.
 
 ## Links
 
-- 📖 Docs: https://hassanmubiru.github.io/street/
+- 📖 Docs: https://hassanmubiru.github.io/StreetJS/
 - 💻 GitHub: https://github.com/hassanmubiru/StreetJS
 - 📦 npm: https://www.npmjs.com/package/streetjs
 

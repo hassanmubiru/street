@@ -1,11 +1,11 @@
 # @streetjs/dating-profiles
 
-Official [StreetJS Framework](https://hassanmubiru.github.io/street/) reference
+Official [StreetJS Framework](https://hassanmubiru.github.io/StreetJS/) reference
 package for **dating profiles, likes, and reciprocal matching** (Phase 10, R11.2).
 
 It composes hardened `@streetjs/core` primitives instead of reinventing them:
 profile `bio` values are encrypted at rest with the core
-[`FieldCipher`/`EncryptedField`](https://hassanmubiru.github.io/street/) field-level
+[`FieldCipher`/`EncryptedField`](https://hassanmubiru.github.io/StreetJS/) field-level
 encryption (Phase 5, R6), and a **match is recorded the moment two users have
 liked each other**.
 

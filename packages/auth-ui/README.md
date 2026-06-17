@@ -1,7 +1,7 @@
 # @streetjs/auth-ui
 
 Accessible, themeable React auth components for
-[StreetJS](https://hassanmubiru.github.io/street/), built on
+[StreetJS](https://hassanmubiru.github.io/StreetJS/), built on
 [`@streetjs/react`](https://www.npmjs.com/package/@streetjs/react). CSS-variable
 theming with built-in dark mode; no CSS-in-JS runtime. React is a peer dependency.
 

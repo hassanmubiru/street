@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://hassanmubiru.github.io/street/assets/images/logo.svg" alt="StreetJS" width="96" height="96" />
+<img src="https://hassanmubiru.github.io/StreetJS/assets/images/logo.svg" alt="StreetJS" width="96" height="96" />
 
 # StreetJS
 
@@ -18,7 +18,7 @@ Auth, realtime, ORM, jobs, messaging, observability and a signed plugin ecosyste
 [![Node.js](https://img.shields.io/badge/node-%3E%3D20-3C873A)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/typescript-%3E%3D5.0-3178C6)](https://www.typescriptlang.org)
 
-[**Documentation**](https://hassanmubiru.github.io/street/) · [**Get Started**](https://hassanmubiru.github.io/street/getting-started/) · [**Compare**](https://hassanmubiru.github.io/street/compare/) · [**Plugins**](https://hassanmubiru.github.io/street/plugins/) · [**Discussions**](https://github.com/hassanmubiru/StreetJS/discussions)
+[**Documentation**](https://hassanmubiru.github.io/StreetJS/) · [**Get Started**](https://hassanmubiru.github.io/StreetJS/getting-started/) · [**Compare**](https://hassanmubiru.github.io/StreetJS/compare/) · [**Plugins**](https://hassanmubiru.github.io/StreetJS/plugins/) · [**Discussions**](https://github.com/hassanmubiru/StreetJS/discussions)
 
 </div>
 
@@ -33,10 +33,10 @@ It targets five problems that slow teams down:
 - **Dependency sprawl** — a typical Node backend pulls in Express + `pg` + an ORM + a validator + an auth library + a WebSocket lib, each with its own transitive tree. StreetJS replaces that stack with one typed framework and a tiny dependency surface.
 - **Integration complexity** — auth, realtime, ORM and OpenAPI are designed to work together, sharing the same context and types, instead of being glued together by hand.
 - **Supply-chain risk** — fewer dependencies plus signed plugins, npm provenance, SBOM generation, CodeQL and secret scanning mean a smaller, more auditable attack surface.
-- **Cost of infrastructure** — dependency-light services with fast cold starts are cheaper to self-host; you own your data and your bill (see [StreetJS on a Budget](https://hassanmubiru.github.io/street/deployment/budget/)).
+- **Cost of infrastructure** — dependency-light services with fast cold starts are cheaper to self-host; you own your data and your bill (see [StreetJS on a Budget](https://hassanmubiru.github.io/StreetJS/deployment/budget/)).
 - **Time-to-production** — `street create` scaffolds a production-ready project (PostgreSQL, JWT, Docker, CI) in seconds.
 
-> **Project status (honest):** the engineering is mature and CI-green; the gaps are community size and ecosystem breadth, not core capability. See the candid [Gap Analysis](https://hassanmubiru.github.io/street/STREETJS-GAP-ANALYSIS/).
+> **Project status (honest):** the engineering is mature and CI-green; the gaps are community size and ecosystem breadth, not core capability. See the candid [Gap Analysis](https://hassanmubiru.github.io/StreetJS/STREETJS-GAP-ANALYSIS/).
 
 ---
 
@@ -56,7 +56,7 @@ A feature comparison against the most common Node.js choices. "Built in" means f
 | Signed plugin system | ✅ Ed25519 + provenance | ❌ | ⚠️ plugins (unsigned) | ⚠️ modules (unsigned) |
 | AI building blocks | ✅ `@streetjs/ai` + OpenAI plugin | ❌ | ❌ | ❌ |
 
-*Comparison is feature-coverage, not performance. Benchmark your own workload — see [Performance](https://hassanmubiru.github.io/street/performance/) and the full honest writeups under [Compare](https://hassanmubiru.github.io/street/compare/).*
+*Comparison is feature-coverage, not performance. Benchmark your own workload — see [Performance](https://hassanmubiru.github.io/StreetJS/performance/) and the full honest writeups under [Compare](https://hassanmubiru.github.io/StreetJS/compare/).*
 
 ---
 
@@ -98,7 +98,7 @@ await app.listen();
 // [street] Listening on http://0.0.0.0:3000
 ```
 
-> Requires Node.js ≥ 20, TypeScript ≥ 5.0, and `"type": "module"`. Full setup in [Getting Started](https://hassanmubiru.github.io/street/getting-started/).
+> Requires Node.js ≥ 20, TypeScript ≥ 5.0, and `"type": "module"`. Full setup in [Getting Started](https://hassanmubiru.github.io/StreetJS/getting-started/).
 
 ---
 
@@ -117,13 +117,13 @@ await app.listen();
 | **DevOps** | `street` CLI (create/dev/build/generate/migrate/…), clustering, Docker scaffolding, GitHub Actions CI with provenance |
 | **Ecosystem** | 19 official signed plugins, a plugin registry, and frontend SDKs (`@streetjs/{client,react,next,vue,nuxt}`) |
 
-Full reference: [Documentation](https://hassanmubiru.github.io/street/).
+Full reference: [Documentation](https://hassanmubiru.github.io/StreetJS/).
 
 ---
 
 ## Official plugins
 
-19 official, Ed25519-signed plugins published under the `@streetjs/` scope. Browse them on the [Official Plugins](https://hassanmubiru.github.io/street/plugins-official/) page.
+19 official, Ed25519-signed plugins published under the `@streetjs/` scope. Browse them on the [Official Plugins](https://hassanmubiru.github.io/StreetJS/plugins-official/) page.
 
 | Category | Plugins |
 |---|---|
@@ -134,7 +134,7 @@ Full reference: [Documentation](https://hassanmubiru.github.io/street/).
 | **Identity** | Auth0, Clerk, Supabase, Firebase |
 | **Databases** | PostgreSQL, MySQL, MongoDB, Redis |
 
-Build your own with the [Plugin Author Guide](https://hassanmubiru.github.io/street/ecosystem/plugin-author-guide/) and get it [certified](https://hassanmubiru.github.io/street/ecosystem/plugin-certification/).
+Build your own with the [Plugin Author Guide](https://hassanmubiru.github.io/StreetJS/ecosystem/plugin-author-guide/) and get it [certified](https://hassanmubiru.github.io/StreetJS/ecosystem/plugin-certification/).
 
 ---
 
@@ -148,7 +148,7 @@ StreetJS treats supply-chain integrity as a first-class concern:
 - **CodeQL** — static analysis on every push (`codeql.yml`).
 - **Secret scanning** — `secret-scan.yml` plus gitleaks configuration.
 - **OpenSSF Scorecard** — continuous supply-chain scoring (`scorecard.yml`).
-- **Runtime certification** — `npm run verify:runtime` produces a published [certification report](https://hassanmubiru.github.io/street/runtime-certification/).
+- **Runtime certification** — `npm run verify:runtime` produces a published [certification report](https://hassanmubiru.github.io/StreetJS/runtime-certification/).
 
 Report vulnerabilities privately via the [Security Policy](SECURITY.md).
 
@@ -158,16 +158,16 @@ Report vulnerabilities privately via the [Security Policy](SECURITY.md).
 
 | Topic | Link |
 |---|---|
-| Getting Started | https://hassanmubiru.github.io/street/getting-started/ |
-| Tutorials | https://hassanmubiru.github.io/street/tutorials/ |
-| Examples | https://hassanmubiru.github.io/street/examples/ |
-| Plugins | https://hassanmubiru.github.io/street/plugins/ |
+| Getting Started | https://hassanmubiru.github.io/StreetJS/getting-started/ |
+| Tutorials | https://hassanmubiru.github.io/StreetJS/tutorials/ |
+| Examples | https://hassanmubiru.github.io/StreetJS/examples/ |
+| Plugins | https://hassanmubiru.github.io/StreetJS/plugins/ |
 | ORM | https://www.npmjs.com/package/@streetjs/orm |
-| Security | https://hassanmubiru.github.io/street/security/ |
-| Enterprise | https://hassanmubiru.github.io/street/enterprise/ |
-| Compare | https://hassanmubiru.github.io/street/compare/ |
-| Roadmap | https://hassanmubiru.github.io/street/roadmap/ |
-| FAQ | https://hassanmubiru.github.io/street/faq/ |
+| Security | https://hassanmubiru.github.io/StreetJS/security/ |
+| Enterprise | https://hassanmubiru.github.io/StreetJS/enterprise/ |
+| Compare | https://hassanmubiru.github.io/StreetJS/compare/ |
+| Roadmap | https://hassanmubiru.github.io/StreetJS/roadmap/ |
+| FAQ | https://hassanmubiru.github.io/StreetJS/faq/ |
 
 ---
 
@@ -175,10 +175,10 @@ Report vulnerabilities privately via the [Security Policy](SECURITY.md).
 
 - 💬 [Discussions](https://github.com/hassanmubiru/StreetJS/discussions) — questions, ideas, show-and-tell
 - 🐛 [Issues](https://github.com/hassanmubiru/StreetJS/issues) — bugs and feature requests
-- 🧭 [Contributing Guide](CONTRIBUTING.md) · [Contributor Path](https://hassanmubiru.github.io/street/community/contributor-path/) · [Code of Conduct](CODE_OF_CONDUCT.md)
+- 🧭 [Contributing Guide](CONTRIBUTING.md) · [Contributor Path](https://hassanmubiru.github.io/StreetJS/community/contributor-path/) · [Code of Conduct](CODE_OF_CONDUCT.md)
 - 🏛️ [Governance](GOVERNANCE.md) & RFC process
-- 🗺️ [Roadmap](https://hassanmubiru.github.io/street/roadmap/) · [Adoption & Go-To-Market Roadmap](https://hassanmubiru.github.io/street/adoption/go-to-market-roadmap/)
-- 🔬 [Runtime Certification](https://hassanmubiru.github.io/street/runtime-certification/) · [Gap Analysis](https://hassanmubiru.github.io/street/STREETJS-GAP-ANALYSIS/)
+- 🗺️ [Roadmap](https://hassanmubiru.github.io/StreetJS/roadmap/) · [Adoption & Go-To-Market Roadmap](https://hassanmubiru.github.io/StreetJS/adoption/go-to-market-roadmap/)
+- 🔬 [Runtime Certification](https://hassanmubiru.github.io/StreetJS/runtime-certification/) · [Gap Analysis](https://hassanmubiru.github.io/StreetJS/STREETJS-GAP-ANALYSIS/)
 
 ---
 

@@ -1,6 +1,6 @@
 # @streetjs/react
 
-React hooks for [StreetJS](https://hassanmubiru.github.io/street/) backends, built
+React hooks for [StreetJS](https://hassanmubiru.github.io/StreetJS/) backends, built
 on [`@streetjs/client`](https://www.npmjs.com/package/@streetjs/client). SSR-safe;
 React is a peer dependency.
 
@@ -45,7 +45,7 @@ const results = useSearch('query');                    // full-text search
 const { messages, streaming, send } = useAIChat();     // AI streaming
 ```
 
-See the [Full-Stack with React tutorial](https://hassanmubiru.github.io/street/tutorials/fullstack-react/).
+See the [Full-Stack with React tutorial](https://hassanmubiru.github.io/StreetJS/tutorials/fullstack-react/).
 
 > **Status:** `0.1.x` preview — pre-1.0, APIs may change.
 

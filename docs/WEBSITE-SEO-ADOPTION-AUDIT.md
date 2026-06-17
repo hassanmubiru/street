@@ -11,7 +11,7 @@ description: "Evidence-based audit of the StreetJS website, branding, documentat
 > Evidence-based. Findings tagged **VERIFIED** (checked against the live site / repo
 > on 2026-06-17), **IMPROVEMENT**, **CRITICAL**, or **UNKNOWN** (no reliable signal).
 > No invented metrics. Live checks were made with `curl` against
-> `https://hassanmubiru.github.io/street/`.
+> `https://hassanmubiru.github.io/StreetJS/`.
 
 > **Measurement caveat (rate-limiting confirmed):** during this audit, after a
 > burst of automated requests, GitHub Pages began returning `404` (with

@@ -1,6 +1,6 @@
 # @streetjs/next
 
-Next.js helpers for [StreetJS](https://hassanmubiru.github.io/street/): server and
+Next.js helpers for [StreetJS](https://hassanmubiru.github.io/StreetJS/): server and
 edge clients plus auth/session/cookie helpers, built on
 [`@streetjs/client`](https://www.npmjs.com/package/@streetjs/client). `next` and
 `react` are peer dependencies.

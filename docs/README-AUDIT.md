@@ -67,7 +67,7 @@ Both corrected the dependency count (3) and package count (47).
 
 ## Part 5 — Link validation report
 
-Live HTTP status checked against `https://hassanmubiru.github.io/street/` on 2026-06-17 (VERIFIED). Repo-relative links (`LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `GOVERNANCE.md`) were confirmed to exist as files in the repo root.
+Live HTTP status checked against `https://hassanmubiru.github.io/StreetJS/` on 2026-06-17 (VERIFIED). Repo-relative links (`LICENSE`, `SECURITY.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `GOVERNANCE.md`) were confirmed to exist as files in the repo root.
 
 | Link | Status | Recommendation |
 |---|---|---|

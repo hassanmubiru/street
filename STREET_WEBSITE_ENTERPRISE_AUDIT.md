@@ -2,7 +2,7 @@
 
 > **Audit Team:** Senior UI/UX Designer, DevRel Lead, Documentation Architect, Frontend Architect, Growth Strategist, SEO Specialist, Accessibility Expert, Performance Engineer, Brand Designer, Product Marketing Expert
 > **Date:** May 31, 2026
-> **Site:** https://hassanmubiru.github.io/street
+> **Site:** https://hassanmubiru.github.io/StreetJS
 > **Repository:** https://github.com/hassanmubiru/StreetJS
 
 ---
@@ -864,13 +864,13 @@ Inter is the industry standard for developer tools (used by Vercel, GitHub, GitL
 ```html
 <meta property="og:title" content="StreetJS Framework — TypeScript Backend Framework" />
 <meta property="og:description" content="Build production APIs on Node.js core. Zero fat dependencies." />
-<meta property="og:image" content="https://hassanmubiru.github.io/street/assets/images/og-image.png" />
-<meta property="og:url" content="https://hassanmubiru.github.io/street" />
+<meta property="og:image" content="https://hassanmubiru.github.io/StreetJS/assets/images/og-image.png" />
+<meta property="og:url" content="https://hassanmubiru.github.io/StreetJS" />
 <meta property="og:type" content="website" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="StreetJS Framework — TypeScript Backend Framework" />
 <meta name="twitter:description" content="Build production APIs on Node.js core. Zero fat dependencies." />
-<meta name="twitter:image" content="https://hassanmubiru.github.io/street/assets/images/og-image.png" />
+<meta name="twitter:image" content="https://hassanmubiru.github.io/StreetJS/assets/images/og-image.png" />
 ```
 
 **Structured Data (JSON-LD):**
@@ -882,7 +882,7 @@ Inter is the industry standard for developer tools (used by Vercel, GitHub, GitL
   "applicationCategory": "Backend Framework",
   "operatingSystem": "Linux, macOS, Windows",
   "description": "Production-grade TypeScript backend framework built on Node.js core.",
-  "url": "https://hassanmubiru.github.io/street",
+  "url": "https://hassanmubiru.github.io/StreetJS",
   "downloadUrl": "https://www.npmjs.com/package/@streetjs/core",
   "license": "https://opensource.org/licenses/MIT",
   "programmingLanguage": "TypeScript",
