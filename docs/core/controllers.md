@@ -233,4 +233,4 @@ async events(ctx: StreetContext): Promise<void> {
 }
 ```
 
-See [Server-Sent Events](../realtime/sse.md) for full details.
+See [Server-Sent Events](../realtime/websocket.md) for full details.
