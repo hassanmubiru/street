@@ -51,6 +51,6 @@
       "source": "Maintainer assessment grounded in the benchmark regression gate (packages/core benchmarks vs committed baseline.json) passing with no >10% throughput regression.",
       "note": "Rubric-based score. Raise once a normalized performance index is computed from benchmark output."
     },
-    "thresholds_rationale": "Thresholds are set to the bar the project demonstrably meets today (coverage 60 matches the enforced c8 floor; security 70 sits just under the real OpenSSF 7.3). These are intentionally honest current-state bars, not the aspirational default of 80. Raise them over time."
+    "thresholds_rationale": "Thresholds are set to the bar the project demonstrably meets today (coverage 70 sits below the measured 77.03% line coverage; security 70 sits just under the real OpenSSF 7.3). These are intentionally honest current-state bars, not the aspirational default of 80. Raise them over time."
   }
 }
