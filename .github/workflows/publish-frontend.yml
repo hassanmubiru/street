@@ -39,6 +39,9 @@ jobs:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Build core (edge compiles against streetjs)
+        run: npm run build -w packages/core
+
       - name: Build all packages (dependency order)
         run: |
           set -euo pipefail
