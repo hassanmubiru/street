@@ -1,4 +1,4 @@
-# Contributing to street
+# Contributing to StreetJS
 
 Thank you for your interest in contributing. This document explains how to set up the development environment, run tests, and submit pull requests.
 
