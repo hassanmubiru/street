@@ -2,6 +2,7 @@
 layout: default
 title: "Official Plugins"
 nav_exclude: true
+permalink: /plugins-official/
 description: "Official StreetJS plugins — S3, SendGrid, Stripe, Twilio, Auth0, R2, NATS, Kafka, RabbitMQ, PostgreSQL, MySQL, MongoDB, PayPal, OpenAI, Clerk, Supabase and Firebase integrations with signed, verified manifests."
 ---
 
