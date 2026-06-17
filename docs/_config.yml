@@ -3,7 +3,7 @@ title:       "StreetJS"
 tagline:     "TypeScript Backend Framework — No Express. No pg. No Prisma."
 description: "StreetJS is a production-grade, memory-safe TypeScript backend framework built on Node.js core. Native PostgreSQL driver, JWT, WebSockets, clustering — 2 dependencies."
 url:         "https://hassanmubiru.github.io"
-baseurl:     "/street"
+baseurl:     "/StreetJS"
 lang:        "en"
 
 # ── SEO ───────────────────────────────────────────────────────────────────────
