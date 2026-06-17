@@ -178,7 +178,7 @@ See the dedicated [WebAuthn Guide](./webauthn.md) for full documentation on pass
 
 ## Security Checklist
 
-- Rotate `JWT_SECRET` and `SESSION_KEY` via your secrets manager (see [Cloud Secret Providers](../cloud/secrets.md)).
+- Rotate `JWT_SECRET` and `SESSION_KEY` via your secrets manager (see [Cloud Secret Providers](../cloud-adapters.md)).
 - Set `expiresIn` to ≤15 minutes for access tokens; use refresh tokens for long sessions.
 - Enable `securityHeaders` middleware to set HSTS, CSP, and other security headers.
 - Use `requireRoles` guards on all admin routes.
