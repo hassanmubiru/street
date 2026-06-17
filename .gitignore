@@ -8,8 +8,24 @@ docs/.bundle/
 # Node modules
 node_modules/
 
-# Environment files
+# Environment files (templates are explicitly re-included below)
 .env
+.env.*
+!.env.example
+
+# Credentials, private keys, and certificates — must never be committed
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*service-account*.json
+*credentials*.json
+aws-credentials.json
+
+# Temp / cache scratch dirs
+.tmp/
+.cache/
 
 # System test output
 # System test results (from packages/core or anywhere)
