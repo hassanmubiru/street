@@ -327,7 +327,7 @@ After publishing, add live badges to `README.md`:
 ```markdown
 [![npm version](https://img.shields.io/npm/v/streetjs.svg)](https://www.npmjs.com/package/streetjs)
 [![npm downloads](https://img.shields.io/npm/dm/streetjs.svg)](https://www.npmjs.com/package/streetjs)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://hassanmubiru.github.io/street)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://hassanmubiru.github.io/StreetJS)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 ```
 

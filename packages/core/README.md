@@ -20,7 +20,7 @@ npm install streetjs
 
 **Requirements:** Node.js ≥ 20, TypeScript ≥ 5.0, and `"type": "module"` in your `package.json`.
 
-> Renamed from `@streetjs/core`. The old package still works as a deprecated shim that re-exports `streetjs` unchanged. See the [migration guide](https://hassanmubiru.github.io/street/migration/).
+> Renamed from `@streetjs/core`. The old package still works as a deprecated shim that re-exports `streetjs` unchanged. See the [migration guide](https://hassanmubiru.github.io/StreetJS/migration/).
 
 ---
 
@@ -196,10 +196,10 @@ import { ClusterCoordinator }    from 'streetjs/cluster';
 
 ## Documentation & links
 
-- 📖 [Documentation](https://hassanmubiru.github.io/street/)
-- 🚀 [Getting Started](https://hassanmubiru.github.io/street/getting-started/)
-- 🧩 [Plugins](https://hassanmubiru.github.io/street/plugins/)
-- ⚖️ [Compare vs Express / Fastify / NestJS](https://hassanmubiru.github.io/street/compare/)
+- 📖 [Documentation](https://hassanmubiru.github.io/StreetJS/)
+- 🚀 [Getting Started](https://hassanmubiru.github.io/StreetJS/getting-started/)
+- 🧩 [Plugins](https://hassanmubiru.github.io/StreetJS/plugins/)
+- ⚖️ [Compare vs Express / Fastify / NestJS](https://hassanmubiru.github.io/StreetJS/compare/)
 - 💬 [GitHub & Discussions](https://github.com/hassanmubiru/StreetJS)
 - 📦 [`@streetjs/cli`](https://www.npmjs.com/package/@streetjs/cli) · [Changelog](https://github.com/hassanmubiru/StreetJS/blob/main/CHANGELOG.md)
 

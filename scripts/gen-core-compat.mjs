@@ -58,7 +58,7 @@ const pkg = {
   keywords: ['streetjs', 'deprecated', 'compatibility', 'framework'],
   author: 'street contributors',
   license: 'MIT',
-  homepage: 'https://hassanmubiru.github.io/street/',
+  homepage: 'https://hassanmubiru.github.io/StreetJS/',
   repository: { type: 'git', url: 'git+https://github.com/hassanmubiru/StreetJS.git' },
   bugs: { url: 'https://github.com/hassanmubiru/StreetJS/issues' },
   engines: { node: '>=20.0.0' },

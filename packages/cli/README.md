@@ -325,7 +325,7 @@ docker compose up
 
 ## Links
 
-- [Documentation](https://hassanmubiru.github.io/street)
+- [Documentation](https://hassanmubiru.github.io/StreetJS)
 - [GitHub](https://github.com/hassanmubiru/StreetJS)
 - [npm — @streetjs/cli](https://www.npmjs.com/package/@streetjs/cli)
 - [npm — streetjs](https://www.npmjs.com/package/streetjs)

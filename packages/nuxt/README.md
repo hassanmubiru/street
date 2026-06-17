@@ -1,6 +1,6 @@
 # @streetjs/nuxt
 
-Nuxt 3 integration for [StreetJS](https://hassanmubiru.github.io/street/):
+Nuxt 3 integration for [StreetJS](https://hassanmubiru.github.io/StreetJS/):
 re-exports the [`@streetjs/vue`](https://www.npmjs.com/package/@streetjs/vue)
 composables and adds a Nuxt plugin factory that provides a StreetJS client to the
 whole app. Vue is a peer dependency; no hard `@nuxt/kit` dependency.

@@ -1,6 +1,6 @@
 # @streetjs/plugin-africastalking
 
-Official [StreetJS](https://hassanmubiru.github.io/street/) plugin for
+Official [StreetJS](https://hassanmubiru.github.io/StreetJS/) plugin for
 [Africa's Talking](https://africastalking.com): **SMS, Bulk SMS, Voice, USSD,
 Airtime, and Mobile Money** — sandbox and production.
 
@@ -131,7 +131,7 @@ This package ships a `manifest.json` and an Ed25519-signed `manifest.signed.json
 (verifiable against `manifest.pub`). Signing runs **only at publish**
 (`prepublishOnly` → `sign`) and **requires** `STREET_PLUGIN_SIGNING_KEY`; a plain
 `npm run build` never signs. See the StreetJS
-[Plugin Author Guide](https://hassanmubiru.github.io/street/ecosystem/plugin-author-guide/).
+[Plugin Author Guide](https://hassanmubiru.github.io/StreetJS/ecosystem/plugin-author-guide/).
 
 ## License
 

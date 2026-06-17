@@ -1556,7 +1556,7 @@ describe('Street Application', () => {
   private renderReadme(projectName: string): string {
     return `# ${projectName}
 
-A [Street](https://hassanmubiru.github.io/street) framework application.
+A [Street](https://hassanmubiru.github.io/StreetJS) framework application.
 
 ## Prerequisites
 

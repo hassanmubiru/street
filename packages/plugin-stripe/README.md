@@ -1,6 +1,6 @@
 # @streetjs/plugin-stripe
 
-Official [StreetJS Framework](https://hassanmubiru.github.io/street/) plugin for **Stripe payments**.
+Official [StreetJS Framework](https://hassanmubiru.github.io/StreetJS/) plugin for **Stripe payments**.
 
 It ships a `PluginModule` subclass that injects a Stripe client into each request
 via middleware. Request building (bearer auth + form-encoded body) is pure and

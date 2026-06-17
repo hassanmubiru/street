@@ -1,6 +1,6 @@
 # @streetjs/vue
 
-Vue 3 composables for [StreetJS](https://hassanmubiru.github.io/street/) backends,
+Vue 3 composables for [StreetJS](https://hassanmubiru.github.io/StreetJS/) backends,
 built on [`@streetjs/client`](https://www.npmjs.com/package/@streetjs/client). Vue
 is a peer dependency.
 

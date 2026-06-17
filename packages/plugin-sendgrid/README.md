@@ -1,6 +1,6 @@
 # @streetjs/plugin-sendgrid
 
-Official [StreetJS Framework](https://hassanmubiru.github.io/street/) plugin for **SendGrid email**.
+Official [StreetJS Framework](https://hassanmubiru.github.io/StreetJS/) plugin for **SendGrid email**.
 
 It ships a `PluginModule` subclass that injects a SendGrid mail client into each
 request via middleware. Request building (endpoint, bearer auth, JSON body) is pure
