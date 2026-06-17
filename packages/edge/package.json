@@ -18,6 +18,25 @@
   },
   "keywords": ["street", "edge", "runtime", "adapter", "cloudflare", "vercel"],
   "license": "MIT",
+  "author": "street contributors",
+  "homepage": "https://hassanmubiru.github.io/StreetJS/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hassanmubiru/StreetJS.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hassanmubiru/StreetJS/issues"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.js.map",
+    "dist/**/*.d.ts",
+    "dist/**/*.d.ts.map",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "streetjs": "^1.0.9"
   },
