@@ -9,7 +9,7 @@ description: "street — StreetJS, the production-grade, memory-safe TypeScript 
 
 **Production-grade, memory-safe TypeScript backend framework built on Node.js core modules.**
 
-[![CI](https://github.com/hassanmubiru/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/hassanmubiru/actions)
+[![CI](https://github.com/hassanmubiru/StreetJS/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/hassanmubiru/StreetJS/actions)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.4-blue)](https://www.typescriptlang.org/)
 [![Node](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
