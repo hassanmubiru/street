@@ -2,137 +2,99 @@
 
 ## Introduction
 
-This feature hardens the backend project that the StreetJS CLI's `street create`
-command scaffolds, so that the generated project **boots out-of-the-box** and is
-**secure-by-default**. Two outcomes define success:
+This feature governs what the streetJS project generator (`street create`, implemented in `packages/cli/src/commands/create.ts`) emits so that a freshly generated backend is **secure-by-default** and **boots successfully out-of-the-box** with no manual configuration. The scope is strictly the templated files the generator writes — `src/main.ts`, `.env.example`, `docker-compose.yml`, and `src/repositories/example.repository.ts` — together with reliance on existing `streetjs` runtime exports (notably `ServiceUnavailableException`).
 
-- **Boots out-of-the-box**: a freshly generated project starts on first run for
-  both the SQLite (zero-config) and PostgreSQL drivers without crashing — even
-  when database credentials are missing or the database is unreachable.
-- **Secure-by-default**: the generated application never silently runs with an
-  open (wildcard) CORS policy or weak signing secrets in production; unsafe
-  defaults are tolerated only in development and always surfaced with a warning,
-  and are refused outright (fail loud) in production.
+Two groups of behavior are captured:
 
-This document follows the StreetJS `CLAUDE.md` "8-Rule Architecture" governance:
-simplicity-first, surgical changes, and fail-loud behavior. Some requirements
-below describe behavior that is **already implemented and verified** and is
-captured here to lock it in as expected behavior; others describe behavior that
-must be (re-)implemented. The requirements are stated in terms of observable
-system behavior and are independent of current implementation state.
+1. **Established behavior** (already implemented, committed, and verified by the CLI test suite: 102 + 50 tests, zero failures) — recorded here as the intended contract so future changes do not regress it.
+2. **In-flight behavior** (configurable CORS, env/compose discoverability, and an unauthenticated-routes notice) — recorded so scope is agreed before re-implementation. On disk today this is partially present and inconsistent: the generated `main.ts` computes a CORS allowlist but still applies a hardcoded `corsMiddleware(['*'])`; the SQLite `.env.example` lists `CORS_ORIGINS` while the Postgres variant does not; and neither `docker-compose` env block lists `CORS_ORIGINS`.
 
-Scope note: this spec covers only the scaffolded backend's first-run boot
-behavior and its secure-by-default configuration surface (CORS, signing secrets,
-database degradation, and the example-route safety comment). It does not change
-the framework runtime, the frontend scaffolds, or unrelated generator output.
+This document is the requirements phase only. No code changes are made here.
 
 ## Glossary
 
-- **Scaffold_Generator**: The `street create <name>` command (implemented by
-  `CreateCommand` in `packages/cli/src/commands/create.ts`) that writes a new
-  project's files from embedded templates.
-- **Generated_Application**: The runtime backend application produced by the
-  Scaffold_Generator and started from the generated `src/main.ts` entry point.
-- **SQLite_Driver**: The database driver selected with `--database sqlite`
-  (the default), which requires no external database server or credentials.
-- **PostgreSQL_Driver**: The database driver selected with `--database postgres`,
-  intended for production use and requiring explicit credentials.
-- **Items_Table**: The example database table named `items` that the
-  Generated_Application uses for its example route.
-- **Database_Backed_Route**: A generated HTTP route whose handler reads from or
-  writes to the configured database.
-- **Health_Route**: The generated HTTP route that reports application liveness
-  and does not require database access.
-- **CORS_Allowlist**: The ordered set of trusted origins the Generated_Application
-  permits for cross-origin requests.
-- **Production_Mode**: The runtime state in which the `NODE_ENV` environment
-  variable is set to the value `production`.
-- **JWT_SECRET**: The environment variable holding the signing secret for JSON
-  Web Tokens.
-- **SESSION_KEY**: The environment variable holding the key used to sign session
-  data.
-- **CORS_ORIGINS**: The environment variable holding a comma-separated allowlist
-  of trusted cross-origin request origins.
-- **ServiceUnavailableException**: The exception type exported by the `streetjs`
-  package that maps to an HTTP 503 response.
+- **Project_Generator**: The `street create <name>` command implemented in `packages/cli/src/commands/create.ts`, which writes templated project files to disk.
+- **Generated_App**: The scaffolded backend application at runtime, whose entry point is the generated `src/main.ts`.
+- **Secret_Resolver**: The `resolveSecret` helper inside the generated `src/main.ts` that resolves `JWT_SECRET` and `SESSION_KEY`.
+- **CORS_Resolver**: The logic inside the generated `src/main.ts` that derives the CORS origin allowlist from the `CORS_ORIGINS` environment variable.
+- **Example_Repository**: The generated `src/repositories/example.repository.ts` (`ExampleRepository`) that performs database queries for the example `items` resource.
+- **Production_Mode**: The runtime condition where the `NODE_ENV` environment variable equals `production`.
+- **Development_Mode**: The runtime condition where the `NODE_ENV` environment variable does not equal `production`.
+- **ServiceUnavailableException**: The exception type exported from `streetjs` that the framework maps to an HTTP 503 response.
+- **CORS_ORIGINS**: The environment variable holding a comma-separated allowlist of trusted origins for cross-origin requests.
 
 ## Requirements
 
-### Requirement 1: SQLite zero-config first-run boot
+### Requirement 1: Zero-config SQLite boot
 
-**User Story:** As a developer, I want the generated SQLite project to start on
-first run with no configuration, so that I can begin developing immediately.
-
-#### Acceptance Criteria
-
-1. WHILE the SQLite_Driver is selected, WHEN the Generated_Application starts, THE Generated_Application SHALL initialize the SQLite database without requiring any database credentials.
-2. WHEN the Generated_Application initializes the SQLite database, THE Generated_Application SHALL create the Items_Table if the Items_Table does not already exist.
-3. IF the `SQLITE_PATH` environment variable is unset, THEN THE Generated_Application SHALL use an in-process in-memory SQLite database.
-4. WHEN the SQLite database initialization completes, THE Generated_Application SHALL emit a database-ready log message and continue startup.
-
-### Requirement 2: Development secret generation with production fail-fast
-
-**User Story:** As a developer, I want valid signing secrets generated
-automatically in development and required explicitly in production, so that the
-project runs with zero setup locally but never starts with throwaway keys in
-production.
+**User Story:** As a developer running a freshly generated SQLite-backed project, I want the application to start without any database setup, so that I can begin development immediately.
 
 #### Acceptance Criteria
 
-1. WHILE the Generated_Application is not in Production_Mode, WHEN JWT_SECRET is unset at startup, THE Generated_Application SHALL generate a 48-character hexadecimal value as the JWT_SECRET for the running process.
-2. WHILE the Generated_Application is not in Production_Mode, WHEN SESSION_KEY is unset at startup, THE Generated_Application SHALL generate a 64-character hexadecimal value as the SESSION_KEY for the running process.
-3. WHEN the Generated_Application generates an ephemeral JWT_SECRET or SESSION_KEY, THE Generated_Application SHALL emit a warning that names the affected environment variable and states that the value is ephemeral.
-4. IF the Generated_Application is in Production_Mode AND JWT_SECRET is unset, THEN THE Generated_Application SHALL terminate startup before binding the HTTP port and report an error that names JWT_SECRET.
-5. IF the Generated_Application is in Production_Mode AND SESSION_KEY is unset, THEN THE Generated_Application SHALL terminate startup before binding the HTTP port and report an error that names SESSION_KEY.
+1. WHEN the Generated_App starts with the SQLite driver and no database environment configuration is provided, THE Generated_App SHALL open a SQLite pool using the path from `SQLITE_PATH` or the default `:memory:` value.
+2. WHEN the SQLite pool is opened, THE Generated_App SHALL create the `items` table if the `items` table does not already exist.
+3. WHEN the `items` table has been ensured, THE Generated_App SHALL log the message `Database ready (sqlite).`.
+4. WHERE the SQLite driver is selected, THE Generated_App SHALL complete startup without requiring any manually supplied database credentials.
 
-### Requirement 3: PostgreSQL graceful degradation on first run
+### Requirement 2: Ephemeral development secrets with production fail-fast
 
-**User Story:** As a developer, I want the generated PostgreSQL project to start
-even when credentials are missing or the database is unreachable, so that I
-receive actionable guidance instead of a crash.
+**User Story:** As a developer, I want valid security keys to exist on first run without manual setup, while production refuses to start without explicit keys, so that local development is frictionless and production is never secured by throwaway keys.
 
 #### Acceptance Criteria
 
-1. IF the PostgreSQL_Driver is selected AND any of `PG_USER`, `PG_PASSWORD`, or `PG_DATABASE` is unset, THEN THE Generated_Application SHALL start the HTTP server and log guidance that lists each missing environment variable.
-2. IF the PostgreSQL_Driver is selected AND the database connection attempt fails, THEN THE Generated_Application SHALL start the HTTP server and log the connection error together with remediation guidance.
-3. WHILE the PostgreSQL connection is unavailable, WHEN a request targets a Database_Backed_Route, THE Generated_Application SHALL respond with HTTP status 503.
-4. WHILE the PostgreSQL connection is unavailable, WHEN the Generated_Application responds to a Database_Backed_Route, THE Generated_Application SHALL signal the unavailability using the ServiceUnavailableException type from the `streetjs` package.
-5. WHILE the PostgreSQL connection is unavailable, WHEN a request targets the Health_Route, THE Generated_Application SHALL respond with HTTP status 200.
+1. WHERE the `JWT_SECRET` environment variable is set to a non-empty value, THE Secret_Resolver SHALL return the provided `JWT_SECRET` value unchanged.
+2. WHERE the `SESSION_KEY` environment variable is set to a non-empty value, THE Secret_Resolver SHALL return the provided `SESSION_KEY` value unchanged.
+3. IF the `JWT_SECRET` environment variable is unset or empty WHILE the Generated_App runs in Development_Mode, THEN THE Secret_Resolver SHALL generate a JWT secret of at least 32 characters at runtime.
+4. IF the `SESSION_KEY` environment variable is unset or empty WHILE the Generated_App runs in Development_Mode, THEN THE Secret_Resolver SHALL generate a session key of exactly 64 hexadecimal characters at runtime.
+5. WHEN the Secret_Resolver generates an ephemeral key in Development_Mode, THE Secret_Resolver SHALL emit a warning that the generated key is for development use only.
+6. IF the `JWT_SECRET` or `SESSION_KEY` environment variable is unset or empty WHILE the Generated_App runs in Production_Mode, THEN THE Secret_Resolver SHALL throw a startup error that names the missing environment variable and SHALL halt startup.
 
-### Requirement 4: Configurable, secure-by-default CORS
+### Requirement 3: Graceful PostgreSQL boot
 
-**User Story:** As an operator, I want cross-origin access controlled by an
-explicit allowlist, so that the deployed API rejects untrusted origins and never
-silently accepts requests from any website.
-
-#### Acceptance Criteria
-
-1. WHEN CORS_ORIGINS is set to a non-empty value, THE Generated_Application SHALL build the CORS_Allowlist from the comma-separated origins in CORS_ORIGINS.
-2. WHEN the Generated_Application builds the CORS_Allowlist from CORS_ORIGINS, THE Generated_Application SHALL trim surrounding whitespace from each origin and exclude empty entries.
-3. THE Generated_Application SHALL apply the CORS_Allowlist as the active CORS policy for all incoming HTTP requests.
-4. WHILE the Generated_Application is not in Production_Mode, WHEN CORS_ORIGINS is unset or contains no non-empty origins, THE Generated_Application SHALL set the CORS_Allowlist to allow all origins and emit a warning that wildcard CORS is enabled for development only.
-5. IF the Generated_Application is in Production_Mode AND CORS_ORIGINS is unset or contains no non-empty origins, THEN THE Generated_Application SHALL terminate startup before binding the HTTP port and report an error that CORS_ORIGINS is required.
-
-### Requirement 5: CORS configuration documented in generated environment templates
-
-**User Story:** As a developer, I want CORS_ORIGINS documented in the generated
-environment and container templates, so that I know how to configure it for each
-deployment target.
+**User Story:** As a developer running a PostgreSQL-backed project without database credentials, I want the server to still start with clear guidance, so that I can configure the database without fighting crashes.
 
 #### Acceptance Criteria
 
-1. WHEN the Scaffold_Generator generates a project using the SQLite_Driver, THE Scaffold_Generator SHALL include a CORS_ORIGINS entry in the generated `.env.example` file.
-2. WHEN the Scaffold_Generator generates a project using the PostgreSQL_Driver, THE Scaffold_Generator SHALL include a CORS_ORIGINS entry in the generated `.env.example` file.
-3. WHERE the generated `docker-compose.yml` defines an application service, THE Scaffold_Generator SHALL include CORS_ORIGINS in that service's environment block.
-4. WHEN the Scaffold_Generator writes a CORS_ORIGINS entry, THE Scaffold_Generator SHALL accompany the entry with a comment that describes the development wildcard behavior and the Production_Mode requirement.
+1. IF the PostgreSQL driver is selected AND any of `PG_USER`, `PG_PASSWORD`, or `PG_DATABASE` is unset or empty, THEN THE Generated_App SHALL log guidance that names the missing variables and describes how to configure them, AND SHALL continue startup without opening a database connection.
+2. IF a PostgreSQL connection attempt fails during startup, THEN THE Generated_App SHALL log guidance describing the failure and the credentials to check, AND SHALL continue serving requests without terminating the process.
+3. WHILE the PostgreSQL database is unconfigured or unreachable, THE Generated_App SHALL continue to serve the health route and all routes that do not require the database.
 
-### Requirement 6: Example routes documented as unauthenticated
+### Requirement 4: HTTP 503 for unconfigured or unreachable database
 
-**User Story:** As a developer, I want a clear warning that the generated example
-routes are unauthenticated, so that I protect them before exposing the
-application publicly.
+**User Story:** As an API consumer, I want database-backed routes to return a clear 503 when the database is not available, so that I receive an actionable status instead of a crash or a generic 500.
 
 #### Acceptance Criteria
 
-1. WHEN the Scaffold_Generator generates the example route controller, THE Scaffold_Generator SHALL include a code comment stating that the example routes are unauthenticated.
-2. WHEN the Scaffold_Generator generates the example route controller, THE Scaffold_Generator SHALL include a code comment advising that the example routes be protected before public exposure.
+1. WHEN a method of the Example_Repository is invoked AND the database pool cannot be resolved from the container, THE Example_Repository SHALL raise a ServiceUnavailableException.
+2. WHEN the Example_Repository raises a ServiceUnavailableException, THE Generated_App SHALL respond to the originating request with HTTP status 503.
+3. THE Example_Repository SHALL resolve the database pool lazily within each query method so that the Example_Repository can be constructed while the database is unconfigured.
+
+### Requirement 5: Configurable CORS allowlist
+
+**User Story:** As an operator deploying a generated app, I want CORS origins controlled by an environment allowlist with no wildcard in production, so that the API is not exposed to arbitrary origins by default.
+
+#### Acceptance Criteria
+
+1. WHERE the `CORS_ORIGINS` environment variable contains one or more comma-separated origins, THE CORS_Resolver SHALL produce an allowlist containing each trimmed, non-empty origin from `CORS_ORIGINS`.
+2. WHEN the CORS_Resolver has produced the allowlist, THE Generated_App SHALL apply the CORS middleware using the produced allowlist as its set of permitted origins.
+3. IF the `CORS_ORIGINS` environment variable is empty or unset WHILE the Generated_App runs in Development_Mode, THEN THE CORS_Resolver SHALL produce an allowlist permitting all origins (`*`) AND THE Generated_App SHALL emit a warning that all origins are permitted for development only.
+4. IF the `CORS_ORIGINS` environment variable is empty or unset WHILE the Generated_App runs in Production_Mode, THEN THE CORS_Resolver SHALL throw a startup error indicating that `CORS_ORIGINS` is required AND SHALL halt startup.
+
+### Requirement 6: CORS configuration discoverability
+
+**User Story:** As a developer, I want `CORS_ORIGINS` documented in the generated configuration files, so that I can discover and set the allowlist before deploying.
+
+#### Acceptance Criteria
+
+1. WHEN the Project_Generator emits the `.env.example` file for the SQLite variant, THE Project_Generator SHALL include a `CORS_ORIGINS` entry with an explanatory comment.
+2. WHEN the Project_Generator emits the `.env.example` file for the PostgreSQL variant, THE Project_Generator SHALL include a `CORS_ORIGINS` entry with an explanatory comment.
+3. WHEN the Project_Generator emits the `docker-compose.yml` file for the SQLite variant, THE Project_Generator SHALL include `CORS_ORIGINS` in the application service environment block.
+4. WHEN the Project_Generator emits the `docker-compose.yml` file for the PostgreSQL variant, THE Project_Generator SHALL include `CORS_ORIGINS` in the application service environment block.
+
+### Requirement 7: Unauthenticated example routes notice
+
+**User Story:** As a developer reading the generated entry point, I want an explicit notice that the example routes are unauthenticated, so that I protect them before exposing the service publicly.
+
+#### Acceptance Criteria
+
+1. WHEN the Project_Generator emits the `src/main.ts` file, THE Project_Generator SHALL include a comment stating that the example routes are unauthenticated and must be protected before public exposure.
