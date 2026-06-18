@@ -1575,8 +1575,10 @@ services:
       # ':memory:' is ephemeral. For production, switch to PostgreSQL:
       # recreate the project with \`--database postgres\`.
       SQLITE_PATH: ":memory:"
-      JWT_SECRET: dev-jwt-secret-change-in-production
-      SESSION_KEY: dev-session-key-change-in-production
+      # JWT_SECRET / SESSION_KEY are auto-generated as valid ephemeral dev keys
+      # when unset (NODE_ENV=development). Set them for stable sessions / prod.
+      # CORS_ORIGINS empty = allow all in development; set an allowlist for prod.
+      CORS_ORIGINS: ""
     volumes:
       - ./uploads:/app/uploads
 `;
