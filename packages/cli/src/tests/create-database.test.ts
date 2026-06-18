@@ -121,4 +121,65 @@ describe('street create --database', () => {
       assert.ok(!dbSection.includes('process.exit'), 'missing-credentials branch does not exit the process');
     });
   });
+
+  // ── Secure-by-default boot (regression + gap coverage) ──────────────────
+  for (const database of ['sqlite', 'postgres'] as const) {
+    it(`${database}: generates valid ephemeral dev secrets (no invalid hardcoded keys)`, async () => {
+      await withTempDir(async (dir) => {
+        const restore = capture();
+        try { await new CreateCommand().execute(ctx(dir, ['proj'], { database })); } finally { restore(); }
+        const main = read(dir, 'proj', 'src/main.ts');
+        // R2: secrets are validated/generated, never the old invalid constants.
+        assert.ok(main.includes("resolveSecret('JWT_SECRET', 24)"), 'JWT secret resolved (≥32 chars)');
+        assert.ok(main.includes("resolveSecret('SESSION_KEY', 32)"), 'session key resolved (64 hex)');
+        assert.ok(!main.includes("'dev-secret'"), 'no invalid short JWT default');
+        assert.ok(!main.includes("'dev-session-key'"), 'no invalid session-key default');
+        assert.ok(main.includes('randomBytes'), 'ephemeral dev keys generated when unset');
+      });
+    });
+
+    it(`${database}: CORS is not a hardcoded wildcard and routes carry an auth notice`, async () => {
+      await withTempDir(async (dir) => {
+        const restore = capture();
+        try { await new CreateCommand().execute(ctx(dir, ['proj'], { database })); } finally { restore(); }
+        const main = read(dir, 'proj', 'src/main.ts');
+        // R5.2
+        assert.ok(main.includes('corsMiddleware(corsOrigins)'), 'CORS uses the resolved allowlist');
+        assert.ok(!main.includes("corsMiddleware(['*'])"), 'no hardcoded wildcard CORS');
+        assert.ok(main.includes("process.env['CORS_ORIGINS']"), 'CORS origins come from env');
+        // R7
+        assert.ok(/UNAUTHENTICATED/i.test(main), 'example routes carry an unauthenticated-routes notice');
+      });
+    });
+
+    it(`${database}: .env.example and docker-compose document CORS_ORIGINS`, async () => {
+      await withTempDir(async (dir) => {
+        const restore = capture();
+        try { await new CreateCommand().execute(ctx(dir, ['proj'], { database })); } finally { restore(); }
+        const env = read(dir, 'proj', '.env.example');
+        const compose = read(dir, 'proj', 'docker-compose.yml');
+        // R6.1 / R6.2
+        assert.ok(env.includes('CORS_ORIGINS'), '.env.example documents CORS_ORIGINS');
+        // R6.3 / R6.4
+        assert.ok(compose.includes('CORS_ORIGINS'), 'docker-compose sets CORS_ORIGINS');
+        // docker-compose must not ship an invalid SESSION_KEY that would crash boot.
+        assert.ok(!compose.includes('SESSION_KEY: dev-session-key'), 'no invalid committed session key in compose');
+      });
+    });
+  }
+
+  it('sqlite: bootstraps schema and logs readiness; repository resolves lazily with a 503', async () => {
+    await withTempDir(async (dir) => {
+      const restore = capture();
+      try { await new CreateCommand().execute(ctx(dir, ['proj'], { database: 'sqlite' })); } finally { restore(); }
+      const main = read(dir, 'proj', 'src/main.ts');
+      const repo = read(dir, 'proj', 'src/repositories/example.repository.ts');
+      // R1
+      assert.ok(main.includes('CREATE TABLE IF NOT EXISTS items'), 'schema bootstrapped');
+      assert.ok(main.includes('Database ready (sqlite).'), 'readiness logged');
+      // R4
+      assert.ok(/get pool\(\)/.test(repo), 'pool resolved lazily via getter');
+      assert.ok(repo.includes('ServiceUnavailableException'), 'unconfigured DB yields a 503');
+    });
+  });
 });
