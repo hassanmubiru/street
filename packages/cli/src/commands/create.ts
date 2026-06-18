@@ -894,6 +894,24 @@ async function bootstrap(): Promise<void> {
   const jwtSecret = resolveSecret('JWT_SECRET', 24);   // 48 hex chars (≥32)
   const sessionKey = resolveSecret('SESSION_KEY', 32);  // 64 hex chars
 
+  // ── CORS ─────────────────────────────────────────────────────────────
+  // SECURITY: the default ['*'] allows requests from ANY origin, which is fine
+  // for local development but UNSAFE in production — it lets any website call
+  // your API with the user's credentials. Set CORS_ORIGINS to a comma-separated
+  // allowlist (e.g. "https://app.example.com,https://admin.example.com") before
+  // deploying. In production we refuse to fall back to the wildcard.
+  const corsOrigins = (process.env['CORS_ORIGINS'] ?? '')
+    .split(',')
+    .map((o) => o.trim())
+    .filter((o) => o.length > 0);
+  if (corsOrigins.length === 0) {
+    if (isProd) {
+      throw new Error('CORS_ORIGINS must be set in production (comma-separated allowlist of trusted origins).');
+    }
+    console.warn('[street] CORS_ORIGINS not set — allowing all origins (*) for development only. Set an allowlist before deploying.');
+    corsOrigins.push('*');
+  }
+
   // ── Database ─────────────────────────────────────────────────────────
 ${isSqlite ? `  // SQLite: zero-config, no server or credentials required. The default
   // ':memory:' database is ephemeral (resets on restart). Set SQLITE_PATH to a
