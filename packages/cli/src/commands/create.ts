@@ -209,7 +209,7 @@ export class CreateCommand {
     // src/main.ts
     await writeFile(
       join(targetDir, 'src/main.ts'),
-      this.renderMainTs(),
+      this.renderMainTs(database),
       'utf8'
     );
 
@@ -237,7 +237,7 @@ export class CreateCommand {
     // src/repositories/example.repository.ts
     await writeFile(
       join(targetDir, 'src/repositories/example.repository.ts'),
-      this.renderExampleRepository(),
+      this.renderExampleRepository(database),
       'utf8'
     );
 
@@ -272,7 +272,7 @@ export class CreateCommand {
     // docker-compose.yml
     await writeFile(
       join(targetDir, 'docker-compose.yml'),
-      this.renderDockerCompose(),
+      this.renderDockerCompose(database),
       'utf8'
     );
 
