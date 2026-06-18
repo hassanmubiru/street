@@ -849,6 +849,7 @@ export default {
 
 import 'reflect-metadata';
 import { resolve } from 'node:path';
+import { randomBytes } from 'node:crypto';
 import {
   streetApp,
   container,
