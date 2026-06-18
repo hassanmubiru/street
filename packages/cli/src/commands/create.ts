@@ -143,7 +143,7 @@ export class CreateCommand {
     await mkdir(targetDir, { recursive: true });
 
     // Scaffold all files
-    await this.scaffoldProject(targetDir, projectName);
+    await this.scaffoldProject(targetDir, projectName, database);
 
     // Apply the template overlay (extra deps + starter module + notes).
     await this.applyTemplate(targetDir, template);
@@ -178,7 +178,7 @@ export class CreateCommand {
     }
   }
 
-  private async scaffoldProject(targetDir: string, projectName: string): Promise<void> {
+  private async scaffoldProject(targetDir: string, projectName: string, database = 'sqlite'): Promise<void> {
     // ── Create all directories first ────────────────────────────────────────
     await mkdir(join(targetDir, 'src', 'controllers'), { recursive: true });
     await mkdir(join(targetDir, 'src', 'services'), { recursive: true });
@@ -202,7 +202,7 @@ export class CreateCommand {
     // street.config.ts
     await writeFile(
       join(targetDir, 'street.config.ts'),
-      this.renderStreetConfig(projectName),
+      this.renderStreetConfig(projectName, database),
       'utf8'
     );
 
