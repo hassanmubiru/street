@@ -24,9 +24,11 @@ description:  "Data access in StreetJS — the native PostgreSQL wire driver, th
 .cap-note{border:1px solid var(--border);background:var(--elevated);border-radius:12px;padding:16px 18px;color:var(--text-secondary);margin:22px 0}
 </style>
 
-StreetJS offers two layers of data access, so you can start simple and add structure only when you need it.
+## Why a native data layer
 
-## Two layers, one driver
+Third-party ORMs add a heavy dependency, a query engine you don't control, and an abstraction that often leaks at exactly the wrong moment. StreetJS implements the PostgreSQL wire protocol itself and exposes two layers of data access on top of it — so you can start with plain typed repositories and adopt entity mapping only when a richer domain model earns it. Either way, queries stay parameterized and the dependency footprint stays small.
+
+## What's included
 
 <div class="cap-grid">
 
@@ -60,7 +62,13 @@ StreetJS offers two layers of data access, so you can start simple and add struc
 
 </div>
 
-## Define entities
+<div class="cap-note">
+<strong>Status:</strong> <code>@streetjs/orm</code> is a <strong>0.x preview</strong>. Relations, eager/lazy loading, querying, and model-driven migration generation are implemented and tested (offline plus live PostgreSQL in CI). The native driver and repositories are stable and shipped in the core framework.
+</div>
+
+## Example
+
+Define entities with decorators; the query planner keeps everything parameterized:
 
 ```ts
 import 'reflect-metadata';
@@ -81,14 +89,6 @@ class Post {
   @BelongsTo(() => User, 'authorId') author?: User;
 }
 ```
-
-The query planner is parameterized and validates SQL type tokens, so entity definitions never build SQL by string concatenation.
-
-<div class="cap-note">
-<strong>Status:</strong> <code>@streetjs/orm</code> is a <strong>0.x preview</strong>. Relations, eager/lazy loading, querying, and model-driven migration generation are implemented and tested (offline plus live PostgreSQL in CI). The native driver and repositories are stable and shipped in the core framework.
-</div>
-
-## Other databases
 
 Need a different store? First-party plugins cover [MySQL](https://www.npmjs.com/package/@streetjs/plugin-mysql), [MongoDB](https://www.npmjs.com/package/@streetjs/plugin-mongodb), [Redis](https://www.npmjs.com/package/@streetjs/plugin-redis), and [Supabase](https://www.npmjs.com/package/@streetjs/plugin-supabase). See the [Plugins]({{ '/plugins/' | relative_url }}) page.
 
