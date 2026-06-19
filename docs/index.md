@@ -255,6 +255,22 @@ description: "StreetJS — production-grade, memory-safe TypeScript backend fram
   <div class="stat"><span class="v">100<span class="u">%</span></span><span class="l">TypeScript</span></div>
 </div>
 
+<!-- ════════════════════════ TRUST ════════════════════════ -->
+<div class="trust">
+  <div class="trust-h">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+    Verified supply-chain &amp; security signals
+  </div>
+  <div class="trust-grid">
+    <a class="tchip" href="https://github.com/hassanmubiru/StreetJS/blob/main/LICENSE" target="_blank" rel="noopener"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>MIT Licensed</a>
+    <a class="tchip" href="https://www.npmjs.com/package/streetjs" target="_blank" rel="noopener"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>npm Provenance</a>
+    <a class="tchip" href="{{ site.baseurl }}/security/"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>CycloneDX SBOM</a>
+    <a class="tchip" href="https://github.com/hassanmubiru/StreetJS/security/code-scanning" target="_blank" rel="noopener"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>CodeQL Analysis</a>
+    <a class="tchip" href="https://securityscorecards.dev/viewer/?uri=github.com/hassanmubiru/StreetJS" target="_blank" rel="noopener"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>OpenSSF Scorecard</a>
+    <a class="tchip" href="https://github.com/hassanmubiru/StreetJS/security/policy" target="_blank" rel="noopener"><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>Security Policy</a>
+  </div>
+</div>
+
 <!-- ════════════════════════ FEATURES ════════════════════════ -->
 <section class="sec band">
   <span class="eyebrow">Core capabilities</span>
@@ -382,6 +398,31 @@ app.registerController(ItemController);
 
 await app.listen();
 {% endhighlight %}
+  </div>
+</section>
+
+<!-- ════════════════════════ SHOWCASE ════════════════════════ -->
+<section class="sec">
+  <span class="eyebrow">Showcase</span>
+  <h2 class="s-title">See what you can build.</h2>
+  <p class="s-sub">Official reference applications — clone any of them and use it as the foundation for your own project.</p>
+  <div class="show-grid">
+    <a class="sx" href="{{ site.baseurl }}/showcase/">
+      <img src="{{ '/assets/images/showcase/rest-api.svg' | relative_url }}" alt="REST API reference app — illustrative cover" loading="lazy" width="640" height="360">
+      <div class="sxb"><p class="sxt">REST API</p><p class="sxd">Typed CRUD with controllers, repositories, validation and OpenAPI.</p></div>
+    </a>
+    <a class="sx" href="{{ site.baseurl }}/showcase/">
+      <img src="{{ '/assets/images/showcase/realtime-chat.svg' | relative_url }}" alt="Realtime Chat reference app — illustrative cover" loading="lazy" width="640" height="360">
+      <div class="sxb"><p class="sxt">Realtime Chat</p><p class="sxd">WebSocket channels, presence and live delivery with heartbeats.</p></div>
+    </a>
+    <a class="sx" href="{{ site.baseurl }}/showcase/">
+      <img src="{{ '/assets/images/showcase/live-dashboard.svg' | relative_url }}" alt="Live Dashboard reference app — illustrative cover" loading="lazy" width="640" height="360">
+      <div class="sxb"><p class="sxt">Live Dashboard</p><p class="sxd">Server-sent events streaming metrics to an auto-updating dashboard.</p></div>
+    </a>
+  </div>
+  <div class="show-more">
+    <a href="{{ site.baseurl }}/showcase/" class="btn btn-g">Browse all reference apps
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
   </div>
 </section>
 
