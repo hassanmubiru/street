@@ -579,7 +579,10 @@ export function App() {
     "jsx": "preserve",
     "strict": true,
     "noEmit": true,
+    "allowJs": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
     "skipLibCheck": true,
     "incremental": true,
     "plugins": [{ "name": "next" }]
