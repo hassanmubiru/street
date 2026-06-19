@@ -172,6 +172,26 @@ description: "StreetJS — production-grade, memory-safe TypeScript backend fram
 .home .cl svg{width:15px;height:15px}
 .home .cl:hover{border-color:var(--a-line);background:var(--a-soft);transform:translateY(-2px);color:var(--a)!important}
 
+/* ── Trust indicators ───────────────────────────────────────────────────── */
+.home .trust{margin:0 0 5rem;border:1px solid var(--bd);border-radius:var(--rl);background:var(--surface);padding:1.5rem 1.6rem}
+.home .trust-h{display:flex;align-items:center;gap:.55rem;font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);margin:0 0 1.1rem}
+.home .trust-h svg{width:15px;height:15px;color:var(--a)}
+.home .trust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:.7rem}
+.home .tchip{display:flex;align-items:center;gap:.6rem;padding:.72rem .9rem;border:1px solid var(--bd);border-radius:var(--rs);background:var(--card);font-size:.86rem;font-weight:600;color:var(--ink)!important;text-decoration:none!important;transition:var(--tr)}
+.home .tchip:hover{border-color:var(--a-line);background:var(--a-soft);transform:translateY(-2px)}
+.home .tchip .ck{flex-shrink:0;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--a-soft);color:var(--a);border:1px solid var(--a-line)}
+.home .tchip .ck svg{width:12px;height:12px}
+
+/* ── Showcase preview strip ─────────────────────────────────────────────── */
+.home .show-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(248px,1fr));gap:1rem}
+.home .sx{display:block;border:1px solid var(--bd);border-radius:var(--rl);overflow:hidden;background:var(--card);text-decoration:none!important;transition:var(--tr);box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.home .sx:hover{border-color:var(--a-line);transform:translateY(-3px);box-shadow:0 18px 36px -18px rgba(37,99,235,.35)}
+.home .sx img{width:100%;aspect-ratio:16/9;object-fit:cover;display:block;border-bottom:1px solid var(--bd);background:#0B1220}
+.home .sx .sxb{padding:.95rem 1.1rem}
+.home .sx .sxt{font-size:.95rem;font-weight:700;color:var(--ink);margin:0 0 .25rem}
+.home .sx .sxd{font-size:.82rem;color:var(--muted);margin:0;line-height:1.55}
+.home .show-more{margin-top:1.6rem}
+
 @media(max-width:640px){
   .home .hero{padding:4rem 1.1rem 3.5rem}
   .home .sec{margin-bottom:4rem}
