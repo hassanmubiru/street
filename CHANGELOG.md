@@ -7,6 +7,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.18] - 2026-06-18
+
+### Fixed
+- Next.js starter dev experience: the dev server now runs on port **3001**
+  (`next dev -p 3001`) so it no longer collides with the backend's default 3000,
+  which caused `/auth/*` requests to self-proxy (ECONNRESET).
+- Added `/health` to the Next rewrite proxy (was returning 404).
+- Pinned `turbopack.root` in `next.config.mjs` so Next no longer warns about
+  multiple lockfiles / inferring a parent workspace root.
+
 ## [1.0.17] - 2026-06-18
 
 ### Changed
