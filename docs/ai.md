@@ -22,6 +22,10 @@ description:  "Build AI features with StreetJS — @streetjs/ai is a provider-ag
 .cap-note{border:1px solid var(--border);background:var(--elevated);border-radius:12px;padding:16px 18px;color:var(--text-secondary);margin:22px 0}
 </style>
 
+## Why a provider-agnostic surface
+
+AI providers change pricing, models, and APIs constantly, and binding your application directly to one of them is a liability. <code>@streetjs/ai</code> puts a single <code>AiProvider</code> contract in front of OpenAI, Anthropic, and Ollama, so switching vendors — or running a local model in development — is a one-line change rather than a refactor. A deterministic in-memory provider lets your test suite exercise AI features with no network and no API key.
+
 ## What's included
 
 <div class="cap-grid">
@@ -48,26 +52,23 @@ description:  "Build AI features with StreetJS — @streetjs/ai is a provider-ag
 
 </div>
 
-## Chat
+## Example
+
+Chat against any provider through the shared contract — then swap the adapter without changing the call site:
 
 ```ts
-import { OpenAiProvider } from '@streetjs/ai';
+import { OpenAiProvider, AnthropicProvider, OllamaProvider } from '@streetjs/ai';
 
 const ai = new OpenAiProvider({ apiKey: process.env.OPENAI_API_KEY });
 const res = await ai.chat({ messages: [{ role: 'user', content: 'Hello!' }] });
 console.log(res.message.content, res.usage);
-```
 
-Swap providers without changing the call site:
-
-```ts
-import { AnthropicProvider, OllamaProvider } from '@streetjs/ai';
-
+// Same call site, different vendor:
 const claude = new AnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY });
 const local  = new OllamaProvider({ baseUrl: 'http://127.0.0.1:11434' });
 ```
 
-## Retrieval-augmented generation
+Retrieval-augmented generation is a pipeline you index once and query repeatedly:
 
 ```ts
 import { RagPipeline, OpenAiProvider } from '@streetjs/ai';
@@ -80,11 +81,7 @@ await rag.index([
 const { answer, context } = await rag.answer('Where is the Eiffel Tower?');
 ```
 
-## Install
-
-```bash
-npm install @streetjs/ai
-```
+Install with `npm install @streetjs/ai`.
 
 <div class="cap-note">
 Pair AI with the rest of the framework: run inference off the request path with <a href="{{ '/jobs/' | relative_url }}">background jobs</a>, stream responses to clients over <a href="{{ '/realtime/' | relative_url }}">realtime channels</a>, and store embeddings alongside your application data using the <a href="{{ '/database/' | relative_url }}">PostgreSQL driver</a>. The <a href="https://www.npmjs.com/package/@streetjs/plugin-openai">OpenAI plugin</a> wires provider configuration into your app.
