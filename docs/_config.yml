@@ -47,6 +47,10 @@ footer_content: >
 
 # Aux links (top-right navigation)
 aux_links:
+  "Showcase":
+    - "/StreetJS/showcase/"
+  "Compare":
+    - "/StreetJS/compare/"
   "GitHub":
     - "https://github.com/hassanmubiru/StreetJS"
   "npm":
