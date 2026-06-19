@@ -7,6 +7,15 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.17] - 2026-06-18
+
+### Changed
+- `--frontend next` starter redesigned as a premium framework landing page
+  (hero with dynamic version, quick-start with copy, six core-feature cards,
+  live framework-status cards, "Why StreetJS" highlights, "Built for Developers",
+  resources, and footer). Adds dark-mode support via `prefers-color-scheme`,
+  professional typography, and subtle gradients — no new runtime dependencies.
+
 ## [1.0.16] - 2026-06-18
 
 ### Changed
