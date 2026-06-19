@@ -7,6 +7,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.15] - 2026-06-18
+
+### Fixed
+- `--frontend next`/`--frontend react` scaffolds add an `overrides` pin for
+  `postcss ^8.5.10`, clearing GHSA-qx2v-qp2m-jg93 (transitive via the build
+  tooling); a freshly generated project now reports `0 vulnerabilities`.
+- Pre-seeded the Next web `tsconfig.json` (`jsx: react-jsx`, `resolveJsonModule`,
+  `isolatedModules`, `allowJs`, `.next/dev/types`) so `next build` no longer
+  rewrites it on first run.
+
 ## [1.0.14] - 2026-06-18
 
 ### Changed
