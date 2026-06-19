@@ -556,6 +556,11 @@ export function App() {
         '@types/react-dom': '^19.2.0',
         typescript: '^5.4.5',
       },
+      // Force a patched transitive postcss (next pins an older one):
+      // GHSA-qx2v-qp2m-jg93 (XSS in CSS stringify) is fixed in 8.5.10.
+      overrides: {
+        postcss: '^8.5.10',
+      },
     }, null, 2) + '\n';
   }
 
