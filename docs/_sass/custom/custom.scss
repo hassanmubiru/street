@@ -78,6 +78,8 @@ html[data-theme="dark"] {
   --accent-hover:  #93C5FD;
   --accent-soft:   rgba(96,165,250,.12);
   --accent-line:   rgba(96,165,250,.28);
+  --accent-solid:  #2563EB;   // filled-button background (white text → 5.8:1 AA)
+  --accent-solid-hover: #1D4ED8;
 
   --success:       #34D399;
   --warning:       #FBBF24;
