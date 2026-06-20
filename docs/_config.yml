@@ -24,7 +24,7 @@ image:       "/assets/images/og.png"
 # verification option below. While it is empty, no meta tag is emitted (no empty-tag
 # bug). A custom key (not `google_site_verification`) is used so jekyll-seo-tag does
 # not also emit the tag site-wide, keeping verification scoped to the homepage.
-google_verify: ""
+google_verify: "V3QJLRmu4_LCKra_zHtKs2QuWn1exSbuabQ2zs6JkiM"
 
 # ── Theme ─────────────────────────────────────────────────────────────────────
 # just-the-docs is installed as a gem (see Gemfile), so use `theme`, not
