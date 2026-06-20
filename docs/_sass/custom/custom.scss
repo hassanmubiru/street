@@ -16,7 +16,8 @@
   --border:        #E2E8F0;
   --border-strong: #CBD5E1;
 
-  --text-primary:  #0F172A;   // headings (16.9:1 on white — AAA)
+  --heading:       #0F172A;   // headings (= text-primary in light)
+  --text-primary:  #0F172A;   // strong / titles (16.9:1 on white — AAA)
   --text-secondary:#334155;   // body (10.4:1 — AAA)
   --text-muted:    #64748B;   // captions (4.9:1 — AA)
 
