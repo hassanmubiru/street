@@ -4,6 +4,8 @@ title:       "SEO & Search Ranking Strategy"
 nav_order:   80
 permalink:   /seo-strategy/
 description:  "Evidence-based technical SEO audit and 12-month search-ranking strategy for StreetJS on GitHub Pages — keyword targets, content gaps, comparison pages, structured data, internal linking, backlinks, and Search Console setup."
+sitemap:     false
+noindex:     true
 ---
 
 {% include doc-styles.html %}

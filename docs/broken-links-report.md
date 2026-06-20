@@ -5,6 +5,8 @@ nav_exclude: true
 search_exclude: true
 permalink: /broken-links-report/
 description: "Internal link + navigation audit of the StreetJS site."
+sitemap:     false
+noindex:     true
 ---
 
 # Broken Links Report

@@ -4,6 +4,8 @@ title:     "Runtime Stability Verification Report"
 nav_exclude: true
 permalink: /RUNTIME-STABILITY-VERIFICATION/
 description: "Zero-trust runtime stability audit of StreetJS — every claim backed by command output and observed evidence."
+sitemap:     false
+noindex:     true
 ---
 
 # StreetJS — Runtime Stability Verification Report

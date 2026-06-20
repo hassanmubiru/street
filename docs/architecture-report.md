@@ -3,6 +3,8 @@ layout: default
 title: "Architecture Report"
 nav_exclude: true
 description: "StreetJS architecture report — module structure, dependency analysis and design decisions of the TypeScript backend framework."
+sitemap:     false
+noindex:     true
 ---
 
 # Architecture Report

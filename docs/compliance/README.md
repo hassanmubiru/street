@@ -3,6 +3,8 @@ layout: default
 title: Compliance Control Mappings
 nav_order: 30
 description: "How StreetJS features map to SOC 2, HIPAA, GDPR, and PCI-DSS control families — and what the framework does not provide."
+sitemap:     false
+noindex:     true
 ---
 
 # Compliance Control Mappings

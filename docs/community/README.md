@@ -3,6 +3,8 @@ layout: default
 title: Community
 nav_order: 40
 description: "StreetJS community structure: GitHub Discussions categories, guidelines, moderation, and escalation."
+sitemap:     false
+noindex:     true
 ---
 
 # StreetJS Community

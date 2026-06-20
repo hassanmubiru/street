@@ -4,6 +4,8 @@ title:     "Adoption & Enterprise Gap-Closure Program"
 nav_exclude: true
 permalink: /ADOPTION-ENTERPRISE-GAP-CLOSURE/
 description: "Execution plan to close StreetJS's non-engineering gaps — adoption, ecosystem, governance, compliance, and enterprise trust — with evidence-tagged outcomes."
+sitemap:     false
+noindex:     true
 ---
 
 # StreetJS — Adoption & Enterprise Readiness Gap-Closure Program

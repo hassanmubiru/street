@@ -5,6 +5,8 @@ nav_exclude: true
 search_exclude: true
 permalink: /documentation-audit/
 description: "Front-matter, navigation, and SEO audit of the StreetJS documentation site."
+sitemap:     false
+noindex:     true
 ---
 
 # Documentation Audit

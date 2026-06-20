@@ -4,6 +4,8 @@ title:     "Platform Leadership & Adoption Acceleration Program"
 nav_exclude: true
 permalink: /PLATFORM-LEADERSHIP-ADOPTION-PROGRAM/
 description: "Evidence-based gap analysis and acceleration program for StreetJS platform leadership and adoption."
+sitemap:     false
+noindex:     true
 ---
 
 # StreetJS — Platform Leadership & Adoption Acceleration Program

@@ -4,6 +4,8 @@ title:     "Full Project Report"
 nav_exclude: true
 permalink: /STREETJS-FULL-REPORT/
 description: "Consolidated, evidence-based status report for StreetJS — verified, implemented, partial, and gap items across the framework."
+sitemap:     false
+noindex:     true
 ---
 
 # StreetJS — Full Project Report

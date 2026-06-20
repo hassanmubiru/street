@@ -4,6 +4,8 @@ title: "README Modernization & Documentation Audit"
 nav_exclude: true
 permalink: /README-AUDIT/
 description: "Evidence-based audit of the StreetJS GitHub and npm READMEs, with SEO recommendations, a link-validation report, and a conversion-optimization roadmap."
+sitemap:     false
+noindex:     true
 ---
 
 # README Modernization & Documentation Audit
