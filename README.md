@@ -4,7 +4,7 @@
 
 # StreetJS
 
-### The batteries-included TypeScript backend framework — built on Node.js core, not on a pile of dependencies.
+### The integrated TypeScript backend framework — built on Node.js core, not on a pile of dependencies.
 
 Auth, realtime, ORM, jobs, messaging, observability and a signed plugin ecosystem — included by default. **No Express. No `pg`. No Prisma.** Just 3 runtime dependencies.
 
