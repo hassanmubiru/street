@@ -10,7 +10,7 @@ description: "StreetJS vs Spring Boot compared — both are integrated, DI-drive
 # StreetJS vs Spring Boot
 
 **In one line:** Both are opinionated, dependency-injection-driven backend
-frameworks with batteries included — but Spring Boot is the mature JVM standard
+frameworks with everything integrated — but Spring Boot is the mature JVM standard
 with an enormous ecosystem, while StreetJS brings a similar integrated experience
 to TypeScript on Node.js with a far smaller dependency surface.
 

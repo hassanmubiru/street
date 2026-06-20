@@ -157,7 +157,7 @@ by an early-adopter team.
 
 | vs | StreetJS stronger | StreetJS weaker | To reach parity |
 |----|-------------------|-----------------|-----------------|
-| **Express** | Batteries-included, typed, DI, native DB, built-in WS/auth, far fewer deps | Ecosystem, ubiquity, hiring pool, longevity | Community + middleware ecosystem |
+| **Express** | Integrated, typed, DI, native DB, built-in WS/auth, far fewer deps | Ecosystem, ubiquity, hiring pool, longevity | Community + middleware ecosystem |
 | **Fastify** | Integrated platform (DI/ORM/auth/realtime) | Plugin ecosystem, JSON-schema serialization maturity, **proven perf**, community | Run real benchmarks; grow plugins |
 | **NestJS** | Lighter deps, native DB driver, no Express/Fastify adapter, integrated realtime | Huge ecosystem, docs depth, courses, hiring pool, maturity | Ecosystem + docs + community + time |
 | **Laravel** | TypeScript-native; one language full-stack | Eloquent/Horizon/Forge/Nova maturity, massive community, DX polish | Years of ecosystem + tooling |
