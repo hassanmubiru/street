@@ -26,7 +26,7 @@ pricing, and shows concrete stacks for **under $10, $25, and $50 per month**.
 | Dependency-light core | 2 runtime deps (no Express/pg/Prisma) | Smaller image, less RAM, fewer CVEs to patch |
 | Single-process throughput | **~5,700 req/s**, 5,000 reqs, 0 errors (MEASURED) | One small VPS serves real traffic |
 | Cheap realtime | **~30 KB per WebSocket**, 1,000 conns @ 100% delivery (MEASURED) | 10k connections ≈ ~300 MB — **no managed Pusher/Ably** |
-| Batteries included | JWT/sessions/RBAC/MFA, WS/SSE channels, jobs, cache, OpenAPI in core | **Replaces Auth0 / Pusher / a queue / Redis bills** |
+| Integrated essentials | JWT/sessions/RBAC/MFA, WS/SSE channels, jobs, cache, OpenAPI in core | **Replaces Auth0 / Pusher / a queue / Redis bills** |
 | Native drivers | PostgreSQL + MySQL over the wire, SQLite (WASM) | Self-host the DB; skip RDS/managed Postgres |
 
 Reproduce the footprint:
