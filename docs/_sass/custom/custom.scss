@@ -208,18 +208,48 @@ body {
 html[data-theme="dark"] :not(pre) > code { color: var(--accent) !important; }
 
 // ── Code blocks ──────────────────────────────────────────────────────────────
-div.highlighter-rouge, figure.highlight, pre.highlight {
+// Outer container owns the editor surface (frame + border + shadow); every inner
+// node is transparent so no light background can bleed through in dark mode —
+// this covers kramdown (div.highlighter-rouge > div.highlight > pre.highlight),
+// Jekyll's {% highlight %} (figure.highlight > pre), and line-number tables.
+div.highlighter-rouge, figure.highlight {
   background: var(--code-bg) !important; border:1px solid var(--code-border) !important;
   border-radius:12px !important; box-shadow: var(--code-shadow) !important; margin:1.5rem 0 !important; overflow:hidden !important;
 }
+div.highlighter-rouge div.highlight, figure.highlight div.highlight {
+  background:transparent !important; border:none !important; border-radius:0 !important; box-shadow:none !important; margin:0 !important;
+}
 pre.highlight {
   padding:1.25rem 1.5rem !important; margin:0 !important; border:none !important; border-radius:0 !important;
-  box-shadow:none !important; overflow-x:auto !important;
+  box-shadow:none !important; overflow-x:auto !important; background:transparent !important;
 }
+div.highlighter-rouge pre, figure.highlight pre, .highlight pre { background:transparent !important; }
 pre.highlight code {
   font-family:'JetBrains Mono','SFMono-Regular',Consolas,monospace !important; font-size:.86rem !important;
   line-height:1.7 !important; background:transparent !important; color: var(--code-text) !important; border:none !important; padding:0 !important;
 }
+
+// Line-number code blocks render a nested <table class="rouge-table"> with a
+// gutter. Stop the site's data-table styling (borders, padding, zebra, hover)
+// from leaking into it, and present the gutter as a muted, unselectable rail.
+.main-content table.rouge-table, .highlight .rouge-table {
+  border:none !important; border-radius:0 !important; box-shadow:none !important;
+  background:transparent !important; width:100% !important; margin:0 !important;
+  border-collapse:collapse !important; border-spacing:0 !important; font-size:inherit !important; table-layout:auto !important;
+}
+.rouge-table thead, .rouge-table tr, .rouge-table tbody { background:transparent !important; }
+.rouge-table td, .rouge-table th, .main-content table.rouge-table td, .main-content table.rouge-table th {
+  border:none !important; padding:0 !important; background:transparent !important;
+  color:inherit !important; font-weight:inherit !important; vertical-align:top !important; line-height:1.7 !important;
+}
+.main-content table.rouge-table tbody tr:hover td, .rouge-table tr:hover td { background:transparent !important; }
+.main-content table.rouge-table td:first-child { color:inherit !important; font-weight:inherit !important; }
+.rouge-table td.rouge-gutter, .rouge-table td.gl { padding-right:1rem !important; -webkit-user-select:none !important; user-select:none !important; }
+.rouge-table pre.lineno {
+  color: var(--text-muted) !important; opacity:.55 !important; background:transparent !important;
+  border:none !important; margin:0 !important; padding:0 !important; box-shadow:none !important;
+}
+.rouge-table td.rouge-code pre { padding:0 !important; background:transparent !important; }
 .copy-code-button {
   background: var(--surface-2) !important; border:1px solid var(--border) !important; color: var(--text-muted) !important;
   border-radius:6px !important; font-size:.72rem !important; font-weight:600 !important; transition:all .13s ease !important;
