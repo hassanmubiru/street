@@ -4,6 +4,8 @@ title:     "GitHub Actions Workflow Audit"
 nav_exclude: true
 permalink: /WORKFLOW-AUDIT/
 description: "Zero-trust audit of the StreetJS GitHub Actions workflows, determined entirely from the workflow files."
+sitemap:     false
+noindex:     true
 ---
 
 # GitHub Actions Workflow Audit — "Test & Publish" Skip

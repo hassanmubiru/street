@@ -3,6 +3,8 @@ layout: default
 title: "StreetJS"
 nav_exclude: true
 description: "StreetJS — the production-grade, memory-safe TypeScript backend framework for Node.js."
+sitemap:     false
+noindex:     true
 ---
 
 # StreetJS

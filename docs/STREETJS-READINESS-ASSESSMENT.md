@@ -4,6 +4,8 @@ title:     "Readiness Assessment"
 nav_exclude: true
 permalink: /STREETJS-READINESS-ASSESSMENT/
 description: "An honest, evidence-based verdict on whether StreetJS is ready for real-world developers."
+sitemap:     false
+noindex:     true
 ---
 
 # StreetJS — Readiness Assessment: Is It Ready for Real Developers?

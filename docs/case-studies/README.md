@@ -4,6 +4,8 @@ title: Case Studies
 nav_order: 50
 permalink: /case-studies/
 description: "How StreetJS collects production proof: verification standard and templates for migration, deployment, and benchmark reports."
+sitemap:     false
+noindex:     true
 ---
 
 # Case Studies & Production Proof

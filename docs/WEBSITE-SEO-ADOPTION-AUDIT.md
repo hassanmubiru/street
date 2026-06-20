@@ -4,6 +4,8 @@ title: "Website, SEO & Adoption Audit"
 nav_exclude: true
 permalink: /WEBSITE-SEO-ADOPTION-AUDIT/
 description: "Evidence-based audit of the StreetJS website, branding, documentation, READMEs, SEO, and adoption readiness, with a prioritized action plan."
+sitemap:     false
+noindex:     true
 ---
 
 # Website, SEO & Adoption — Final Audit

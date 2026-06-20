@@ -3,6 +3,8 @@ layout: default
 title: Sustainability
 nav_order: 60
 description: "StreetJS sustainability: funding strategy, maintainer health, and bus-factor mitigation."
+sitemap:     false
+noindex:     true
 ---
 
 # Open Source Sustainability

@@ -3,6 +3,8 @@ layout: default
 title: "Security Certification"
 nav_exclude: true
 description: "Security Certification — StreetJS, the production-grade, memory-safe TypeScript backend framework for Node.js."
+sitemap:     false
+noindex:     true
 ---
 
 # Security Certification
