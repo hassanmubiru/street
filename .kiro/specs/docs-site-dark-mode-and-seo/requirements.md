@@ -125,7 +125,7 @@ can verify the property in Search Console without relying only on the HTML file.
 3. THE verification key SHALL be configured so that `jekyll-seo-tag` does not also
    emit a duplicate tag site-wide.
 
-### Requirement 7 — GitHub Pages compatibility (cross-cutting)
+### Requirement 7: GitHub Pages compatibility (cross-cutting)
 
 **User Story:** As a maintainer, I want all changes to build on GitHub Pages, so the
 site keeps deploying.
