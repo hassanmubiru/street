@@ -19,11 +19,12 @@ logo:        "/assets/images/logo.svg"
 # Default social-share image (jekyll-seo-tag → og:image / twitter:image)
 image:       "/assets/images/og.png"
 # Google Search Console verified via the HTML-file method (googledf528d4f2b039b20.html
-# at the docs root). To ALSO use the meta-tag method, uncomment the line below and
-# paste the content="..." token from the "HTML tag" option. Leaving it commented
-# avoids emitting an empty <meta name="google-site-verification" content=""> tag
-# (an empty string is truthy in Liquid, so jekyll-seo-tag would still output it).
-# google_site_verification: "PASTE_HTML_TAG_TOKEN_HERE"
+# at the docs root). To ALSO use the meta-tag method (rendered on the HOMEPAGE only by
+# _includes/head_custom.html), paste the content="..." token from GSC's "HTML tag"
+# verification option below. While it is empty, no meta tag is emitted (no empty-tag
+# bug). A custom key (not `google_site_verification`) is used so jekyll-seo-tag does
+# not also emit the tag site-wide, keeping verification scoped to the homepage.
+google_verify: ""
 
 # ── Theme ─────────────────────────────────────────────────────────────────────
 # just-the-docs is installed as a gem (see Gemfile), so use `theme`, not
