@@ -57,22 +57,25 @@
 }
 
 html[data-theme="dark"] {
-  --canvas:        #060A12;
-  --bg:            #0F172A;
-  --surface:       #111A2E;
-  --surface-2:     #16213A;
-  --elevated:      #131D33;
-  --border:        #243049;
-  --border-strong: #33415C;
+  // Premium dark surfaces — cool neutral (Next.js / React.dev / Vercel feel).
+  // Soft, low-glare; no pure-black, no pure-white.
+  --canvas:        #070A11;   // page behind the article card (deepest)
+  --bg:            #0B0F19;   // base
+  --surface:       #111827;   // sidebar / subtle panels
+  --surface-2:     #1F2937;   // hover
+  --elevated:      rgba(255,255,255,.03);  // cards — translucent for depth
+  --border:        rgba(255,255,255,.08);
+  --border-strong: rgba(255,255,255,.14);
 
-  --text-primary:  #F8FAFC;   // (15.8:1 on --bg — AAA)
-  --text-secondary:#CBD5E1;   // (10.6:1 — AAA)
-  --text-muted:    #94A3B8;   // (5.9:1 — AA)
+  --heading:       #F9FAFB;   // headings — near-white, never pure #fff
+  --text-primary:  #E5E7EB;   // strong / titles (13.9:1 on --bg — AAA)
+  --text-secondary:#9CA3AF;   // body (7.0:1 — AAA), softened from white
+  --text-muted:    #8A93A3;   // captions (≥4.5:1 — AA)
 
-  --accent:        #60A5FA;   // lighter blue for dark bg (7.0:1 — AAA)
+  --accent:        #60A5FA;   // links / accent (7.0:1 on --bg — AAA)
   --accent-hover:  #93C5FD;
   --accent-soft:   rgba(96,165,250,.12);
-  --accent-line:   rgba(96,165,250,.30);
+  --accent-line:   rgba(96,165,250,.28);
 
   --success:       #34D399;
   --warning:       #FBBF24;
@@ -82,21 +85,21 @@ html[data-theme="dark"] {
   --warning-soft:  rgba(251,191,36,.10); --warning-line:rgba(251,191,36,.30);
   --danger-soft:   rgba(248,113,113,.10);--danger-line: rgba(248,113,113,.30);
 
-  // Code surfaces — DARK mode (per spec: #0f172a / #f8fafc)
-  --code-bg:       #0B1120;
-  --code-text:     #F8FAFC;
-  --code-border:   #243049;
-  --code-header:   #111A2E;
+  // Code surfaces — DARK mode (soft, not pure white text)
+  --code-bg:       #111827;
+  --code-text:     #D1D5DB;
+  --code-border:   rgba(255,255,255,.08);
+  --code-header:   #161E2E;
   --code-shadow:   0 1px 2px rgba(0,0,0,.4), 0 10px 30px -16px rgba(0,0,0,.7);
 
-  // Syntax palette — DARK (brightened so each clears AA on #0B1120)
+  // Syntax palette — DARK (each clears AA on --code-bg #111827)
   --syn-comment:   #8B98AC;
   --syn-string:    #6EE7B7;
   --syn-keyword:   #93C5FD;
   --syn-function:  #C4B5FD;
   --syn-number:    #FCA5A5;
   --syn-type:      #67E8F9;
-  --syn-prop:      #E2E8F0;
+  --syn-prop:      #D1D5DB;
   --syn-command:   #FDBA74;
 
   --shadow-sm: 0 1px 2px rgba(0,0,0,.4);
@@ -165,7 +168,7 @@ body {
   font-family: 'Inter', sans-serif !important; font-size: 0.95rem !important; line-height: 1.75 !important;
   color: var(--text-secondary) !important;
 
-  h1,h2,h3,h4,h5,h6 { font-family:'Inter',sans-serif !important; font-weight:700 !important; letter-spacing:-0.022em !important; color: var(--text-primary) !important; }
+  h1,h2,h3,h4,h5,h6 { font-family:'Inter',sans-serif !important; font-weight:700 !important; letter-spacing:-0.022em !important; color: var(--heading) !important; }
   h1 { font-size: clamp(1.75rem,4vw,2.3rem) !important; font-weight:800 !important; margin-top:0 !important; line-height:1.2 !important; }
   h2 { font-size: clamp(1.3rem,3vw,1.6rem) !important; margin-top:2.75rem !important; padding-top:2rem !important; border-top:1px solid var(--border) !important; }
   h3 { font-size:1.15rem !important; margin-top:2rem !important; }
