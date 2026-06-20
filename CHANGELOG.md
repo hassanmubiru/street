@@ -7,6 +7,16 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+---
+
+## [1.0.19] - 2026-06-20
+
+### Changed
+- Added the StreetJS logo to the `streetjs` package README (and across all
+  `@streetjs/*` package READMEs) using a raster PNG at an absolute URL, so the
+  logo renders on npmjs.com (npm blocks SVG images in READMEs). Refreshed the
+  `streetjs` README header and removed legacy marketing phrasing from the tagline.
+
 ## [1.0.18] - 2026-06-18
 
 ### Fixed
