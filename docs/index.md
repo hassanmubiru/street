@@ -59,7 +59,7 @@ description: "StreetJS — the TypeScript framework for modern backend applicati
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .home .hero h1{font-size:clamp(2.6rem,6.2vw,4.4rem);font-weight:800;letter-spacing:-.045em;
   line-height:1.04;margin:0 0 1.6rem;color:var(--ink);max-width:14ch;margin-left:auto;margin-right:auto}
-.home .grad{background:linear-gradient(115deg,var(--text-primary) 0%,var(--accent) 100%);
+.home .grad{background:linear-gradient(115deg,var(--heading) 0%,var(--accent) 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent}
 .home .hero-sub{font-size:clamp(1.05rem,2vw,1.25rem);color:var(--muted);line-height:1.7;
   max-width:640px;margin:0 auto 2.4rem}
