@@ -69,9 +69,9 @@ description: "StreetJS — the TypeScript framework for modern backend applicati
 .home .btn{display:inline-flex;align-items:center;gap:.5rem;padding:.78rem 1.6rem;border-radius:var(--rs);
   font-size:.96rem;font-weight:600;text-decoration:none!important;transition:var(--tr);white-space:nowrap;border:1px solid transparent}
 .home .btn svg{width:16px;height:16px}
-.home .btn-p{background:var(--a);color:#fff!important;border-color:var(--a);
+.home .btn-p{background:var(--accent-solid);color:#fff!important;border-color:var(--accent-solid);
   box-shadow:0 6px 18px -5px rgba(37,99,235,.5)}
-.home .btn-p:hover{background:var(--a-hover);border-color:var(--a-hover);transform:translateY(-2px);box-shadow:0 10px 26px -6px rgba(37,99,235,.55)}
+.home .btn-p:hover{background:var(--accent-solid-hover);border-color:var(--accent-solid-hover);transform:translateY(-2px);box-shadow:0 10px 26px -6px rgba(37,99,235,.55)}
 .home .btn-g{background:var(--card);color:var(--ink)!important;border-color:var(--bd)}
 .home .btn-g:hover{border-color:var(--bd2);background:var(--surface);transform:translateY(-2px);color:var(--a)!important}
 
