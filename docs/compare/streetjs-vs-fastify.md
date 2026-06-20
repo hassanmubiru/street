@@ -40,7 +40,7 @@ realtime as first-class, typed building blocks.
 
 ## Where StreetJS wins
 
-- **Batteries included:** DI, ORM, auth (JWT/sessions/RBAC/MFA), and realtime
+- **Integrated by default:** DI, ORM, auth (JWT/sessions/RBAC/MFA), and realtime
   ship together — fewer plugins to choose, wire, and keep compatible.
 - **TypeScript-native ergonomics:** decorator controllers and a typed context.
 - **Full-stack:** a typed client SDK and framework hooks plus `street create
