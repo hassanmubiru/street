@@ -39,6 +39,19 @@ function categorize(name, keywords) {
   return 'Other';
 }
 
+// Unique intro copy per category (avoids thin-content SEO; one paragraph each).
+const CATEGORY_INTROS = {
+  'Database': 'Connect StreetJS to SQL and document databases with native, dependency-free drivers — no `pg`, `mysql2` or `mongodb` npm packages. Each plugin speaks the database wire protocol directly over Node core for pooling, streaming and authentication you can audit.',
+  'Cache & KV': 'Add caching and key-value storage to your StreetJS backend with dependency-free clients that speak the protocol directly — ideal for sessions, rate-limit state, and hot data.',
+  'Messaging': 'Publish/subscribe and stream events from StreetJS with dependency-free clients for the major brokers — wire-protocol implementations over Node core, no heavyweight SDKs.',
+  'Storage': 'Store and serve files from StreetJS with object-storage plugins for the major providers — signed, dependency-free clients for uploads, downloads and presigned URLs.',
+  'Payments': 'Accept payments in your StreetJS app with provider plugins built on dependency-free HTTPS clients — subscriptions, orders and webhooks without bundling a vendor SDK.',
+  'Auth & Identity': 'Authenticate users in StreetJS with identity-provider plugins on top of the framework’s built-in JWT, sessions, OAuth2/OIDC and RBAC — bring your IdP without leaving the type-safe stack.',
+  'Communications': 'Send SMS, email, voice and notifications from StreetJS with dependency-free provider plugins — transactional messaging wired into your controllers and jobs.',
+  'AI': 'Add LLM chat, embeddings and retrieval to StreetJS with provider-agnostic AI plugins — dependency-free HTTPS clients for the major model providers.',
+  'Other': 'Official StreetJS plugins that extend the framework with signed, dependency-free capabilities.',
+};
+
 const dirs = readdirSync(pkgsDir).filter((d) => d.startsWith('plugin-'));
 const plugins = [];
 for (const d of dirs) {
