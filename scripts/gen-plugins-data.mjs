@@ -50,6 +50,7 @@ const CATEGORY_INTROS = {
   'Auth & Identity': 'Authenticate users in StreetJS with identity-provider plugins on top of the framework’s built-in JWT, sessions, OAuth2/OIDC and RBAC — bring your IdP without leaving the type-safe stack.',
   'Communications': 'Send SMS, email, voice and notifications from StreetJS with dependency-free provider plugins — transactional messaging wired into your controllers and jobs.',
   'AI': 'Add LLM chat, embeddings and retrieval to StreetJS with provider-agnostic AI plugins — dependency-free HTTPS clients for the major model providers.',
+  'Frontend & Views': 'Render HTML from StreetJS with dependency-free view engines and frontend integrations — server-rendered, interactive apps with typed controllers that return markup, no SPA or client build step required.',
   'Other': 'Official StreetJS plugins that extend the framework with signed, dependency-free capabilities.',
 };
 
