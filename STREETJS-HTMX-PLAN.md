@@ -1,5 +1,24 @@
 # StreetJS HTMX Ecosystem Expansion — Architecture & Implementation Plan
 
+> ## Execution log
+> **30-day P0 slice — IMPLEMENTED (this commit):** `@streetjs/plugin-htmx`
+> scaffolded as a self-contained, dependency-free package
+> (`packages/plugin-htmx/`):
+> - Dependency-free **view engine** (`ViewEngine`, `renderTemplate`) — layouts,
+>   partials, `{{ }}` escaping, `{{{ }}}` raw, `{{> partial }}`, bounded cache.
+> - **HTMX helpers** — `isHtmxRequest`, `hxHeaders` (HX-Redirect/Trigger/Retarget/
+>   Reswap/…), `csrfField`.
+> - **Context glue** — `HtmxPlugin.middleware({ viewsDir, layout })` attaches
+>   `ctx.htmx.view/partial/fragment/hx`; full page on navigation, fragment on
+>   HX-Request (progressive enhancement).
+> - **16 unit tests pass**, `tsc` build green, end-to-end render verified, no
+>   diagnostics. Marked `unlisted` so it stays out of the live marketplace until
+>   published (the generator skips `streetjs.unlisted`).
+> **Remaining:** sign + publish via the keyed plugin-publish flow (needs the org
+> signing key); then `--frontend htmx` starter (Phase 4, P1) and `/docs/htmx/`
+> (Phase 6, P1).
+
+
 > Evidence-based, repo-grounded. Tags: **VERIFIED** (confirmed in repo) ·
 > **RECOMMENDATION** · **RISK**. Per-recommendation scoring uses: Impact (H/M/L),
 > Effort (H/M/L), Adoption (0–5), Maintenance cost (0–5), Priority (P0/P1/P2).
