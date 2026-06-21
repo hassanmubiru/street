@@ -80,6 +80,22 @@ describe('street create --starter (alias of --template)', () => {
     });
   });
 
+  it('saas starter scaffolds the schema migration, SAAS.md and billing env sample', async () => {
+    await withTempDir(async (dir) => {
+      const restore = capture();
+      try { await new CreateCommand().execute(ctx(dir, ['proj'], { starter: 'saas' })); } finally { restore(); }
+      assert.equal(process.exitCode, 0);
+      const proj = join(dir, 'proj');
+      assert.ok(existsSync(join(proj, 'migrations', '001_saas.sql')), 'schema migration should exist');
+      assert.ok(existsSync(join(proj, 'SAAS.md')), 'SAAS.md should exist');
+      assert.ok(existsSync(join(proj, '.env.saas.example')), 'billing env sample should exist');
+      const sql = readFileSync(join(proj, 'migrations', '001_saas.sql'), 'utf8');
+      for (const t of ['organizations', 'memberships', 'invitations', 'subscriptions', 'audit_logs']) {
+        assert.ok(sql.includes(t), `migration should define ${t}`);
+      }
+    });
+  });
+
   it('--starter ai scaffolds the AI starter', async () => {
     await withTempDir(async (dir) => {
       const restore = capture();
