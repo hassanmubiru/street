@@ -113,10 +113,20 @@ export class CreateCommand {
     const targetDir = resolve(ctx.cwd, projectName);
 
     // Template variant (default 'app'). Variants overlay extra @streetjs
-    // packages + a starter module on top of the base scaffold.
-    const template = String(ctx.args.flags['template'] ?? 'app');
+    // packages + a starter module on top of the base scaffold. `--starter` is a
+    // friendly alias of `--template` (the documented Phase-18 flag); both work.
+    // Starter aliases map convenient names to the underlying template keys.
+    const STARTER_ALIASES: Record<string, string> = {
+      realtime: 'realtime-chat',
+      chat: 'realtime-chat',
+      marketplace: 'ecommerce',
+      dating: 'dating-app',
+    };
+    const requested = String(ctx.args.flags['starter'] ?? ctx.args.flags['template'] ?? 'app');
+    const template = STARTER_ALIASES[requested] ?? requested;
     if (!TEMPLATES[template]) {
-      console.error(`[street] Unknown template "${template}". Available: ${Object.keys(TEMPLATES).join(', ')}`);
+      const available = [...Object.keys(TEMPLATES), ...Object.keys(STARTER_ALIASES)].join(', ');
+      console.error(`[street] Unknown starter "${requested}". Available: ${available}`);
       process.exitCode = 1;
       return;
     }
