@@ -33,6 +33,138 @@ export const admin = new AdminService();
 // await admin.createRole('system', { name: 'owner', permissions: ['*'] });
 `,
     },
+    extraFiles: [
+      {
+        path: 'migrations/001_saas.sql',
+        content: `-- SaaS starter schema — organizations, teams, RBAC, invitations, billing, audit.
+-- Apply with: street migrate:run  (PostgreSQL syntax; adjust types for SQLite).
+
+CREATE TABLE IF NOT EXISTS users (
+  id            BIGSERIAL PRIMARY KEY,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS organizations (
+  id         BIGSERIAL PRIMARY KEY,
+  name       TEXT NOT NULL,
+  slug       TEXT UNIQUE NOT NULL,
+  owner_id   BIGINT NOT NULL REFERENCES users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS memberships (
+  id      BIGSERIAL PRIMARY KEY,
+  org_id  BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role    TEXT NOT NULL DEFAULT 'member',  -- owner | admin | member
+  UNIQUE (org_id, user_id)
+);
+
+CREATE TABLE IF NOT EXISTS invitations (
+  id          BIGSERIAL PRIMARY KEY,
+  org_id      BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  email       TEXT NOT NULL,
+  role        TEXT NOT NULL DEFAULT 'member',
+  token       TEXT UNIQUE NOT NULL,
+  expires_at  TIMESTAMPTZ NOT NULL,
+  accepted_at TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id                 BIGSERIAL PRIMARY KEY,
+  org_id             BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  plan               TEXT NOT NULL DEFAULT 'free',
+  status             TEXT NOT NULL DEFAULT 'active',
+  stripe_customer_id TEXT,
+  current_period_end TIMESTAMPTZ
+);
+
+CREATE TABLE IF NOT EXISTS audit_logs (
+  id         BIGSERIAL PRIMARY KEY,
+  org_id     BIGINT REFERENCES organizations(id) ON DELETE CASCADE,
+  actor_id   BIGINT REFERENCES users(id),
+  action     TEXT NOT NULL,
+  target     TEXT,
+  meta       JSONB,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS notifications (
+  id         BIGSERIAL PRIMARY KEY,
+  user_id    BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  type       TEXT NOT NULL,
+  payload    JSONB,
+  read_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_memberships_user ON memberships(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_org_created ON audit_logs(org_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, read_at);
+`,
+      },
+      {
+        path: 'SAAS.md',
+        content: `# SaaS starter
+
+This project was scaffolded with \`street create --starter saas\`. It overlays a
+multi-tenant SaaS structure on top of the base StreetJS app.
+
+## What's included
+
+- **Auth** — email/password + sessions (core JWT/session primitives).
+- **Organizations, teams & RBAC** — \`organizations\`, \`memberships\` (roles:
+  owner/admin/member) via \`@streetjs/admin\`.
+- **Invitations** — tokenized org invites (\`invitations\`).
+- **Billing placeholders** — \`subscriptions\` table + a Stripe webhook handler
+  stub. Add \`@streetjs/plugin-stripe\` and wire your keys to go live.
+- **Audit logs** — \`audit_logs\` for every privileged action.
+- **Notifications** — \`notifications\` per user.
+
+## Schema
+
+See \`migrations/001_saas.sql\`. Apply it with:
+
+\`\`\`bash
+street migrate:run
+\`\`\`
+
+## Suggested module layout
+
+\`\`\`
+src/
+  features/saas.ts        # admin/RBAC wiring (this overlay)
+  modules/
+    auth/                 # sign-up, login, sessions
+    orgs/                 # create org, switch org
+    members/              # list/invite/remove members
+    invitations/          # accept invite
+    billing/              # Stripe webhook + subscription state
+    audit/                # audit-log writer + viewer
+\`\`\`
+
+Generate modules with \`street generate controller|service|repository <name>\`.
+
+## Billing (Stripe)
+
+\`\`\`bash
+npm install @streetjs/plugin-stripe
+# set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET (see .env.saas.example)
+\`\`\`
+
+See the [SaaS starter docs](https://hassanmubiru.github.io/StreetJS/starters/).
+`,
+      },
+      {
+        path: '.env.saas.example',
+        content: `# SaaS starter — billing (Stripe) placeholders. Copy values into your .env.
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+`,
+      },
+    ],
   },
   ecommerce: {
     packages: { '@streetjs/commerce': '^1.0.0' },
@@ -378,6 +510,13 @@ export class CreateCommand {
       const starterAbs = join(targetDir, spec.starter.path);
       await mkdir(join(starterAbs, '..'), { recursive: true });
       await writeFile(starterAbs, spec.starter.content, 'utf8');
+    }
+
+    // Write any additional overlay files (migrations, docs, env samples).
+    for (const file of spec.extraFiles ?? []) {
+      const abs = join(targetDir, file.path);
+      await mkdir(join(abs, '..'), { recursive: true });
+      await writeFile(abs, file.content, 'utf8');
     }
 
     // Write a TEMPLATE.md note.
