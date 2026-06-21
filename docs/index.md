@@ -345,9 +345,9 @@ export class UsersController {
       <div><div class="dt">Examples <span class="arr">→</span></div><p class="dd">REST API, WebSocket chat, file upload and authentication flows.</p></div>
     </a>
 
-    <a href="{{ site.baseurl }}/plugins/" class="dc">
+    <a href="{{ site.baseurl }}/plugins/marketplace/" class="dc">
       <span class="dic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M19 7V4a1 1 0 0 0-1-1h-3a2 2 0 0 0-4 0H8a1 1 0 0 0-1 1v3a2 2 0 0 1 0 4v3a1 1 0 0 0 1 1h3a2 2 0 0 1 4 0h3a1 1 0 0 0 1-1v-3a2 2 0 0 0 0-4z"/></svg></span>
-      <div><div class="dt">Plugins <span class="arr">→</span></div><p class="dd">Signed manifests, capability permissions and a sandboxed plugin host.</p></div>
+      <div><div class="dt">Plugins <span class="arr">→</span></div><p class="dd">Browse 20+ official, signed, dependency-free plugins — databases, payments, auth, storage and AI.</p></div>
     </a>
 
     <a href="{{ site.baseurl }}/community/" class="dc">
