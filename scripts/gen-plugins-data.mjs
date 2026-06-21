@@ -29,6 +29,7 @@ const CATEGORIES = [
   ['Auth & Identity', /auth0|clerk|firebase|supabase|oauth|identity|auth/i],
   ['Communications', /twilio|sendgrid|africastalking|sms|email|voice|notification/i],
   ['AI', /openai|ai|llm|embedding/i],
+  ['Frontend & Views', /htmx|view|template|ssr|server-rendered|html|frontend/i],
 ];
 const slugify = (s) => s.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 const yamlEsc = (s) => String(s).replace(/"/g, '\\"');
