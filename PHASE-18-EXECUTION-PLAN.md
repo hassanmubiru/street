@@ -135,7 +135,10 @@ my-app/
 **Frontend (Next):** auth pages, org switcher, team/members, settings, billing
 (placeholder), audit log viewer.
 
-**Onboarding flow / tutorial roadmap:** (1) `create --starter saas` → (2) run +
+**Onboarding flow / tutorial roadmap:** (1) `create --starter saas` → (2) run +	modified:   package-lock.json
+	modified:   packages/core-compat/package.json
+
+
 sign up → (3) create org + invite → (4) wire Stripe test keys → (5) deploy
 (Docker). Each step = one docs page; the series doubles as Content Engine material.
 
