@@ -18,6 +18,13 @@ description:  "Official StreetJS plugin: RabbitMQ messaging (wraps the dependenc
 - **Version:** `v1.0.2`
 - **npm:** [@streetjs/plugin-rabbitmq](https://www.npmjs.com/package/@streetjs/plugin-rabbitmq)
 
+## Trust signals
+
+- ✅ **Signed manifest** (Ed25519) — verified by the plugin host on load
+- ✅ **Dependency-free** — no third-party runtime dependencies
+- ✅ **MIT licensed** · **Node.js ≥ 20** · **TypeScript-native**
+- ✅ **npm provenance** — published with build attestations
+
 ## Install
 
 ```bash

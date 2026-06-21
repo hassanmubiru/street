@@ -18,6 +18,13 @@ description:  "Official StreetJS plugin: MySQL/MariaDB connection pool (wraps th
 - **Version:** `v1.0.2`
 - **npm:** [@streetjs/plugin-mysql](https://www.npmjs.com/package/@streetjs/plugin-mysql)
 
+## Trust signals
+
+- ✅ **Signed manifest** (Ed25519) — verified by the plugin host on load
+- ✅ **Dependency-free** — no third-party runtime dependencies
+- ✅ **MIT licensed** · **Node.js ≥ 20** · **TypeScript-native**
+- ✅ **npm provenance** — published with build attestations
+
 ## Install
 
 ```bash
