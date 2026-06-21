@@ -46,6 +46,7 @@ for (const d of dirs) {
   if (!existsSync(pjPath)) continue;
   const pj = JSON.parse(readFileSync(pjPath, 'utf8'));
   if (pj.private) continue;
+  if (pj.streetjs && pj.streetjs.unlisted) continue; // not yet published — keep out of the marketplace
   const short = pj.name.replace('@streetjs/plugin-', '');
   plugins.push({
     name: pj.name,
