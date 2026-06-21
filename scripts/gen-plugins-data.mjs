@@ -107,6 +107,7 @@ rmSync(regDir, { recursive: true, force: true });
 mkdirSync(regDir, { recursive: true });
 for (const p of plugins) {
   const cslug = slugify(p.category);
+  const related = plugins.filter((o) => o.category === p.category && o.slug !== p.slug).slice(0, 6);
   const fm = [
     '---',
     'layout:      default',
