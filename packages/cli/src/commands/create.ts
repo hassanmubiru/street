@@ -22,7 +22,19 @@ export const TEMPLATES: Record<string, TemplateSpec> = {
     starter: { path: '', content: '' },
   },
   saas: {
-    packages: { '@streetjs/admin': '^1.0.0' },
+    // Always-on composition set for the production-grade SaaS starter. RBAC +
+    // audit (@streetjs/admin), the admin/RBAC management screens
+    // (@streetjs/admin-ui), the server-rendered dashboard runtime
+    // (@streetjs/plugin-htmx), and the auth/session UI (@streetjs/auth-ui) ship
+    // by default. Billing (@streetjs/plugin-stripe), email
+    // (@streetjs/plugin-sendgrid), and the Postgres driver
+    // (@streetjs/plugin-postgres) stay install-on-demand (see SAAS.md).
+    packages: {
+      '@streetjs/admin': '^1.0.0',
+      '@streetjs/admin-ui': '^1.0.0',
+      '@streetjs/plugin-htmx': '^1.0.0',
+      '@streetjs/auth-ui': '^1.0.0',
+    },
     description: 'SaaS starter: user/role admin + audit log on top of the base app.',
     starter: {
       path: 'src/features/saas.ts',
