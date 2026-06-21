@@ -63,7 +63,24 @@ plugin` (Phase 17 / CLI-EVOLUTION) lands.
 
 ---
 
-## Workstream 2 — SaaS Starter — SPEC (P0)
+## Workstream 2 — SaaS Starter — PARTIALLY IMPLEMENTED (P0)
+
+**Shipped this commit:** the CLI already had a `--template` system (`saas`,
+`ecommerce`, `realtime-chat`, `dating-app`) — VERIFIED. Added (non-breaking):
+- **`--starter` flag** as an alias of `--template` (the documented Phase-18 flag);
+  both work. `street create my-app --starter saas` now scaffolds the SaaS overlay.
+- **Friendly aliases**: `realtime`→`realtime-chat`, `chat`→`realtime-chat`,
+  `marketplace`→`ecommerce`, `dating`→`dating-app`.
+- **New `ai` starter** (`--starter ai`) overlaying `@streetjs/ai` (genuine GAP filled).
+- Tests added to `create-templates.test.ts` (already in the coverage list); CLI
+  build green; coverage **92.59% branches** (gate 85%), 117 tests pass.
+- Ships to npm on the next CLI release (currently 1.0.19 → 1.0.20).
+
+**Remaining (richer SaaS overlay) — SPEC (P1):** the current `saas` template is a
+thin overlay (admin users/roles + audit log). The full spec below (orgs, teams,
+invitations, billing handler, dashboard) is the next iteration — build it as a
+richer `saas` template overlay composing the existing generators + `plugin-stripe`.
+
 
 `street create my-app --starter saas` — additive, non-breaking (default template
 unchanged). Composes existing generators + official plugins; no new framework code.
