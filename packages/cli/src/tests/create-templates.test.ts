@@ -3,10 +3,25 @@
 
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync, existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdtempSync, rmSync, existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { join, relative, sep } from 'node:path';
 import { tmpdir } from 'node:os';
 import { CreateCommand, TEMPLATES } from '../commands/create.js';
+
+/** Recursively collect every file under `root` as { relPath -> Buffer } for
+ * byte-exact scaffold comparison (paths normalized to forward slashes). */
+function snapshotDir(root: string): Map<string, Buffer> {
+  const out = new Map<string, Buffer>();
+  const walk = (abs: string): void => {
+    for (const entry of readdirSync(abs)) {
+      const full = join(abs, entry);
+      if (statSync(full).isDirectory()) walk(full);
+      else out.set(relative(root, full).split(sep).join('/'), readFileSync(full));
+    }
+  };
+  walk(root);
+  return out;
+}
 
 function withTempDir(fn: (dir: string) => Promise<void>): Promise<void> {
   const dir = mkdtempSync(join(tmpdir(), 'street-tpl-test-'));
