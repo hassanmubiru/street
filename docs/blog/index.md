@@ -17,6 +17,12 @@ description:   "StreetJS blog — release notes, deep dives, and ecosystem updat
 
 The blog is just getting started. In the meantime:
 
+## Latest
+
+- [**Why StreetJS has two runtime dependencies**](/blog/why-2-dependencies/) — how a full backend ships on Node core with two deps, and why that matters for security and cost.
+
+## More
+
 - **What's changing release to release:** [Changelog](/changelog/)
 - **Where the project is headed:** [Roadmap](/roadmap/) · [Go-To-Market Roadmap](/adoption/go-to-market-roadmap/)
 - **Learn by building:** [Tutorials](/tutorials/) · [Examples](/examples/)
