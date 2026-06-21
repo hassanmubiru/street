@@ -9,6 +9,14 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.0.22] - 2026-06-21
+
+### Added
+- Richer **realtime** and **marketplace** starters: `street create --starter
+  realtime` now scaffolds a channels/members/messages migration + `REALTIME.md`;
+  `--starter marketplace` scaffolds a catalog/inventory/carts/orders/payments
+  migration + `COMMERCE.md`. Consistent with the SaaS starter overlay.
+
 ## [1.0.21] - 2026-06-21
 
 ### Added
