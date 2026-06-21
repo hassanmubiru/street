@@ -18,6 +18,13 @@ description:  "Official Street Framework plugin: Africa's Talking (SMS, Bulk SMS
 - **Version:** `v1.0.1`
 - **npm:** [@streetjs/plugin-africastalking](https://www.npmjs.com/package/@streetjs/plugin-africastalking)
 
+## Trust signals
+
+- ✅ **Signed manifest** (Ed25519) — verified by the plugin host on load
+- ✅ **Dependency-free** — no third-party runtime dependencies
+- ✅ **MIT licensed** · **Node.js ≥ 20** · **TypeScript-native**
+- ✅ **npm provenance** — published with build attestations
+
 ## Install
 
 ```bash
