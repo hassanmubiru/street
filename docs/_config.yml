@@ -52,6 +52,8 @@ footer_content: >
 
 # Aux links (top-right navigation)
 aux_links:
+  "Plugins":
+    - "/StreetJS/plugins/marketplace/"
   "Showcase":
     - "/StreetJS/showcase/"
   "Compare":
