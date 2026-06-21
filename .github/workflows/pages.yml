@@ -47,6 +47,10 @@ jobs:
           sed -i -E "s/^version:.*/version:     \"${VERSION}\"/" docs/_config.yml
           grep -E "^version:" docs/_config.yml
 
+      - name: Generate plugin marketplace data + pages
+        run: |
+          node scripts/gen-plugins-data.mjs
+
       - name: Setup Ruby
         uses: ruby/setup-ruby@12fd324f1d0b43274fdc8130f6980590a667c455 # v1.312.0
         with:
