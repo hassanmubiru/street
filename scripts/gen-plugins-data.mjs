@@ -105,7 +105,9 @@ for (const { name: cat, slug: cslug } of categories) {
   const body = [
     `# ${cat} Plugins`,
     '',
-    `${inCat.length} official ${cat} plugin${inCat.length === 1 ? '' : 's'} for StreetJS. All are signed, dependency-free, and installable from npm. See the full [Plugin Marketplace](/StreetJS/plugins/marketplace/).`,
+    CATEGORY_INTROS[cat] ?? `Official StreetJS ${cat} plugins — signed and dependency-free.`,
+    '',
+    `${inCat.length} official ${cat} plugin${inCat.length === 1 ? '' : 's'}, all installable from npm. See the full [Plugin Marketplace](/StreetJS/plugins/marketplace/).`,
     '',
     '| Plugin | Description | Version | Links |',
     '|--------|-------------|---------|-------|',
