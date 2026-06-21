@@ -78,11 +78,20 @@ describe('generated project boots successfully (integration)', () => {
       assert.ok(existsSync(join(projectDir, 'dist', 'main.js')), 'compiled dist/main.js');
 
       // 3) Boot the server on an ephemeral-ish test port with ZERO db/secret env
-      //    (the exact "first run" scenario). NODE_ENV stays development.
+      //    (the exact "first run" scenario). NODE_ENV stays development. We strip
+      //    any DB/secret vars from the inherited environment so the test is
+      //    deterministic regardless of the CI job's env (some jobs export PG_*/
+      //    KEK/JWT_SECRET/SESSION_KEY, which must NOT leak into this first-run boot).
+      const cleanEnv: NodeJS.ProcessEnv = { ...process.env };
+      for (const k of [
+        'PG_HOST', 'PG_PORT', 'PG_USER', 'PG_PASSWORD', 'PG_DATABASE', 'PGHOST',
+        'PGPORT', 'PGUSER', 'PGPASSWORD', 'PGDATABASE', 'DATABASE_URL',
+        'KEK', 'JWT_SECRET', 'SESSION_KEY',
+      ]) delete cleanEnv[k];
       const port = 3100 + Math.floor(Math.random() * 800);
       server = spawn(process.execPath, ['dist/main.js'], {
         cwd: projectDir,
-        env: { ...process.env, PORT: String(port), HOST: '127.0.0.1', NODE_ENV: 'development' },
+        env: { ...cleanEnv, PORT: String(port), HOST: '127.0.0.1', NODE_ENV: 'development' },
         stdio: 'ignore',
       });
       const exited = new Promise<number>((r) => server!.on('exit', (c) => r(c ?? -1)));
