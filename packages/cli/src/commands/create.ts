@@ -8,11 +8,25 @@ import type { CliContext } from '../index.js';
 
 /** Template variants: extra @streetjs deps + a starter module + a description. */
 interface TemplateSpec {
+  /** Always-on dependencies added on top of the base scaffold for every variant. */
   packages: Record<string, string>;
   description: string;
   starter: { path: string; content: string };
-  /** Optional additional files written verbatim into the project (e.g. SQL migrations, docs). */
-  extraFiles?: { path: string; content: string }[];
+  /**
+   * Optional additional files written verbatim into the project (e.g. SQL
+   * migrations, docs). An entry tagged with `flag` is written ONLY when that
+   * opt-in flag is enabled (default = no flag = always written). Every entry
+   * stays registered here regardless of `flag` so the template registry remains
+   * the single source of truth for template extraction.
+   */
+  extraFiles?: { path: string; content: string; flag?: string }[];
+  /**
+   * Dependencies added ONLY when a given opt-in flag is enabled. Keeps the
+   * default scaffold dependency-minimal: a package that a flag-gated file imports
+   * is installed only when that flag is passed (e.g. `--with-billing` adds
+   * `@streetjs/plugin-stripe`).
+   */
+  flagPackages?: Record<string, Record<string, string>>;
 }
 
 export const TEMPLATES: Record<string, TemplateSpec> = {
