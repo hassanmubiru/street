@@ -2294,8 +2294,23 @@ export interface CheckoutResult {
   status: string;
 }
 
+/** A verified webhook event, after MarzPayClient.validateWebhook + re-verify. */
+export interface VerifiedWebhookEvent {
+  /** Client reference echoed by MarzPay (matches the BillingRecord reference). */
+  reference: string;
+  /** Verified transaction status (e.g. \`completed\`/\`failed\`). */
+  status: string;
+  /** Raw numeric amount of the collection. */
+  amount: number;
+  /** ISO currency of the collection (e.g. \`UGX\`). */
+  currency: string;
+  /** Configured plan id this payment settles, when known. */
+  plan?: string;
+}
+
 export class BillingService {
   constructor(
+    private readonly repo: ScopedRepository<BillingRecord>,
     private readonly plans: BillingConfig,
     private readonly client: MarzPayClient,
   ) {}
@@ -2303,6 +2318,61 @@ export class BillingService {
   /** Look up a configured plan by id; null when the plan is unknown. */
   resolvePlan(planId: string): PlanDefinition | null {
     return this.plans.plans[planId] ?? null;
+  }
+
+  /**
+   * Start a checkout for a configured plan.
+   *
+   * Plans are read from BillingConfig (never hardcoded). An unknown planId
+   * throws an "unknown plan" error and persists NOTHING (Requirement 6.6). On a
+   * known plan, MarzPay initializes the payment and exactly one BillingRecord is
+   * written through orgScopedRepo(repo, ctx), tenant-scoped by org_id
+   * (Requirements 6.5, 6.7, 6.8).
+   */
+  async startCheckout(ctx: StreetContext, planId: string): Promise<CheckoutResult> {
+    const plan = this.resolvePlan(planId);
+    if (!plan) {
+      // Reject before any side effect: nothing is sent and nothing is persisted.
+      throw new BadRequestException('unknown plan: ' + planId);
+    }
+
+    // Verified card collection (V2): no phone number; MarzPay returns redirect_url.
+    const init = await this.client.initializePayment({
+      amount: plan.amount,
+      currency: plan.currency,
+      country: 'UG',
+      reference: randomUUID(),
+      method: 'card',
+      description: plan.name,
+    });
+
+    // Persist ONLY through the org-scoped repo: org_id is stamped to the active
+    // tenant and cannot be overridden by the payload (tenant isolation).
+    await orgScopedRepo(this.repo, ctx).insert({
+      plan: planId,
+      status: init.status,
+      reference: init.reference,
+      amount: plan.amount,
+      currency: plan.currency,
+      created_at: new Date().toISOString(),
+    });
+
+    return { reference: init.reference, redirectUrl: init.redirectUrl, status: init.status };
+  }
+
+  /**
+   * Record a settled payment from a verified webhook event, writing the
+   * BillingRecord ONLY through orgScopedRepo(repo, ctx) so it is tenant-scoped.
+   */
+  async recordPayment(ctx: StreetContext, event: VerifiedWebhookEvent): Promise<BillingRecord> {
+    return orgScopedRepo(this.repo, ctx).insert({
+      plan: event.plan ?? '',
+      status: event.status,
+      reference: event.reference,
+      amount: event.amount,
+      currency: event.currency,
+      created_at: new Date().toISOString(),
+    });
   }
 }
 `,
