@@ -3040,12 +3040,14 @@ export class CreateCommand {
     //   --with-billing   Stripe billing webhook controller (@streetjs/plugin-stripe)
     //   --with-admin-ui  auth/RBAC React management screens (@streetjs/auth-ui + admin-ui)
     //   --with-email     transactional email via @streetjs/plugin-sendgrid (injected Mailer)
+    //   --with-marzpay   MarzPay billing modules + dashboard (@streetjs/plugin-marzpay)
     // Each flag gates the matching overlay file(s) and adds only the deps those
     // files import, so unflagged scaffolds never reference packages they don't use.
     const starterFlags = new Set<string>();
     if (ctx.args.flags['with-billing']) starterFlags.add('with-billing');
     if (ctx.args.flags['with-admin-ui']) starterFlags.add('with-admin-ui');
     if (ctx.args.flags['with-email']) starterFlags.add('with-email');
+    if (ctx.args.flags['with-marzpay']) starterFlags.add('with-marzpay');
 
     // Check if target already exists
     try {
