@@ -2766,9 +2766,28 @@ export class BillingDashboardController {
 -- Org-scoped billing records and invoices for the scaffolded MarzPay modules.
 -- Apply with: street migrate:run  (PostgreSQL syntax; adjust types for SQLite).
 --
--- Placeholder migration — the subscriptions-table extension and the full
--- billing_records / invoices schema are filled in by the MarzPay billing
--- migrations task. Every table carries org_id for tenant scoping.
+-- This migration is ADDITIVE and IDEMPOTENT: it extends the audited
+-- 001_saas.sql \`subscriptions\` table with the MarzPay billing fields required by
+-- SubscriptionRecord and creates the \`billing_records\` / \`invoices\` tables. It
+-- only runs when the project is scaffolded with --with-marzpay, so the default
+-- (non-MarzPay) SaaS schema in 001_saas.sql is left byte-for-byte unchanged.
+-- Every table carries org_id (indexed) so every billing row is scoped to a
+-- single tenant (Requirements 6.7, 6.8).
+--
+-- SQLite note: SQLite supports \`ALTER TABLE ... ADD COLUMN\` but not
+-- \`ADD COLUMN IF NOT EXISTS\`; on SQLite, drop the \`IF NOT EXISTS\` clause from the
+-- ALTER statements below, use INTEGER PRIMARY KEY AUTOINCREMENT in place of
+-- BIGSERIAL, and TEXT timestamps in place of TIMESTAMPTZ.
+
+-- Extend the existing subscriptions table for MarzPay-backed billing. These
+-- columns are additive so they coexist with the audited 001_saas.sql schema
+-- (which already provides id, org_id, plan, status, stripe_customer_id,
+-- current_period_end). org_id stays the tenant discriminator for SubscriptionRecord.
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS marzpay_reference    TEXT;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS current_period_start TIMESTAMPTZ;
+
+-- Index the subscriptions tenant discriminator for org-scoped lookups (Req 6.8).
+CREATE INDEX IF NOT EXISTS idx_subscriptions_org ON subscriptions(org_id);
 
 CREATE TABLE IF NOT EXISTS billing_records (
   id         BIGSERIAL PRIMARY KEY,
