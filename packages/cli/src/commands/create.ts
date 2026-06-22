@@ -2144,10 +2144,52 @@ street migrate:run
 
 ## Billing (Stripe)
 
+Scaffold the signature-verified Stripe webhook controller with the
+\`--with-billing\` flag (adds \`@streetjs/plugin-stripe\`):
+
 \`\`\`bash
-npm install @streetjs/plugin-stripe
+street create my-saas --starter saas --with-billing
 # set STRIPE_SECRET_KEY and STRIPE_WEBHOOK_SECRET (see .env.saas.example)
 \`\`\`
+
+If you scaffolded without the flag, add it later:
+
+\`\`\`bash
+npm install @streetjs/plugin-stripe
+\`\`\`
+
+The \`subscriptions\` table and \`billing.service.ts\` (which imports no third-party
+package) ship in the default scaffold either way.
+
+## Auth & RBAC management screens (admin UI)
+
+Scaffold the server-rendered auth + RBAC React screens with \`--with-admin-ui\`
+(adds \`@streetjs/auth-ui\` and \`@streetjs/admin-ui\`):
+
+\`\`\`bash
+street create my-saas --starter saas --with-admin-ui
+\`\`\`
+
+This emits \`src/modules/dashboard/auth-ui.controller.ts\`, which composes the
+official React component packages (no client build step — they load from an ESM
+CDN via an importmap). The core dashboard (\`dashboard.controller.ts\`) and its
+htmx views ship in the default scaffold regardless.
+
+## Email notifications
+
+In-app notifications are always available. To deliver email as well, scaffold
+with \`--with-email\` and provide a \`Mailer\` implementation backed by
+\`@streetjs/plugin-sendgrid\`:
+
+\`\`\`bash
+street create my-saas --starter saas --with-email
+npm install @streetjs/plugin-sendgrid
+# set SENDGRID_API_KEY (see .env.saas.example)
+\`\`\`
+
+\`notification.service.ts\` takes the transport through an injected \`Mailer\`
+interface, so the default scaffold imports no email package; email is simply
+skipped until a \`Mailer\` is wired.
 
 See the [SaaS starter docs](https://hassanmubiru.github.io/StreetJS/starters/).
 `,
@@ -2166,9 +2208,14 @@ PG_DATABASE=
 PG_USER=
 PG_PASSWORD=
 
-# Billing (Stripe) placeholders.
+# Billing (Stripe) — scaffold the webhook controller with: --starter saas --with-billing
+# (adds @streetjs/plugin-stripe). These values are read by the billing module.
 STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
+
+# Email (SendGrid) — scaffold with: --starter saas --with-email, then
+# \`npm install @streetjs/plugin-sendgrid\` and wire the Mailer transport.
+SENDGRID_API_KEY=SG....
 `,
       },
       {
