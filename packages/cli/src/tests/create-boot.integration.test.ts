@@ -123,11 +123,15 @@ describe('generated project boots successfully (integration)', () => {
   //      migration set (001 → 002 → 003), the tenant + API-key middleware, the
   //      module services, SAAS.md and .env.saas.example (Requirements 11.4, 10.1).
   //   2. COMPILE   — the WHOLE scaffolded project type-checks with the workspace
-  //      `tsc` against the published `streetjs` (+ @streetjs/admin, auth-ui,
-  //      admin-ui, plugin-stripe) types. This is the core value: every authored
-  //      overlay module (ApiKeyService, tenantResolver, BillingService,
-  //      SettingsService, NotificationService, dashboard controllers, …) is
-  //      verified to be valid TypeScript against the real framework surface.
+  //      `tsc` against the published `streetjs` types. The DEFAULT saas scaffold
+  //      is dependency-minimal: every authored overlay module (ApiKeyService,
+  //      tenantResolver, BillingService, SettingsService, NotificationService,
+  //      dashboard controller, …) imports only `streetjs`, Node builtins, local
+  //      files, or @streetjs/plugin-htmx — so the project compiles with ZERO
+  //      extra @streetjs packages installed. The optional billing webhook
+  //      controller and the auth/RBAC UI controller (which import
+  //      @streetjs/plugin-stripe / auth-ui / admin-ui) are opt-in behind
+  //      --with-billing / --with-admin-ui and are NOT part of this default case.
   //   3. BOOT      — the compiled `dist/main.js` starts on the zero-config SQLite
   //      default and serves a readiness request within the 120s budget
   //      (Requirements 12.1, 12.2). Any failure is reported with the failing step.
