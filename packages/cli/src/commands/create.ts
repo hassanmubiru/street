@@ -4703,6 +4703,10 @@ export class MarzPayViewsController {
       dependencies: {
         '@streetjs/client': '^0.1.0',
         '@streetjs/react': '^0.1.0',
+        // MarzPay client lib: the React overlay (web/src/lib/marzpay.ts + pages)
+        // is scaffolded whenever `--frontend react` is selected, so its client
+        // dependency ships in the web app's package.json (Requirements 5.4, 8.1).
+        '@streetjs/plugin-marzpay': '^1.0.0',
         react: '^18.3.1',
         'react-dom': '^18.3.1',
       },
