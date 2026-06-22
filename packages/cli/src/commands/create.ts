@@ -2979,7 +2979,7 @@ export class CreateCommand {
     await this.scaffoldProject(targetDir, projectName, database);
 
     // Apply the template overlay (extra deps + starter module + notes).
-    await this.applyTemplate(targetDir, template);
+    await this.applyTemplate(targetDir, template, starterFlags);
 
     // Scaffold an optional frontend app + a CI workflow that builds both tiers.
     if (frontend !== 'none') {
