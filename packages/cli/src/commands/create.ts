@@ -2035,6 +2035,536 @@ STRIPE_SECRET_KEY=sk_test_...
 STRIPE_WEBHOOK_SECRET=whsec_...
 `,
       },
+      {
+        path: 'src/modules/dashboard/dashboard.controller.ts',
+        content: `// src/modules/dashboard/dashboard.controller.ts
+// Server-rendered dashboard for the SaaS starter (overlay code — NOT framework code).
+//
+// Renders htmx fragments via @streetjs/plugin-htmx (ctx.htmx.view / .partial /
+// .engine.partial) for the orgs list, members, API keys, and audit viewer. No SPA
+// and no client build step — this REUSES the exact view convention the base
+// \`--frontend htmx\` scaffold uses (src/controllers/views.controller.ts +
+// HtmxPlugin.middleware in main.ts); it does NOT introduce a second view engine.
+//
+// ROLE-GATING (Requirements 9.1, 9.2, 9.4, 9.5): every /o/:slug route runs behind
+// tenantResolver (src/middleware/tenant.ts), which sets ctx.org = { id, slug, role }
+// ONLY when the caller holds a membership — otherwise 403 and no org is established.
+// The controller defends again at render time: it renders ONLY the views and the
+// actions the member's role permits, and returns 403 with NO organization data when
+// membership or the required role is missing (consistent with tenantResolver +
+// requireRoles already in the overlay).
+//
+// WIRING (src/main.ts):
+//   app.use(HtmxPlugin.middleware({ viewsDir: 'src/views', layout: 'dashboard' }));
+//   // /o/:slug/* also pass through tenantResolver({ members }); the api-keys and
+//   // audit routes additionally pass requireRoles('owner', 'admin').
+//   app.registerController(DashboardController);
+
+import 'reflect-metadata';
+import { Controller, Get } from 'streetjs';
+import type { StreetContext } from 'streetjs';
+import type { OrgService } from '../orgs/org.service.js';
+import type { ActiveOrg, MembershipService, Role } from '../members/membership.service.js';
+import type { ApiKeyService } from '../apikeys/apikey.service.js';
+import type { AuditService } from '../audit/audit.service.js';
+
+/** Roles permitted to OPEN each dashboard view (Requirement 9.2). */
+const VIEW_ROLES: Record<string, Role[]> = {
+  home: ['owner', 'admin', 'member'],
+  orgs: ['owner', 'admin', 'member'],
+  members: ['owner', 'admin', 'member'],
+  'api-keys': ['owner', 'admin'],
+  audit: ['owner', 'admin'],
+};
+
+/** Roles permitted to perform privileged ACTIONS (invite/remove/create/revoke). */
+const MANAGE_ROLES: Role[] = ['owner', 'admin'];
+
+@Controller('/o/:slug')
+export class DashboardController {
+  constructor(
+    private readonly orgs: OrgService,
+    private readonly members: MembershipService,
+    private readonly apiKeys: ApiKeyService,
+    private readonly audit: AuditService,
+  ) {}
+
+  /** GET /o/:slug — member home. Any member of the org may open it. */
+  @Get('/')
+  async home(ctx: StreetContext): Promise<void> {
+    const org = this.gate(ctx, 'home');
+    if (!org) return;
+    ctx.htmx.view('dashboard/home', {
+      title: 'Dashboard',
+      slug: org.slug,
+      role: org.role,
+      nav: this.nav(org),
+    });
+  }
+
+  /** GET /o/:slug/orgs — organizations the signed-in user belongs to. */
+  @Get('/orgs')
+  async listOrgs(ctx: StreetContext): Promise<void> {
+    const org = this.gate(ctx, 'orgs');
+    if (!org) return;
+    const orgs = await this.orgs.listForUser(ctx.user.id);
+    const rows = orgs.map((o) => ctx.htmx.engine.partial('dashboard/org-row', { ...o })).join('');
+    ctx.htmx.view('dashboard/orgs', { title: 'Organizations', nav: this.nav(org), orgs: rows });
+  }
+
+  /**
+   * GET /o/:slug/members — any member may view the list. The invite form and the
+   * per-row remove action are rendered ONLY for owner/admin (Requirement 9.2);
+   * a plain member sees the roster with no management actions.
+   */
+  @Get('/members')
+  async listMembers(ctx: StreetContext): Promise<void> {
+    const org = this.gate(ctx, 'members');
+    if (!org) return;
+    const canManage = MANAGE_ROLES.includes(org.role);
+    const list = await this.members.list(org.id);
+    const rows = list
+      .map((m) =>
+        ctx.htmx.engine.partial('dashboard/member-row', {
+          id: m.id,
+          user_id: m.user_id,
+          role: m.role,
+          actions: canManage ? this.removeMemberButton(org.slug, m.user_id) : '',
+        }),
+      )
+      .join('');
+    ctx.htmx.view('dashboard/members', {
+      title: 'Members',
+      nav: this.nav(org),
+      members: rows,
+      inviteForm: canManage ? this.inviteForm(org.slug) : '',
+    });
+  }
+
+  /** GET /o/:slug/api-keys — owner/admin only; a member gets 403 with no data. */
+  @Get('/api-keys')
+  async listApiKeys(ctx: StreetContext): Promise<void> {
+    const org = this.gate(ctx, 'api-keys');
+    if (!org) return;
+    const keys = await this.apiKeys.list(org.id);
+    const rows = keys
+      .map((k) =>
+        ctx.htmx.engine.partial('dashboard/api-key-row', {
+          ...k,
+          scopes: (k.scopes ?? []).join(', '),
+        }),
+      )
+      .join('');
+    ctx.htmx.view('dashboard/api-keys', {
+      title: 'API keys',
+      nav: this.nav(org),
+      keys: rows,
+      createForm: this.createKeyForm(org.slug),
+    });
+  }
+
+  /** GET /o/:slug/audit — owner/admin only; a member gets 403 with no data. */
+  @Get('/audit')
+  async listAudit(ctx: StreetContext): Promise<void> {
+    const org = this.gate(ctx, 'audit');
+    if (!org) return;
+    // AuditService.list also enforces owner/admin, so it is safe behind the gate.
+    const entries = await this.audit.list({ orgId: org.id, role: org.role });
+    const rows = entries
+      .map((e) =>
+        ctx.htmx.engine.partial('dashboard/audit-row', {
+          id: e.id,
+          actor_id: e.actor_id,
+          action: e.action,
+          target: e.target,
+          created_at: e.created_at,
+        }),
+      )
+      .join('');
+    ctx.htmx.view('dashboard/audit', { title: 'Audit log', nav: this.nav(org), entries: rows });
+  }
+
+  // ── helpers ─────────────────────────────────────────────────────────────
+
+  /**
+   * gate — the render-time role gate. Returns ctx.org IFF a membership exists
+   * AND the role may open \`view\`; otherwise it responds 403 with NO organization
+   * data and returns null so the caller stops (Requirements 9.4, 9.5).
+   */
+  private gate(ctx: StreetContext, view: string): ActiveOrg | null {
+    const org = ctx.org as ActiveOrg | undefined;
+    if (!org) {
+      this.forbid(ctx); // no membership -> 403, render no org data (9.4)
+      return null;
+    }
+    const allowed = VIEW_ROLES[view] ?? [];
+    if (!allowed.includes(org.role)) {
+      this.forbid(ctx); // role too low for this view -> 403, render no data (9.5)
+      return null;
+    }
+    return org;
+  }
+
+  /** Render the 403 view, which contains no organization data. */
+  private forbid(ctx: StreetContext): void {
+    ctx.htmx.view('dashboard/forbidden', { title: 'Forbidden' }, 403);
+  }
+
+  /** Role-gated navigation: only the links the member's role may open are emitted. */
+  private nav(org: ActiveOrg): string {
+    const base = '/o/' + org.slug;
+    const links = [
+      '<a href="' + base + '">Home</a>',
+      '<a href="' + base + '/orgs">Organizations</a>',
+      '<a href="' + base + '/members">Members</a>',
+    ];
+    if (MANAGE_ROLES.includes(org.role)) {
+      links.push('<a href="' + base + '/api-keys">API keys</a>');
+      links.push('<a href="' + base + '/audit">Audit</a>');
+      links.push('<a href="' + base + '/rbac">RBAC</a>');
+    }
+    links.push('<a href="' + base + '/account">Account</a>');
+    return '<nav class="dash-nav">' + links.join(' · ') + '</nav>';
+  }
+
+  /** Invite form (owner/admin only) — posts to the members module. */
+  private inviteForm(slug: string): string {
+    const action = '/o/' + slug + '/members/invite';
+    return (
+      '<form class="invite" hx-post="' + action + '" hx-target="#members" hx-swap="beforeend">' +
+      '<input name="email" type="email" placeholder="teammate@example.com" required>' +
+      '<select name="role"><option value="member">member</option><option value="admin">admin</option></select>' +
+      '<button type="submit">Invite</button>' +
+      '</form>'
+    );
+  }
+
+  /** Per-row remove control (owner/admin only). */
+  private removeMemberButton(slug: string, userId: string): string {
+    const action = '/o/' + slug + '/members/' + userId;
+    return (
+      '<button class="danger" hx-delete="' + action + '" hx-target="closest li" ' +
+      'hx-swap="outerHTML" hx-confirm="Remove this member?">Remove</button>'
+    );
+  }
+
+  /** API key creation form (rendered inside the owner/admin-gated api-keys view). */
+  private createKeyForm(slug: string): string {
+    const action = '/o/' + slug + '/api-keys';
+    return (
+      '<form class="api-key-create" hx-post="' + action + '" hx-target="#api-keys" hx-swap="afterbegin">' +
+      '<input name="name" placeholder="Key name" required>' +
+      '<input name="scopes" placeholder="billing:read, members:write">' +
+      '<button type="submit">Create key</button>' +
+      '</form>'
+    );
+  }
+}
+`,
+      },
+      {
+        path: 'src/modules/dashboard/auth-ui.controller.ts',
+        content: `// src/modules/dashboard/auth-ui.controller.ts
+// Auth + RBAC management screens for the SaaS starter (overlay code — NOT framework code).
+//
+// Composes the official React component packages instead of hand-rolling forms
+// (Requirement 9.3):
+//   @streetjs/auth-ui  — LoginForm, RegisterForm, ForgotPasswordForm, MFASetup, ProfileSettings
+//   @streetjs/admin-ui — UserManagement, RoleManager, AuditLogViewer, TenantSwitcher
+//
+// NO CLIENT BUILD STEP: each screen is a server-rendered htmx page that drops a React
+// "island" mount point (partials/dashboard/react-island.html) and hydrates it from an
+// ESM CDN declared in the page importmap (layouts/dashboard.html) — the same build-free
+// approach the base htmx scaffold uses to load htmx.org from a CDN. The packages' own
+// stylesheets (streetAuthCss / streetAdminCss) are injected server-side so the screens
+// are styled before/without hydration.
+//
+// ROLE-GATING (Requirements 9.2, 9.5): RBAC management is owner/admin only — a member
+// requesting it gets 403 with no data. Account (the user's own profile/MFA) is open to
+// any member. The login/register/forgot screens are public.
+//
+// WIRING (src/main.ts):
+//   app.registerController(AuthRbacController);   // /o/:slug/account, /o/:slug/rbac
+//   app.registerController(AuthScreensController); // /auth/login, /auth/register, ...
+
+import 'reflect-metadata';
+import { Controller, Get } from 'streetjs';
+import type { StreetContext } from 'streetjs';
+import { streetAuthCss } from '@streetjs/auth-ui';
+import { streetAdminCss } from '@streetjs/admin-ui';
+import type { ActiveOrg, Role } from '../members/membership.service.js';
+
+const MANAGE_ROLES: Role[] = ['owner', 'admin'];
+
+/** Descriptor consumed by the react-island partial (mounts a component client-side). */
+function island(
+  pkg: string,
+  component: string,
+  props: Record<string, unknown> = {},
+): { pkg: string; component: string; props: string } {
+  return { pkg, component, props: JSON.stringify(props) };
+}
+
+@Controller('/o/:slug')
+export class AuthRbacController {
+  /** GET /o/:slug/account — the signed-in user's profile + MFA (auth-ui); any member. */
+  @Get('/account')
+  async account(ctx: StreetContext): Promise<void> {
+    const org = ctx.org as ActiveOrg | undefined;
+    if (!org) {
+      ctx.htmx.view('dashboard/forbidden', { title: 'Forbidden' }, 403); // 9.4: no membership
+      return;
+    }
+    ctx.htmx.view('dashboard/account', {
+      title: 'Account',
+      uiCss: streetAuthCss,
+      profile: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/auth-ui', 'ProfileSettings', { userId: ctx.user.id }),
+      ),
+      mfa: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/auth-ui', 'MFASetup', { userId: ctx.user.id }),
+      ),
+    });
+  }
+
+  /** GET /o/:slug/rbac — RBAC management (admin-ui); owner/admin only. */
+  @Get('/rbac')
+  async rbac(ctx: StreetContext): Promise<void> {
+    const org = ctx.org as ActiveOrg | undefined;
+    if (!org || !MANAGE_ROLES.includes(org.role)) {
+      ctx.htmx.view('dashboard/forbidden', { title: 'Forbidden' }, 403); // 9.5: 403, no data
+      return;
+    }
+    ctx.htmx.view('dashboard/rbac', {
+      title: 'RBAC',
+      uiCss: streetAdminCss,
+      users: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/admin-ui', 'UserManagement', { orgId: org.id }),
+      ),
+      roles: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/admin-ui', 'RoleManager', { orgId: org.id }),
+      ),
+      auditLog: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/admin-ui', 'AuditLogViewer', { orgId: org.id }),
+      ),
+      tenants: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/admin-ui', 'TenantSwitcher', { orgId: org.id }),
+      ),
+    });
+  }
+}
+
+/** Public authentication screens rendered with @streetjs/auth-ui (Requirement 9.3). */
+@Controller('/auth')
+export class AuthScreensController {
+  @Get('/login')
+  async login(ctx: StreetContext): Promise<void> {
+    ctx.htmx.view('dashboard/auth', {
+      title: 'Log in',
+      uiCss: streetAuthCss,
+      form: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/auth-ui', 'LoginForm', { action: '/auth/login' }),
+      ),
+    });
+  }
+
+  @Get('/register')
+  async register(ctx: StreetContext): Promise<void> {
+    ctx.htmx.view('dashboard/auth', {
+      title: 'Create account',
+      uiCss: streetAuthCss,
+      form: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/auth-ui', 'RegisterForm', { action: '/auth/register' }),
+      ),
+    });
+  }
+
+  @Get('/forgot-password')
+  async forgotPassword(ctx: StreetContext): Promise<void> {
+    ctx.htmx.view('dashboard/auth', {
+      title: 'Reset password',
+      uiCss: streetAuthCss,
+      form: ctx.htmx.engine.partial(
+        'dashboard/react-island',
+        island('@streetjs/auth-ui', 'ForgotPasswordForm', { action: '/auth/forgot-password' }),
+      ),
+    });
+  }
+}
+`,
+      },
+      {
+        path: 'src/views/layouts/dashboard.html',
+        content: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title }} · Dashboard</title>
+  <script src="https://unpkg.com/htmx.org@2.0.4" crossorigin="anonymous"></script>
+  <link rel="stylesheet" href="/public/app.css">
+  <!-- @streetjs/auth-ui / @streetjs/admin-ui stylesheet, injected server-side (empty on plain views). -->
+  <style>{{{ uiCss }}}</style>
+  <!-- No build step: React + the UI packages load from an ESM CDN, mirroring how htmx is loaded above. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18",
+      "react-dom/client": "https://esm.sh/react-dom@18/client",
+      "@streetjs/auth-ui": "https://esm.sh/@streetjs/auth-ui",
+      "@streetjs/admin-ui": "https://esm.sh/@streetjs/admin-ui"
+    }
+  }
+  </script>
+  <script type="module" src="/public/islands.js"></script>
+</head>
+<body>
+  {{{ nav }}}
+  <main>{{{ body }}}</main>
+</body>
+</html>
+`,
+      },
+      {
+        path: 'src/views/partials/dashboard/react-island.html',
+        content: `<!-- React island mount point. Hydrated client-side by /public/islands.js using the
+     component named in data-street-component from the package in data-street-pkg.
+     Server-rendered with no build step; props are passed as an escaped JSON attribute. -->
+<div class="street-island" data-street-pkg="{{ pkg }}" data-street-component="{{ component }}" data-street-props="{{ props }}">
+  <noscript>Enable JavaScript to load the {{ component }} screen.</noscript>
+</div>
+`,
+      },
+      {
+        path: 'src/views/partials/dashboard/org-row.html',
+        content: `<li class="org" id="org-{{ id }}"><a href="/o/{{ slug }}">{{ name }}</a> <span class="muted">{{ slug }}</span></li>
+`,
+      },
+      {
+        path: 'src/views/partials/dashboard/member-row.html',
+        content: `<li class="member" id="member-{{ id }}"><span class="member-id">{{ user_id }}</span> <span class="badge">{{ role }}</span> {{{ actions }}}</li>
+`,
+      },
+      {
+        path: 'src/views/partials/dashboard/api-key-row.html',
+        content: `<li class="api-key" id="api-key-{{ id }}"><strong>{{ name }}</strong> <code>{{ prefix }}</code> <span class="muted">{{ scopes }}</span> <time>{{ created_at }}</time></li>
+`,
+      },
+      {
+        path: 'src/views/partials/dashboard/audit-row.html',
+        content: `<li class="audit" id="audit-{{ id }}"><time>{{ created_at }}</time> <span class="action">{{ action }}</span> <span class="muted">actor {{ actor_id }} → {{ target }}</span></li>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/home.html',
+        content: `<h1>{{ title }}</h1>
+<p>Organization <strong>{{ slug }}</strong> · your role: <span class="badge">{{ role }}</span></p>
+<ul class="dash-tiles">
+  <li><a href="/o/{{ slug }}/orgs">Organizations</a></li>
+  <li><a href="/o/{{ slug }}/members">Members</a></li>
+</ul>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/orgs.html',
+        content: `<h1>{{ title }}</h1>
+<ul id="orgs" class="org-list">{{{ orgs }}}</ul>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/members.html',
+        content: `<h1>{{ title }}</h1>
+<!-- inviteForm is empty for non-owner/admin members (Requirement 9.2). -->
+{{{ inviteForm }}}
+<ul id="members" class="member-list">{{{ members }}}</ul>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/api-keys.html',
+        content: `<h1>{{ title }}</h1>
+{{{ createForm }}}
+<ul id="api-keys" class="api-key-list">{{{ keys }}}</ul>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/audit.html',
+        content: `<h1>{{ title }}</h1>
+<ul id="audit" class="audit-list">{{{ entries }}}</ul>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/account.html',
+        content: `<h1>{{ title }}</h1>
+<section class="auth-ui">
+  <h2>Profile</h2>
+  {{{ profile }}}
+  <h2>Multi-factor authentication</h2>
+  {{{ mfa }}}
+</section>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/rbac.html',
+        content: `<h1>{{ title }}</h1>
+<section class="admin-ui">
+  <h2>Users</h2>{{{ users }}}
+  <h2>Roles</h2>{{{ roles }}}
+  <h2>Audit log</h2>{{{ auditLog }}}
+  <h2>Tenants</h2>{{{ tenants }}}
+</section>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/auth.html',
+        content: `<h1>{{ title }}</h1>
+<section class="auth-ui">{{{ form }}}</section>
+`,
+      },
+      {
+        path: 'src/views/pages/dashboard/forbidden.html',
+        content: `<h1>403 — Forbidden</h1>
+<p>You do not have access to this organization or this view.</p>
+`,
+      },
+      {
+        path: 'public/islands.js',
+        content: `// public/islands.js — hydrate @streetjs/auth-ui & @streetjs/admin-ui React islands.
+// No build step: React and the UI packages resolve through the importmap declared in
+// layouts/dashboard.html. Each [data-street-component] element renders its component
+// with the JSON props carried in data-street-props.
+import { createElement } from 'react';
+import { createRoot } from 'react-dom/client';
+
+const PACKAGES = {
+  '@streetjs/auth-ui': () => import('@streetjs/auth-ui'),
+  '@streetjs/admin-ui': () => import('@streetjs/admin-ui'),
+};
+
+async function mount(el) {
+  const pkgName = el.getAttribute('data-street-pkg');
+  const componentName = el.getAttribute('data-street-component');
+  const props = JSON.parse(el.getAttribute('data-street-props') || '{}');
+  const loader = PACKAGES[pkgName];
+  if (!loader) return;
+  const mod = await loader();
+  const Component = mod[componentName];
+  if (!Component) return;
+  createRoot(el).render(createElement(Component, props));
+}
+
+for (const el of document.querySelectorAll('[data-street-component]')) {
+  mount(el).catch((err) => console.error('[street] island mount failed', err));
+}
+`,
+      },
     ],
   },
   ecommerce: {
