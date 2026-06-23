@@ -446,6 +446,11 @@ jobs:
       - name: Run zizmor
         uses: zizmorcore/zizmor-action@5f14fd08f7cf1cb1609c1e344975f152c7ee938d # v0.5.6
         with:
+          # Lint StreetJS's OWN CI only (`.github/` = workflows + composite actions).
+          # The root-level `app-*/` directories are GENERATED `street create` sample
+          # scaffolds whose CI uses conventional unpinned `@vN` refs by design;
+          # they are not workflows this repo runs, so they are out of scope here.
+          inputs: .github/
           min-severity: medium
           advanced-security: false
           annotations: true
