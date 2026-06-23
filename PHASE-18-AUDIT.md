@@ -177,6 +177,12 @@ These cannot be completed from repository source without violating the "no fabri
 - **A-REC-5/6 — taxonomy/tier enrichment.** The brief's "Authentication / Realtime / Search / Observability / Integrations" categories have no backing `plugin-*` packages today; adding empty category pages would be thin-content. `tier` is uniformly "Official" until a real third-party (Verified/Community) plugin exists. *Action: revisit when such plugins land — keep generator-driven.*
 - **F — content roadmap execution.** Writing the tutorials/articles in `CONTENT-ROADMAP.md` is ongoing editorial work, MEASURED-only.
 
+### Post-audit follow-ups (applied)
+
+- **Site footer attribution removed.** `docs/_includes/components/footer.html` overrides the just-the-docs theme footer to render only the back-to-top link and the project's own `footer_content`, deliberately omitting the theme's "This site uses Just the Docs…" line.
+- **Publish pipeline fixed for MarzPay.** `plugin-marzpay` added to the `.github/workflows/publish-plugins.yml` matrix; build + sign + test paths verified locally (tsc clean, 67 tests pass, committed official signed manifest present). The actual npm publish runs in CI (tag `plugins-v*` / manual dispatch) with `NPM_TOKEN` + `STREET_PLUGIN_SIGNING_KEY` — it cannot be run from a workstation without those secrets.
+- **MarzPay published & listed (X4 resolved).** `streetjs.unlisted` removed; the generator now lists it (Payments, v1.0.0, signed) — `plugins.json` count is **21 / 9 categories** — and it is featured on the homepage.
+
 ---
 
 ## 7. ROI / Adoption Impact / Maintenance Cost — top moves
