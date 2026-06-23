@@ -63,6 +63,13 @@ for (const d of dirs) {
   if (pj.private) continue;
   if (pj.streetjs && pj.streetjs.unlisted) continue; // not yet published — keep out of the marketplace
   const short = pj.name.replace('@streetjs/plugin-', '');
+  // ── Derive trust signals from real on-disk artifacts (no hardcoded claims) ──
+  // `signed`: a committed Ed25519 manifest must exist for the package.
+  const signed = existsSync(join(pkgsDir, d, 'manifest.signed.json'));
+  // `thirdPartyDeps`: runtime dependencies excluding the framework core itself
+  // (`streetjs`). Zero third-party deps ⇒ the "dependency-free" badge is true.
+  const thirdPartyDeps = Object.keys(pj.dependencies || {}).filter((dep) => dep !== 'streetjs');
+  const dependencyFree = thirdPartyDeps.length === 0;
   plugins.push({
     name: pj.name,
     slug: short,
@@ -73,6 +80,11 @@ for (const d of dirs) {
     catSlug: slugify(categorize(pj.name, pj.keywords)),
     tier: 'Official',
     npm: `https://www.npmjs.com/package/${pj.name}`,
+    repo: `https://github.com/hassanmubiru/StreetJS/tree/main/packages/${d}`,
+    signed,
+    thirdPartyDepCount: thirdPartyDeps.length,
+    thirdPartyDeps,
+    dependencyFree,
     keywords: pj.keywords || [],
   });
 }
