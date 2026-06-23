@@ -16,7 +16,8 @@ A TypeScript backend framework built on Node.js core, published on npm
 (`streetjs`). **MIT licensed.** Source and CI are public.
 
 ### What is the dependency / supply-chain posture?
-Core has **two runtime dependencies**. Releases ship with **npm provenance** and
+Core has **three runtime dependencies** (`reflect-metadata`, `ws`, `zod`).
+Releases ship with **npm provenance** and
 a **CycloneDX SBOM**. CI enforces secret scanning, dependency review, CodeQL, and
 workflow static analysis. See the [Security Whitepaper](security-whitepaper.md).
 
