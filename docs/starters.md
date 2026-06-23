@@ -57,6 +57,45 @@ npx @streetjs/cli create my-saas --starter saas --with-billing --with-admin-ui
 > audit primitives) is an **optional enhancement** you install separately — the
 > base SaaS starter does not depend on it.
 
+## SaaS starter architecture
+
+What `--starter saas` scaffolds (every module is overlay code you own — not
+framework code). Org-scoped modules go through `orgScopedRepo` (`tenant.ts`) so
+every query/mutation is constrained to the caller's `org_id`:
+
+```
+HTTP request
+   │
+   ▼
+StreetJS HTTP server
+   ├─ authMiddleware (JWT)            core
+   ├─ requireRoles(...) (RBAC)        core   ← owner/admin/member
+   ├─ apiKeyAuth (X-API-Key)          src/middleware/apiKeyAuth.ts
+   └─ tenant scoping                  src/middleware/tenant.ts → orgScopedRepo(org_id)
+        │
+        ▼  modules (controller → service → org-scoped repository)
+   ┌───────────────┬──────────────────┬───────────────────────┐
+   │ orgs          │ members           │ invitations           │
+   │ apikeys       │ settings          │ audit                 │
+   │ notifications │ dashboard (SSR)   │ billing               │
+   └───────────────┴──────────────────┴───────────────────────┘
+        │
+        ▼
+   PostgreSQL  (organizations, memberships, invitations, api_keys,
+                audit_logs, notifications, subscriptions)
+
+Opt-in overlays (added only with the matching --with-* flag):
+   --with-billing   → billing.controller.ts        (@streetjs/plugin-stripe)
+   --with-marzpay   → marzpay-{billing,subscription}.service.ts,
+                      marzpay-{checkout,webhook}.controller.ts,
+                      dashboard/billing-dashboard.controller.ts  (@streetjs/plugin-marzpay)
+   --with-admin-ui  → dashboard/auth-ui.controller.ts   (@streetjs/auth-ui, @streetjs/admin-ui)
+   --with-email     → notification email transport       (@streetjs/plugin-sendgrid)
+```
+
+Tenant isolation and API-key scoping are covered by property-based tests in the
+CLI package (`saas-tenant-isolation.pbt.test.ts`, `saas-apikey-scoping.pbt.test.ts`).
+
 ## Next steps after scaffolding
 
 ```bash
