@@ -209,6 +209,11 @@ jobs:
       - name: Build core package (CLI dependency)
         run: npm run build -w packages/core
 
+      - name: Build plugins imported by CLI tests (marzpay, htmx)
+        run: |
+          npm run build -w packages/plugin-marzpay
+          npm run build -w packages/plugin-htmx
+
       - name: Build registry-server (CLI registry tests import its built output)
         run: npm run build -w packages/registry-server
 
