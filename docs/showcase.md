@@ -186,7 +186,7 @@ These are runnable starting points, not npm packages — clone and adapt.
 <span class="sc-tag">Reference app<span class="sc-lvl lvl-advanced">Advanced</span></span>
 <h3>SaaS</h3>
 <p>RBAC wildcards, account suspension and an audit log on <code>@streetjs/admin</code>.</p>
-<span class="sc-links"><a href="https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/saas">Source</a><a href="{{ '/starters/' | relative_url }}">Starter</a></span>
+<span class="sc-links"><a href="{{ '/showcase/saas/' | relative_url }}">Showcase</a><a href="https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/saas">Source</a></span>
 </div>
 
 <div class="sc-card" data-level="advanced">
