@@ -2,6 +2,15 @@
 # Apply with a label-sync action (e.g. micnncim/action-label-syncer) or the
 # GitHub CLI: `gh label create <name> --color <hex> --description "<desc>"`.
 
+- name: bug
+  color: "d73a4a"
+  description: Something is not working as intended (applied by the bug-report template)
+- name: enhancement
+  color: "a2eeef"
+  description: New feature or request (applied by the feature-request template)
+- name: triage
+  color: "ededed"
+  description: Needs maintainer triage / initial assessment
 - name: good-first-issue
   color: "7057ff"
   description: Scoped, well-documented task suitable for a first contribution
