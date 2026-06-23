@@ -204,7 +204,7 @@ an organizational/legal entity and follow once revenue or sponsorship exists.
 
 **Strongest differentiators (lead with these):**
 1. **Total cost of ownership** — self-host a full backend for <$10/mo (measured footprint); replaces Auth0/Pusher/managed-queue bills.
-2. **Supply-chain integrity** — provenance, SBOM, signed plugins, ~2 deps; a real answer to dependency-risk anxiety.
+2. **Supply-chain integrity** — provenance, SBOM, signed plugins, ~3 deps; a real answer to dependency-risk anxiety.
 3. **Cohesion** — auth/realtime/jobs/ORM/observability that are *designed together*, not assembled.
 
 **Where StreetJS should NOT compete:**
