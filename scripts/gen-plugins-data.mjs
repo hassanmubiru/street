@@ -143,7 +143,7 @@ for (const p of plugins) {
     `title:       "${yamlEsc(p.name)}"`,
     `permalink:   /plugins/${p.slug}/`,
     'nav_exclude: true',
-    `description:  "${yamlEsc(p.description)} Official, signed, dependency-free StreetJS plugin — install from npm."`,
+    `description:  "${yamlEsc(p.description)} Official${p.signed ? ', signed' : ''}${p.dependencyFree ? ', dependency-free' : ''} StreetJS plugin — install from npm."`,
     '---',
     '',
     '<script type="application/ld+json">',
