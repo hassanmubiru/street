@@ -11,6 +11,17 @@ description: "Real-time WebSocket chat example with StreetJS Framework — rooms
 
 A real-time chat server with rooms, JWT authentication, and broadcast messaging.
 
+> **Two ways to build realtime chat in StreetJS — this page is the *from-scratch
+> tutorial*.** It hand-rolls a gateway over `StreetWebSocketServer` to teach the
+> primitives. For the **production-shaped, CI-tested reference app** — which uses
+> the built-in `ChannelHub` for rooms, presence, typing indicators and history
+> with auth at the upgrade — see the
+> [Realtime Chat showcase](/StreetJS/showcase/realtime-chat/) and its source at
+> [`examples/reference-apps/realtime-chat`](https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/realtime-chat).
+> The protocols differ on purpose: this tutorial uses a `?token=` query param and a
+> simple `chat` event; the reference app uses bearer auth and typed
+> `join/leave/message/typing` frames.
+
 ---
 
 ## Gateway
