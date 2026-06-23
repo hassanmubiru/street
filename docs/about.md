@@ -30,7 +30,8 @@ with a tiny dependency footprint**, and ship them as one coherent framework.
 
 ## Philosophy & design principles
 
-1. **Dependency-light.** Core has ~2 runtime dependencies; a native PostgreSQL
+1. **Dependency-light.** Core has 3 runtime dependencies (`reflect-metadata`,
+   `ws`, `zod`); a native PostgreSQL
    driver (no `pg`), native auth, realtime, and jobs.
 2. **Supply-chain integrity first.** Every release ships with npm provenance and an
    SBOM; official plugins are Ed25519-signed and verified against a trust key.
