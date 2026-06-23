@@ -5263,6 +5263,583 @@ export function InvoicesPage() {
 `;
   }
 
+  /**
+   * Scaffold the MarzPay Next.js App Router overlay (Requirements 5.4, 5.5,
+   * 9.1–9.5). Written whenever the `next` frontend is selected.
+   *
+   * Files (all under web/app):
+   *  - `lib/marzpay.ts` — typed client helpers that call the StreetJS backend
+   *    MarzPay endpoints. MarzPay credentials and the MarzPayClient live ONLY on
+   *    the backend; the browser holds none. Each helper maps to a verified
+   *    operation (initializePayment / verifyPayment) and raises an error that
+   *    INCLUDES the returned HTTP status on a non-success response.
+   *  - `billing/page.tsx` — a checkout control that initiates a MarzPay payment,
+   *    a subscription view showing the active plan, and an invoice history list
+   *    (Requirements 9.1, 9.2).
+   *  - `billing/success/page.tsx` — shows the VERIFIED payment status via the
+   *    backend verifyPayment endpoint (Requirement 9.4).
+   *  - `billing/cancel/page.tsx` — shows a cancellation indication (Req 9.4).
+   *  - `api/webhooks/marzpay/route.ts` — a SERVER-SIDE webhook example that calls
+   *    `validateWebhook` on the unmodified raw body BEFORE processing, then
+   *    re-verifies server-side (the documented trust path) (Requirement 9.3).
+   *
+   * All files compile under the Next strict tsconfig (strict, `jsx: react-jsx`,
+   * no `any`) (Requirement 9.5).
+   */
+  private async scaffoldNextMarzPay(webDir: string): Promise<void> {
+    await mkdir(join(webDir, 'app', 'lib'), { recursive: true });
+    await mkdir(join(webDir, 'app', 'billing', 'success'), { recursive: true });
+    await mkdir(join(webDir, 'app', 'billing', 'cancel'), { recursive: true });
+    await mkdir(join(webDir, 'app', 'api', 'webhooks', 'marzpay'), { recursive: true });
+    await writeFile(join(webDir, 'app', 'lib', 'marzpay.ts'), this.renderNextMarzPayLib(), 'utf8');
+    await writeFile(join(webDir, 'app', 'billing', 'page.tsx'), this.renderNextBillingPage(), 'utf8');
+    await writeFile(
+      join(webDir, 'app', 'billing', 'success', 'page.tsx'),
+      this.renderNextBillingSuccessPage(),
+      'utf8',
+    );
+    await writeFile(
+      join(webDir, 'app', 'billing', 'cancel', 'page.tsx'),
+      this.renderNextBillingCancelPage(),
+      'utf8',
+    );
+    await writeFile(
+      join(webDir, 'app', 'api', 'webhooks', 'marzpay', 'route.ts'),
+      this.renderNextMarzPayWebhookRoute(),
+      'utf8',
+    );
+  }
+
+  private renderNextMarzPayLib(): string {
+    return `// MarzPay client helpers for the Next.js frontend.
+//
+// MarzPay credentials and the MarzPayClient live ONLY on the StreetJS backend;
+// these helpers call that backend over HTTP (the browser holds no MarzPay
+// credentials). Each maps to a verified MarzPay operation surfaced by the backend
+// MarzPay controller: initializePayment (POST /collect-money, card) and
+// verifyPayment (GET /transactions/{reference}).
+//
+// Requirement 9.5: strict TS, no \`any\`. Requirement 9.4: verifyPayment returns
+// the verified payment status. On a non-success response these helpers raise an
+// error that INCLUDES the returned HTTP status and never return a result.
+import type { PaymentRequest, PaymentInitResult, PaymentStatus } from '@streetjs/plugin-marzpay';
+
+/** The StreetJS backend base URL (empty string => same-origin). */
+const API_URL: string = process.env.NEXT_PUBLIC_API_URL ?? '';
+
+/** Active subscription view model returned by the backend. */
+export interface SubscriptionView {
+  planId: string;
+  planName: string;
+  status: string;
+  renewsAt?: string;
+}
+
+/** An invoice row returned by the backend invoice-history endpoint. */
+export interface InvoiceView {
+  id: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  status: string;
+  issuedAt?: string;
+}
+
+/**
+ * Error raised when a MarzPay endpoint returns a non-success HTTP status. The
+ * offending status is carried both in \`status\` and the message so callers can
+ * surface it.
+ */
+export class MarzPayError extends Error {
+  readonly status: number;
+
+  constructor(status: number, message: string) {
+    super(message);
+    this.name = 'MarzPayError';
+    this.status = status;
+  }
+}
+
+async function readJson<T>(response: Response, path: string): Promise<T> {
+  if (!response.ok) {
+    // Non-success: raise an error INCLUDING the returned status; return nothing.
+    throw new MarzPayError(
+      response.status,
+      'MarzPay request to ' + path + ' failed with status ' + response.status,
+    );
+  }
+  return (await response.json()) as T;
+}
+
+/**
+ * Initialize a MarzPay payment via the application's initialization endpoint.
+ * Returns the initialization result on success; raises {@link MarzPayError}
+ * (including the status) on a non-success response.
+ */
+export async function initializePayment(request: PaymentRequest): Promise<PaymentInitResult> {
+  const path = '/api/marzpay/initialize';
+  const response = await fetch(API_URL + path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(request),
+  });
+  return readJson<PaymentInitResult>(response, path);
+}
+
+/**
+ * Verify a MarzPay payment by reference via the application's verification
+ * endpoint. Returns the verified payment status on success; raises
+ * {@link MarzPayError} (including the status) on a non-success response.
+ */
+export async function verifyPayment(reference: string): Promise<PaymentStatus> {
+  const path = '/api/marzpay/verify/' + encodeURIComponent(reference);
+  const response = await fetch(API_URL + path, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  return readJson<PaymentStatus>(response, path);
+}
+
+/**
+ * Fetch the active subscription for the current account via the backend. Returns
+ * \`null\` when the account has no active subscription (HTTP 404).
+ */
+export async function fetchSubscription(): Promise<SubscriptionView | null> {
+  const path = '/api/marzpay/subscription';
+  const response = await fetch(API_URL + path, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  if (response.status === 404) {
+    return null;
+  }
+  return readJson<SubscriptionView | null>(response, path);
+}
+
+/** Fetch the invoice history for the current account via the backend. */
+export async function fetchInvoices(): Promise<InvoiceView[]> {
+  const path = '/api/marzpay/invoices';
+  const response = await fetch(API_URL + path, {
+    method: 'GET',
+    credentials: 'include',
+    headers: { Accept: 'application/json' },
+    cache: 'no-store',
+  });
+  return readJson<InvoiceView[]>(response, path);
+}
+`;
+  }
+
+  private renderNextBillingPage(): string {
+    return `'use client';
+
+// app/billing/page.tsx — the MarzPay billing hub (Requirements 9.1, 9.2).
+//
+// Renders three controls: a checkout control that initiates a MarzPay payment, a
+// subscription management view that displays the active plan, and an invoice
+// history list. All MarzPay calls go through the typed client helpers, which call
+// the StreetJS backend — the browser never holds MarzPay credentials.
+import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import type { PaymentInitResult } from '@streetjs/plugin-marzpay';
+import {
+  initializePayment,
+  fetchSubscription,
+  fetchInvoices,
+  type SubscriptionView,
+  type InvoiceView,
+} from '../lib/marzpay';
+
+export default function BillingPage() {
+  return (
+    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 720, margin: '40px auto', padding: 16 }}>
+      <h1>Billing</h1>
+      <CheckoutControl />
+      <SubscriptionSection />
+      <InvoiceHistory />
+    </main>
+  );
+}
+
+// Checkout control: initiates a MarzPay card payment. On a verified init that
+// returns a redirect URL the browser is navigated to MarzPay; otherwise the
+// returned status is shown. A failed request surfaces the MarzPayError message
+// (which includes the HTTP status).
+function CheckoutControl() {
+  const [amount, setAmount] = useState<number>(10000);
+  const [currency, setCurrency] = useState<string>('UGX');
+  const [country, setCountry] = useState<string>('UG');
+  const [reference, setReference] = useState<string>('');
+  const [result, setResult] = useState<PaymentInitResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState<boolean>(false);
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault();
+    setError(null);
+    setResult(null);
+    setPending(true);
+    try {
+      const init = await initializePayment({ amount, currency, country, reference, method: 'card' });
+      setResult(init);
+      if (typeof init.redirectUrl === 'string' && init.redirectUrl.trim() !== '') {
+        window.location.assign(init.redirectUrl);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment initialization failed.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <section>
+      <h2>Checkout</h2>
+      <form onSubmit={onSubmit}>
+        <label>
+          Amount
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={amount}
+            onChange={(e) => setAmount(Number(e.target.value))}
+            required
+          />
+        </label>
+        <label>
+          Currency
+          <input value={currency} onChange={(e) => setCurrency(e.target.value)} required />
+        </label>
+        <label>
+          Country
+          <input value={country} onChange={(e) => setCountry(e.target.value)} required />
+        </label>
+        <label>
+          Reference
+          <input
+            value={reference}
+            onChange={(e) => setReference(e.target.value)}
+            placeholder="unique reference (UUID)"
+            required
+          />
+        </label>
+        <button type="submit" disabled={pending}>
+          {pending ? 'Processing…' : 'Pay now'}
+        </button>
+      </form>
+      {error !== null ? <p role="alert">{error}</p> : null}
+      {result !== null ? (
+        <p>
+          Payment <code>{result.reference}</code> initialized (status: {result.status}).
+        </p>
+      ) : null}
+    </section>
+  );
+}
+
+// Subscription management view: displays the active subscription plan loaded
+// from the backend (Requirement 9.2). An empty subscription renders an
+// empty-state; a failed load renders an error indicator.
+function SubscriptionSection() {
+  const [subscription, setSubscription] = useState<SubscriptionView | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchSubscription()
+      .then((value) => {
+        if (active) {
+          setSubscription(value);
+        }
+      })
+      .catch((err: unknown) => {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Subscription is currently unavailable.');
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <section>
+      <h2>Subscription</h2>
+      {loading ? <p>Loading…</p> : null}
+      {!loading && error !== null ? <p role="alert">{error}</p> : null}
+      {!loading && error === null && subscription === null ? <p>No active subscription.</p> : null}
+      {!loading && error === null && subscription !== null ? (
+        <dl>
+          <dt>Plan</dt>
+          <dd>{subscription.planName}</dd>
+          <dt>Status</dt>
+          <dd>{subscription.status}</dd>
+          {typeof subscription.renewsAt === 'string' ? (
+            <>
+              <dt>Renews</dt>
+              <dd>{subscription.renewsAt}</dd>
+            </>
+          ) : null}
+        </dl>
+      ) : null}
+    </section>
+  );
+}
+
+// Invoice history: lists past invoices loaded from the backend. An empty
+// collection renders an empty-state; a failed load renders an error indicator.
+function InvoiceHistory() {
+  const [invoices, setInvoices] = useState<InvoiceView[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetchInvoices()
+      .then((rows) => {
+        if (active) {
+          setInvoices(rows);
+        }
+      })
+      .catch((err: unknown) => {
+        if (active) {
+          setError(err instanceof Error ? err.message : 'Invoices are currently unavailable.');
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return (
+    <section>
+      <h2>Invoices</h2>
+      {loading ? <p>Loading…</p> : null}
+      {!loading && error !== null ? <p role="alert">{error}</p> : null}
+      {!loading && error === null && invoices.length === 0 ? <p>No invoices yet.</p> : null}
+      {!loading && error === null && invoices.length > 0 ? (
+        <table>
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {invoices.map((invoice) => (
+              <tr key={invoice.id}>
+                <td>
+                  <code>{invoice.reference}</code>
+                </td>
+                <td>
+                  {invoice.amount} {invoice.currency}
+                </td>
+                <td>{invoice.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
+    </section>
+  );
+}
+`;
+  }
+
+  private renderNextBillingSuccessPage(): string {
+    return `// app/billing/success/page.tsx — post-payment success route (Requirement 9.4).
+//
+// MarzPay redirects the customer back here with the payment \`reference\`. This
+// server component confirms the OUTCOME by calling the backend verifyPayment
+// endpoint (GET /transactions/{reference}) and displays the VERIFIED payment
+// status — it never trusts a status from the query string alone.
+import { verifyPayment } from '../../lib/marzpay';
+
+interface BillingSuccessPageProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+function readReference(value: string | string[] | undefined): string {
+  if (typeof value === 'string') {
+    return value.trim();
+  }
+  if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'string') {
+    return value[0].trim();
+  }
+  return '';
+}
+
+export default async function BillingSuccessPage(props: BillingSuccessPageProps) {
+  const params = await props.searchParams;
+  const reference = readReference(params['reference']);
+
+  if (reference === '') {
+    return (
+      <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 640, margin: '40px auto', padding: 16 }}>
+        <h1>Payment status unavailable</h1>
+        <p role="alert">No payment reference was provided in the success redirect.</p>
+      </main>
+    );
+  }
+
+  let status: string;
+  let verified: boolean;
+  try {
+    const result = await verifyPayment(reference);
+    status = result.status;
+    verified = status === 'completed' || status === 'successful';
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Verification failed.';
+    return (
+      <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 640, margin: '40px auto', padding: 16 }}>
+        <h1>Payment status unavailable</h1>
+        <p role="alert">{message}</p>
+        <p>Reference: <code>{reference}</code></p>
+      </main>
+    );
+  }
+
+  return (
+    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 640, margin: '40px auto', padding: 16 }}>
+      <h1>{verified ? 'Payment complete' : 'Payment ' + status}</h1>
+      <p>Verified status: <strong>{status}</strong></p>
+      <p>Reference: <code>{reference}</code></p>
+    </main>
+  );
+}
+`;
+  }
+
+  private renderNextBillingCancelPage(): string {
+    return `// app/billing/cancel/page.tsx — payment cancellation route (Requirement 9.4).
+//
+// MarzPay redirects the customer here when a payment is cancelled. This route
+// displays a clear cancellation indication and a path back to checkout.
+import Link from 'next/link';
+
+export default function BillingCancelPage() {
+  return (
+    <main style={{ fontFamily: 'system-ui, sans-serif', maxWidth: 640, margin: '40px auto', padding: 16 }}>
+      <h1>Payment cancelled</h1>
+      <p role="status">Your payment was cancelled and you have not been charged.</p>
+      <p>
+        <Link href="/billing">Return to billing</Link>
+      </p>
+    </main>
+  );
+}
+`;
+  }
+
+  private renderNextMarzPayWebhookRoute(): string {
+    return `// app/api/webhooks/marzpay/route.ts — MarzPay webhook example (Requirement 9.3).
+//
+// SERVER-SIDE ONLY. This route handler runs on the Node.js runtime so the
+// MarzPayClient (node:https / node:crypto) and the MarzPay credentials are never
+// exposed to the browser.
+//
+// SECURITY: handle() calls the injected MarzPayClient's \`validateWebhook\` on the
+// UNMODIFIED raw body BEFORE any processing. A NEGATIVE result rejects the
+// webhook with a 400 and processes NOTHING.
+//
+// Verify-don't-invent: MarzPay documents no webhook signature scheme
+// (Research_Artifact §L4), so validateWebhook returns false for absent/malformed
+// signature material. The documented trust path for a POSITIVE result is
+// server-side re-verification: re-fetch the transaction from MarzPay and trust
+// the server's status rather than the raw payload (Research_Artifact §R1).
+import { NextResponse } from 'next/server';
+import { MarzPayClient, validateMarzPayConfig } from '@streetjs/plugin-marzpay';
+
+// Force the Node.js runtime: the MarzPay client depends on node:https/node:crypto.
+export const runtime = 'nodejs';
+
+// MarzPay documents no signature header (Research_Artifact §L4). We read a
+// conventional header so its value flows into validateWebhook; with the scheme
+// unbound, validateWebhook returns false for absent/malformed material, so the
+// conservative negative path is taken until MarzPay publishes a signing scheme.
+const MARZPAY_SIGNATURE_HEADER = 'x-marzpay-signature';
+
+/** Construct a server-side MarzPayClient from the configured environment. */
+function marzPayClient(): MarzPayClient {
+  const environment = process.env.MARZPAY_ENVIRONMENT;
+  const config = validateMarzPayConfig({
+    apiKey: process.env.MARZPAY_API_KEY,
+    secretKey: process.env.MARZPAY_SECRET,
+    ...(environment !== undefined ? { environment } : {}),
+  });
+  return new MarzPayClient(config);
+}
+
+/** Parse the client \`reference\` from a webhook payload (empty when absent). */
+function referenceOf(rawBody: string): string {
+  try {
+    const parsed: unknown = JSON.parse(rawBody);
+    if (typeof parsed === 'object' && parsed !== null) {
+      const record = parsed as Record<string, unknown>;
+      const txn = record['transaction'];
+      if (typeof txn === 'object' && txn !== null) {
+        const ref = (txn as Record<string, unknown>)['reference'];
+        if (typeof ref === 'string') {
+          return ref.trim();
+        }
+      }
+      const topLevel = record['reference'];
+      if (typeof topLevel === 'string') {
+        return topLevel.trim();
+      }
+    }
+  } catch {
+    return '';
+  }
+  return '';
+}
+
+export async function POST(request: Request): Promise<NextResponse> {
+  // 1. Capture the unmodified raw body and the signature header.
+  const rawBody = await request.text();
+  const signature = request.headers.get(MARZPAY_SIGNATURE_HEADER) ?? undefined;
+
+  const client = marzPayClient();
+
+  // 2. Validate BEFORE any processing (Requirement 9.3).
+  if (!client.validateWebhook(rawBody, signature)) {
+    // Negative result: reject and process NOTHING.
+    return NextResponse.json({ error: 'webhook validation failed' }, { status: 400 });
+  }
+
+  // 3. Positive result: re-verify server-side (the documented trust path), then
+  //    process the verified transaction (record it, fulfill the order, etc.).
+  const reference = referenceOf(rawBody);
+  if (reference === '') {
+    return NextResponse.json({ error: 'webhook payload missing transaction reference' }, { status: 400 });
+  }
+  const transaction = await client.getTransaction(reference);
+  return NextResponse.json(
+    { received: true, reference: transaction.reference, status: transaction.status },
+    { status: 200 },
+  );
+}
+`;
+  }
+
   private renderNextConfig(): string {
     return `import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
