@@ -152,6 +152,52 @@ concepts of the previous one.
   </div>
 </div>
 
+## Advanced reference applications
+
+Production-shaped backends, each built on verified StreetJS packages and each with
+an **executable end-to-end smoke test** (run in CI via
+[`reference-apps.yml`](https://github.com/hassanmubiru/StreetJS/blob/main/.github/workflows/reference-apps.yml)).
+These are runnable starting points, not npm packages — clone and adapt.
+
+<div class="sc-grid">
+
+<div class="sc-card" data-level="advanced">
+<span class="sc-tag">Reference app<span class="sc-lvl lvl-advanced">Advanced</span></span>
+<h3>Realtime Chat (full)</h3>
+<p>Auth-on-upgrade, rooms, presence, typing and history on the core <code>ChannelHub</code> + WebSocket server.</p>
+<span class="sc-links"><a href="https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/realtime-chat">Source</a><a href="{{ '/realtime-channels/' | relative_url }}">Docs</a></span>
+</div>
+
+<div class="sc-card" data-level="advanced">
+<span class="sc-tag">Reference app<span class="sc-lvl lvl-advanced">Advanced</span></span>
+<h3>AI Assistant</h3>
+<p>Retrieval-augmented generation (ingest/ask) and a tool-calling loop on <code>@streetjs/ai</code>.</p>
+<span class="sc-links"><a href="https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/ai-assistant">Source</a><a href="{{ '/ai/' | relative_url }}">Docs</a></span>
+</div>
+
+<div class="sc-card" data-level="advanced">
+<span class="sc-tag">Reference app<span class="sc-lvl lvl-advanced">Advanced</span></span>
+<h3>E-commerce</h3>
+<p>Checkout with coupons, no-oversell reservation, and cancel/refund/restock on <code>@streetjs/commerce</code>.</p>
+<span class="sc-links"><a href="https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/ecommerce">Source</a><a href="{{ '/starters/' | relative_url }}">Starter</a></span>
+</div>
+
+<div class="sc-card" data-level="advanced">
+<span class="sc-tag">Reference app<span class="sc-lvl lvl-advanced">Advanced</span></span>
+<h3>SaaS</h3>
+<p>RBAC wildcards, account suspension and an audit log on <code>@streetjs/admin</code>.</p>
+<span class="sc-links"><a href="https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/saas">Source</a><a href="{{ '/starters/' | relative_url }}">Starter</a></span>
+</div>
+
+<div class="sc-card" data-level="advanced">
+<span class="sc-tag">Reference app<span class="sc-lvl lvl-advanced">Advanced</span></span>
+<h3>Dating</h3>
+<p>Encrypted bios and reciprocal matching on <code>@streetjs/dating-profiles</code>.</p>
+<span class="sc-links"><a href="https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/dating">Source</a><a href="{{ '/starters/' | relative_url }}">Starter</a></span>
+</div>
+
+</div>
+
 ## Starters
 
 Scaffold a new project with either backend or a full-stack frontend in one command:
