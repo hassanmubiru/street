@@ -15,11 +15,16 @@
 
 ## RFC process
 
-1. Open an RFC issue from the `rfc` template describing motivation, design,
-   alternatives, backward-compatibility impact, and test/doc plan.
+> The canonical RFC workflow is **PR-based** and documented in
+> [`rfcs/README.md`](rfcs/README.md); copy [`rfcs/0000-template.md`](rfcs/0000-template.md)
+> to start one. The steps below summarize that flow (there is no `rfc` issue template).
+
+1. Copy `rfcs/0000-template.md` to `rfcs/NNNN-my-feature.md` and open a pull
+   request describing motivation, design, alternatives,
+   backward-compatibility impact, and test/doc plan.
 2. Discussion period (minimum 7 days).
-3. Maintainer decision: Accepted / Rejected / Postponed, recorded in the issue
-   and, for architectural choices, as an ADR under
+3. Maintainer decision: Accepted / Rejected / Postponed, recorded in the RFC's
+   front-matter `status` and the PR, and, for architectural choices, as an ADR under
    `docs/architecture-decision-records/`.
 4. Implementation must satisfy the contribution bar: implementation + tests +
    docs + examples (+ benchmarks where applicable).
