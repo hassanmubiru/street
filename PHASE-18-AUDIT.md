@@ -155,6 +155,29 @@ All Phase-1 (accuracy/trust) items are now implemented — docs/generator/metada
 - **D-REC-2/3 — DONE.** `docs/trust.md` SBOM row now links the real `sbom.json` + generator; threat-model links `docs/THREAT-MODEL.md`; added rows for cosign release signing, secret scanning, dependency review, DAST, and compliance control mappings (all to verifiable in-repo artifacts); enterprise checklist updated.
 - **X3/X5 — DONE.** `STARTERS-ROADMAP.md` carries a SUPERSEDED banner (the "no `--starter` flag" claim is struck/resolved); `PHASE-18-EXECUTION-PLAN.md` and `PLUGIN-MARKETPLACE.md` counts reconciled to **20 plugins / 9 categories** with generator-driven caveats; `docs/cli-reference.md` and `docs/roadmap.md` updated for the real `htmx` frontend, `ai` starter, and `--with-*` flags.
 
+### Phase 2 — Execution status (APPLIED)
+
+- **A-REC-2/3/4 — DONE.** `gen-plugins-data.mjs` now emits `author`, `streetjsRange`, `nodeRange`, `tsRange` per plugin; detail pages show a **Maintainer** line, a **runtime-dependency** line, a **Source/GitHub** link, and a **data-driven Compatibility matrix** derived from each package's `dependencies.streetjs` / `engines.node` / `peerDependencies.typescript` (e.g. `plugin-africastalking` correctly shows `streetjs ^1.0.9` vs others' `^1.0.6`). Hub cards (`marketplace.md`) now show **version + signed indicator**.
+- **E1/E2 — DONE.** Added a data-driven **"Featured plugins"** row to `docs/index.md` sourced from `site.data.plugins` (featured set: stripe, openai, redis, kafka, postgres, htmx). By construction it can only show **listed** plugins (the generator excludes unlisted MarzPay), satisfying E2; signing/dep badges render from real data.
+- **C-REC-1 — DONE.** `docs/showcase.md` gained **difficulty tiers** (Beginner/Intermediate/Advanced) on every card, a client-side **difficulty filter**, and a **6-step learning path**.
+- **B-R4 — DONE.** `street create` flag docs unified across `docs/starters.md`, `docs/cli-reference.md`, `docs/showcase.md`, and `docs/roadmap.md` (single accurate surface: frontends incl. `htmx`, `ai` starter, `--with-*` flags).
+- **G-R8 — DONE.** Added the missing `bug`/`triage`/`enhancement` labels to `.github/labels.yml` (referenced by the issue templates); corrected `GOVERNANCE.md`'s stale "open an RFC issue from the `rfc` template" instruction to the real **PR-based** flow via `rfcs/0000-template.md`.
+- **G-R7 / X6 — PARTIAL (DONE in source).** Added an honest [`MAINTAINERS.md`](MAINTAINERS.md) (sole maintainer, bus factor = 1, "Steering Committee activates at N ≥ 3") and pointed `GOVERNANCE.md` at it.
+
+### Phase 3 — Execution status (APPLIED where source-verifiable)
+
+- **C-REC-2/4 — DONE.** Promoted the CI-tested `examples/reference-apps/*` (realtime-chat, ai-assistant, ecommerce, saas, dating) into an **"Advanced reference applications"** row on `docs/showcase.md`, each with a real source link and the CI workflow as evidence. (MEASURED benchmark numbers deliberately omitted from the marketing surface.)
+
+### Remaining items that require external assets or GitHub-runtime actions (NOT fabricated)
+
+These cannot be completed from repository source without violating the "no fabrication / no claims without evidence" guardrail. They are the genuine remaining work and require a human/asset/runtime step:
+
+- **C-REC-5/6, B-R3 — real screenshots + architecture diagrams.** The showcase/starters currently use illustrative SVG covers (labeled as such). Real screenshots require running each app and capturing UI; architecture diagrams require authored artwork. *Action: capture/author and drop into `docs/assets/images/…`.*
+- **G-R1 — seed the good-first-issue backlog.** The label and 25 scoped candidates exist in source; **filing the issues** is a GitHub-runtime action (use the existing `mentored_task.yml`). *Action: `gh issue create` / label-sync.*
+- **X5 / Discussions — enable + seed GitHub Discussions.** Repo-setting + content; not verifiable from source. *Action: enable Discussions; seed threads.*
+- **A-REC-5/6 — taxonomy/tier enrichment.** The brief's "Authentication / Realtime / Search / Observability / Integrations" categories have no backing `plugin-*` packages today; adding empty category pages would be thin-content. `tier` is uniformly "Official" until a real third-party (Verified/Community) plugin exists. *Action: revisit when such plugins land — keep generator-driven.*
+- **F — content roadmap execution.** Writing the tutorials/articles in `CONTENT-ROADMAP.md` is ongoing editorial work, MEASURED-only.
+
 ---
 
 ## 7. ROI / Adoption Impact / Maintenance Cost — top moves
