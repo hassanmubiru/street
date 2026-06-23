@@ -182,6 +182,7 @@ for (const p of plugins) {
     `- **Runtime dependencies:** ${p.thirdPartyDepCount === 0 ? 'none (third-party) — only `streetjs`' : '`' + p.thirdPartyDeps.join('`, `') + '`'}`,
     `- **npm:** [${p.name}](${p.npm})`,
     `- **Source:** [packages/plugin-${p.slug}](${p.repo})`,
+    `- **Maintainer:** ${p.author} (StreetJS core team)`,
     '',
     '## Trust signals',
     '',
