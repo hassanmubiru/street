@@ -1010,7 +1010,7 @@ Use StreetJS when you need:
 - **TypeScript throughout** — strict mode, `NodeNext` ESM, full type inference
 - **Security by default** — every security primitive built in, not bolted on
 - **Memory predictability** — explicit bounds on every collection, buffer, and connection
-- **No dependency sprawl** — two runtime dependencies (`reflect-metadata`, `ws`)
+- **No dependency sprawl** — three runtime dependencies (`reflect-metadata`, `ws`, `zod`)
 - **Native PostgreSQL** — wire protocol v3, SCRAM-SHA-256, no `pg` package
 - **Production-ready from day one** — clustering, telemetry, health endpoints, migrations
 
