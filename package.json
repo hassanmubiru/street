@@ -32,6 +32,7 @@
     "test:registry-harness": "node --test scripts/tests/registry-e2e-harness.test.mjs",
     "test:enterprise-harness": "node --test scripts/tests/enterprise-e2e-harness.test.mjs",
     "test:plugins-harness": "node --test scripts/tests/plugin-integration-harness.test.mjs",
+    "test:plugins-marketplace": "node --test scripts/tests/gen-plugins-data.test.mjs",
     "verify:plugins": "node scripts/plugins/verify.mjs",
     "test:devtools-harness": "node --test scripts/tests/devtools-verify-harness.test.mjs",
     "test:observability-harness": "node --test scripts/tests/observability-validate-harness.test.mjs",
