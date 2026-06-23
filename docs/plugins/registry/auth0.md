@@ -19,6 +19,7 @@ description:  "Official Street Framework plugin: Auth0 identity. Official, signe
 - **Runtime dependencies:** none (third-party) — only `streetjs`
 - **npm:** [@streetjs/plugin-auth0](https://www.npmjs.com/package/@streetjs/plugin-auth0)
 - **Source:** [packages/plugin-auth0](https://github.com/hassanmubiru/StreetJS/tree/main/packages/plugin-auth0)
+- **Maintainer:** street contributors (StreetJS core team)
 
 ## Trust signals
 
@@ -44,11 +45,12 @@ capabilities and signature verification.
 
 | | |
 |---|---|
-| StreetJS | `>=1.0.0` |
-| Node.js | `>=20` |
-| TypeScript | `>=5.0` (NodeNext) |
+| StreetJS | `^1.0.6` |
+| Node.js | `>=20.0.0` |
+| TypeScript | `>=5.0.0` (NodeNext) |
 
-See the [compatibility matrix](/StreetJS/compatibility/) for the full support grid.
+Derived from this package's `dependencies.streetjs`, `engines.node`, and
+`peerDependencies.typescript`. See the [compatibility matrix](/StreetJS/compatibility/) for the full support grid.
 
 ## Certification
 
