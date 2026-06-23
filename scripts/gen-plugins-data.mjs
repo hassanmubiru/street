@@ -70,6 +70,11 @@ for (const d of dirs) {
   // (`streetjs`). Zero third-party deps ⇒ the "dependency-free" badge is true.
   const thirdPartyDeps = Object.keys(pj.dependencies || {}).filter((dep) => dep !== 'streetjs');
   const dependencyFree = thirdPartyDeps.length === 0;
+  // Real compatibility, derived from the package's own manifest (no static guesses).
+  const author = typeof pj.author === 'string' ? pj.author : (pj.author && pj.author.name) || 'StreetJS contributors';
+  const streetjsRange = (pj.dependencies || {}).streetjs || '>=1.0.0';
+  const nodeRange = (pj.engines || {}).node || '>=20';
+  const tsRange = (pj.peerDependencies || {}).typescript || '>=5.0';
   plugins.push({
     name: pj.name,
     slug: short,
@@ -81,6 +86,10 @@ for (const d of dirs) {
     tier: 'Official',
     npm: `https://www.npmjs.com/package/${pj.name}`,
     repo: `https://github.com/hassanmubiru/StreetJS/tree/main/packages/${d}`,
+    author,
+    streetjsRange,
+    nodeRange,
+    tsRange,
     signed,
     thirdPartyDepCount: thirdPartyDeps.length,
     thirdPartyDeps,
