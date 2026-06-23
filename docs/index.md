@@ -354,6 +354,37 @@ export class UsersController {
   </div>
 </section>
 
+<!-- ════════════════════════ 4c · SEE IT IN ACTION ════════════════════════ -->
+<!-- Data-driven from docs/_data/demos.json (site.data.demos). A green "LIVE"
+     badge renders only for status: live with a url; otherwise "SOON"/"ROADMAP".
+     Flipping a demo live is a one-line edit to demos.json. -->
+<section class="sec">
+  <span class="eyebrow">See it in action</span>
+  <h2 class="s-title">A real application for every major capability.</h2>
+  <p class="s-sub">Each is a runnable, CI-tested reference app — not a mockup. Live, hosted demos are rolling out; every card links to its architecture, source, and learning path today.</p>
+  <div class="dgrid">
+    {%- for d in site.data.demos.demos -%}
+    <a href="{{ d.docs | relative_url }}" class="dc">
+      <span class="dic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      <div>
+        <div class="dt">{{ d.title }}
+          {%- if d.status == "live" and d.url != "" %} <span style="font-size:.62rem;font-weight:700;color:#15803d;background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.3);border-radius:100px;padding:.1rem .5rem">● LIVE</span>
+          {%- elsif d.status == "roadmap" %} <span style="font-size:.62rem;font-weight:700;color:#b45309;background:rgba(217,119,6,.12);border:1px solid rgba(217,119,6,.3);border-radius:100px;padding:.1rem .5rem">ROADMAP</span>
+          {%- else %} <span style="font-size:.62rem;font-weight:700;color:var(--muted);border:1px solid var(--bd);border-radius:100px;padding:.1rem .5rem">SOON</span>
+          {%- endif %}
+          <span class="arr">→</span>
+        </div>
+        <p class="dd">{{ d.capability }}</p>
+      </div>
+    </a>
+    {%- endfor -%}
+  </div>
+  <div class="show-more">
+    <a href="{{ site.baseurl }}/showcase/" class="btn btn-g">Explore the showcase
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+  </div>
+</section>
+
 <!-- ════════════════════════ 5 · ECOSYSTEM ════════════════════════ -->
 <section class="sec">
   <span class="eyebrow">Ecosystem</span>
