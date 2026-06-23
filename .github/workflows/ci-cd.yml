@@ -820,6 +820,11 @@ jobs:
       - name: Build @streetjs/cli
         run: npm run clean -w packages/cli && npm run build -w packages/cli
 
+      - name: Build plugins imported by CLI tests (marzpay, htmx)
+        run: |
+          npm run build -w packages/plugin-marzpay
+          npm run build -w packages/plugin-htmx
+
       - name: Run CLI test suite
         run: npm run test -w packages/cli
 
