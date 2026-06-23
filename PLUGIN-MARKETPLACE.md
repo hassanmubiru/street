@@ -28,7 +28,7 @@
 | Phase | Spec | Status |
 |---|---|---|
 | 1 Ecosystem audit | inventory + classify | **VERIFIED** (`ECOSYSTEM-PLUGINS-AUDIT.md`) |
-| 2 Marketplace IA | hub + categories | **VERIFIED** hub at `/plugins/marketplace/`; 8 data-driven categories |
+| 2 Marketplace IA | hub + categories | **VERIFIED** hub at `/plugins/marketplace/`; 9 data-driven categories |
 | 3 Detail pages | Overview→Related | **IMPLEMENTED** — added Quick Start, Compatibility, Certification, Related Plugins |
 | 4 Search | build-time, no infra | **VERIFIED** — client-side over generated data |
 | 5 Badges | taxonomy + rules | **IMPLEMENTED** (taxonomy below); all official = Official+Signed |
