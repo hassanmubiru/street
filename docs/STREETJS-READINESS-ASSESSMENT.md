@@ -90,7 +90,7 @@ So the honest verdict is **conditional readiness**, segmented below.
 |---------|---------|-----|
 | Solo devs / side projects / internal tools | **Ready** | Minimal deps, fast scaffolding, strong defaults; small blast radius if you need to pivot |
 | Small teams comfortable being early adopters | **Ready, with eyes open** | Excellent engineering; accept that you may be filing (and fixing) issues yourself |
-| Teams that value a tiny dependency tree / supply-chain minimalism | **Strong fit** | Two runtime deps; native drivers; signed plugins |
+| Teams that value a tiny dependency tree / supply-chain minimalism | **Strong fit** | Three runtime deps; native drivers; signed plugins |
 | Mid-size product teams needing a large ecosystem + hiring pool | **Not yet** | Ecosystem breadth exists but third-party depth and labor market do not |
 | Risk-averse enterprises / regulated industries | **Not yet** | No compliance evidence, no multi-maintainer guarantee, no production references |
 
