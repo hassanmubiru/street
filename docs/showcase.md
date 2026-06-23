@@ -45,6 +45,17 @@ description:  "Built with StreetJS — official reference applications and start
 
 <style>
 .sc-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;margin:24px 0}
+.dz-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin:14px 0 28px}
+.dz-card{display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);background:var(--elevated);border-radius:12px;padding:14px 16px}
+.dz-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.dz-cap{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent)}
+.dz-badge{font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;white-space:nowrap}
+.dz-live{color:#15803d;background:rgba(22,163,74,.12);border:1px solid rgba(22,163,74,.3);text-decoration:none!important}
+.dz-soon{color:var(--text-muted);background:var(--surface);border:1px solid var(--border)}
+.dz-roadmap{color:#b45309;background:rgba(217,119,6,.12);border:1px solid rgba(217,119,6,.3)}
+.dz-title{margin:2px 0 0;font-size:16px}
+.dz-title a{text-decoration:none}
+.dz-links{font-size:13px;color:var(--text-muted)}
 .sc-card{display:flex;flex-direction:column;gap:8px;border:1px solid var(--border);background:var(--elevated);border-radius:14px;padding:14px}
 .sc-cover{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;border:1px solid var(--border);display:block;background:#0B1220;margin-bottom:6px}
 .sc-card h3{margin:0;font-size:17px}
