@@ -62,9 +62,6 @@
   "bugs": {
     "url": "https://github.com/hassanmubiru/StreetJS/issues"
   },
-  "streetjs": {
-    "unlisted": true
-  },
   "dependencies": {
     "streetjs": "^1.0.6"
   },
