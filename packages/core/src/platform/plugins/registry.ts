@@ -22,8 +22,12 @@ export interface PluginInstallerOptions {
  * (preserving in-containment normalization, Req 3.2), rejects absolute paths
  * and any ".." path segment, and finally requires that the resolved path is
  * the extraction root itself or a descendant of it (Req 2.1, 2.2, 2.4).
+ *
+ * Exported as a pure, side-effect-free helper so it can be unit-tested
+ * directly (task 4.3); it remains an internal implementation detail of the
+ * extractor and is not part of the published public surface.
  */
-function resolveContained(destDir: string, entryName: string): string | null {
+export function resolveContained(destDir: string, entryName: string): string | null {
   // Strip the existing leading "./" and "/" normalization (preserve Req 3.2).
   const sanitized = entryName.replace(/^\.\//, '').replace(/^\//, '');
   // Reject obvious traversal/absolute forms early.
