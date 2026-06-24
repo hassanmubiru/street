@@ -1,0 +1,25 @@
+# Caddy reverse proxy for the StreetJS showcase demos.
+# Automatic HTTPS (Let's Encrypt) per subdomain. Set DEMO_DOMAIN to your domain
+# (e.g. demo.streetjs.dev); each capability is served at <slug>.$DEMO_DOMAIN.
+# For local use, DEMO_DOMAIN defaults to demo.localhost (HTTP).
+
+saas.{$DEMO_DOMAIN} {
+	reverse_proxy saas:3000
+}
+
+crm.{$DEMO_DOMAIN} {
+	reverse_proxy crm:3000
+}
+
+htmx.{$DEMO_DOMAIN} {
+	reverse_proxy htmx-dashboard:3000
+}
+
+chat.{$DEMO_DOMAIN} {
+	# Realtime chat needs WebSocket upgrades — Caddy proxies them transparently.
+	reverse_proxy realtime-chat:3000
+}
+
+ai.{$DEMO_DOMAIN} {
+	reverse_proxy ai-assistant:3000
+}
