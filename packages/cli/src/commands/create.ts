@@ -3150,6 +3150,39 @@ CREATE INDEX IF NOT EXISTS idx_invoices_org        ON invoices(org_id);
 `,
       },
       {
+        path: 'migrations/005_marzpay_events.sql',
+        flag: 'with-marzpay',
+        content: `-- MarzPay processed-event store + settlement uniqueness (opt-in: --starter saas --with-marzpay).
+-- Org-scoped dedup store keyed on the transaction reference, plus a uniqueness
+-- guarantee on billing_records.reference for idempotent settlement (Req 7.1, 7.5).
+-- Apply with: street migrate:run  (PostgreSQL syntax; adjust types for SQLite).
+--
+-- This migration is ADDITIVE and IDEMPOTENT: it creates the \`marzpay_events\`
+-- table and the \`uq_billing_records_reference\` unique index on top of the
+-- 004_marzpay_billing.sql schema, leaving \`billing_records\`, \`subscriptions\`,
+-- and \`invoices\` otherwise unchanged. It only runs when the project is
+-- scaffolded with --with-marzpay. marzpay_events carries org_id (indexed) so
+-- every processed-event row is scoped to a single tenant.
+--
+-- SQLite note: SQLite has no \`TIMESTAMPTZ\` or \`now()\`; on SQLite, use TEXT
+-- timestamps (e.g. DEFAULT CURRENT_TIMESTAMP) in place of TIMESTAMPTZ NOT NULL
+-- DEFAULT now(). CREATE TABLE/INDEX IF NOT EXISTS are supported as written.
+
+-- Org-scoped processed-event store keyed on the transaction reference.
+CREATE TABLE IF NOT EXISTS marzpay_events (
+  reference    TEXT PRIMARY KEY,
+  org_id       BIGINT NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+  processed_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- Index the marzpay_events tenant discriminator for org-scoped lookups.
+CREATE INDEX IF NOT EXISTS idx_marzpay_events_org ON marzpay_events(org_id);
+
+-- Enforce settlement uniqueness on billing_records.reference (Req 7.5).
+CREATE UNIQUE INDEX IF NOT EXISTS uq_billing_records_reference ON billing_records(reference);
+`,
+      },
+      {
         path: '.env.marzpay.example',
         flag: 'with-marzpay',
         content: `# MarzPay billing — scaffolded with: --starter saas --with-marzpay
