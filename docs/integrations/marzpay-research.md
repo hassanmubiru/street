@@ -350,6 +350,74 @@ Only `Verified_Capability` values may be bound.
 
 ---
 
+## Section 5 — Binding Prerequisites for Unbound Seams
+
+The `MarzPaySpec` seams for **disbursements** (`paths.disburse`), **account
+balance** (`paths.balance`), and **phone verification**
+(`paths.phoneVerification.*`) are currently **unbound** (`undefined` in
+`MARZPAY_SPEC`). The operations that would use them — `disbursements.sendMoney`,
+`accounts.getBalance`, and `phoneVerification.verify` / `.isVerified` /
+`.getUserInfo` — validate their arguments and then surface an
+`UnsupportedOperationError` with **no network request**.
+
+> **Prerequisite (binding rule 4 / Requirement 1.4):** Binding any of these seams
+> requires **first** adding an audited `Verified_Capability` entry to **Section 1**
+> of this Research_Artifact, with a resolvable citation under
+> `https://wallet.wearemarz.com/`, for each endpoint. Until those audited entries
+> with citations exist, the seams **MUST remain unbound** and the operations
+> **MUST** surface an `UnsupportedOperationError` with **no** network request.
+> No endpoint may be invented or assumed.
+
+This section records **what must be audited** before binding — it does **not**
+record any endpoint, path, request field, or response shape. None of the
+following has been verified against MarzPay_Documentation; treat each as
+**unverified/unsupported** until a `Vn.` entry below is filled in from audited,
+citable documentation.
+
+### Disbursements (`paths.disburse`) — required before binding
+
+A new `Vn. Disbursement initiation` Verified_Capability entry must record, from
+audited documentation with citations:
+
+- the verified send-money (disbursement) endpoint **path** and HTTP method;
+- the **required request fields** and their constraints;
+- the **response shape** (including the `reference` and `status` it returns);
+- the **status-lookup semantics** for a previously-initiated disbursement.
+
+Note: `disbursements.getStatus` already reads the **verified** transactions
+endpoint (V3) and is functional; only `disbursements.sendMoney` is blocked on the
+unbound `disburse` seam.
+
+### Account balance (`paths.balance`) — required before binding
+
+A new `Vn. Account balance` Verified_Capability entry must record, from audited
+documentation with citations:
+
+- a **concrete balance endpoint path** and HTTP method;
+- the **response shape** of the balance result.
+
+The current Appendix A reference to a balance response (`status.mode: "live"`,
+seen via V9) is **incidental** evidence of the environment field, **not** a
+verified balance endpoint, and MUST NOT be used to bind `paths.balance`.
+
+### Phone verification (`paths.phoneVerification.*`) — required before binding
+
+A new `Vn. Phone verification` Verified_Capability entry must record, from audited
+documentation with citations:
+
+- the **verify**, **is-verified**, and **user-info** endpoint paths and HTTP
+  methods;
+- the **required request fields** for each operation;
+- the **response shapes** for each operation.
+
+> **Reminder:** This is a documentation prerequisite only. Adding these entries
+> does not, by itself, change `MARZPAY_SPEC`; the seams are bound in code only
+> after the corresponding `Vn.` entries exist here with citations. Absent those
+> entries, `MARZPAY_SPEC` stays unchanged (single base URL for both
+> environments — see V8/V9 and Recommendation 2).
+
+---
+
 ## Appendix A — Verified Wire Facts for `MarzPaySpec` Binding
 
 | Field | Verified value | Source |
