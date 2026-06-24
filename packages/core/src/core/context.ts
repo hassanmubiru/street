@@ -180,7 +180,16 @@ export function createContext(
     },
 
     setCookie(name: string, value: string, options: CookieOptions = {}): void {
-      res.setHeader('Set-Cookie', serializeCookie(name, value, options));
+      const cookie = serializeCookie(name, value, options);
+      const existing = res.getHeader('Set-Cookie');
+      const list: string[] =
+        existing === undefined
+          ? []
+          : Array.isArray(existing)
+            ? existing.slice()
+            : [String(existing)];
+      list.push(cookie);
+      res.setHeader('Set-Cookie', list);
     },
   };
 
