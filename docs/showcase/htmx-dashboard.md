@@ -33,14 +33,16 @@ a client bundler — typed controllers all the way down.
 ```bash
 npm run build -w packages/core
 npm run build -w packages/plugin-htmx
-cat examples/marzpay-htmx/README.md      # run instructions
+node examples/reference-apps/htmx-dashboard/server.mjs        # :3000
+node examples/reference-apps/htmx-dashboard/smoke-test.mjs    # 12/12 checks
 ```
 
 ## Status
 
-The current HTMX example is checkout-focused; a dedicated dashboard (live SSE
-tiles + HTMX-swapped panels, reusing the Live Dashboard patterns) is the next
-build step in the [Showcase Roadmap](https://github.com/hassanmubiru/StreetJS/blob/main/SHOWCASE-ROADMAP.md).
+A dedicated, CI-tested **HTMX dashboard reference app** now ships at
+`examples/reference-apps/htmx-dashboard` — full-page layout for normal loads, an
+HTML fragment for the HTMX poll target (`/tiles`), and a Server-Sent Events stream
+(`/events`) for push updates, all on the `@streetjs/plugin-htmx` view engine.
 
 ## Learning path
 
