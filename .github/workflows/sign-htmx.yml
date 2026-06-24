@@ -1,18 +1,17 @@
 name: Sign plugin-htmx
 
 # One-shot: produce the official Ed25519 signed manifest for @streetjs/plugin-htmx
-# and commit it, so the marketplace lists it as signed (it was the only plugin
-# without a committed manifest.signed.json). Signing requires the official key,
-# which exists ONLY as a CI secret — it cannot be produced on a workstation.
-#
-# Pushes via a token (no persisted checkout credentials), commits the signed
-# manifest + public key, regenerates the marketplace data, and commits that too.
+# and upload it as an artifact, so the marketplace can list it as signed (it was
+# the only plugin without a committed manifest.signed.json). Signing requires the
+# official key, which exists ONLY as a CI secret — it cannot be produced on a
+# workstation. `main` is a protected branch, so this workflow does NOT push;
+# download the artifact and commit the signed manifest through the normal flow.
 
 on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: sign-htmx
