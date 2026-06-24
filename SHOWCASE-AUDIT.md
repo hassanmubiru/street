@@ -118,11 +118,14 @@ Implemented this pass — docs/examples/generator/CI only, no fabrication, no ho
 - **Uptime automation — DONE.** `scripts/check-demos.mjs` (dependency-free `/health/ready` probe; `--write` updates statuses) + `.github/workflows/demos-uptime.yml` (scheduled, report-only, pinned). Not wired into the Pages build (a network probe there could break deploys).
 - **Doc-drift fix (X19-5) — DONE.** `docs/examples/websocket-chat.md` now clearly distinguishes the from-scratch tutorial from the canonical `ChannelHub` reference app, with links.
 
+**Now done (previously "external"):**
+- **`plugin-htmx` signed (X19-4) — DONE.** Signed with the official key via the `sign-htmx.yml` CI workflow (the key is CI-only; `main` is protected so the workflow uploads the signed manifest as an artifact, applied through the normal flow). Marketplace is now **21/21 signed**; the htmx detail page shows the Signed badge.
+- **HTMX dashboard built — DONE.** `examples/reference-apps/htmx-dashboard` (ViewEngine + HTMX `/tiles` fragment + SSE `/events`); `smoke-test.mjs` 12/12; registered in `verify-reference-apps.sh` + `reference-apps.yml`; per-app page + `demos.json` updated.
+- **Multi-tenant CRM built — DONE.** `examples/reference-apps/crm` on `@streetjs/admin` RBAC + org-scoped `CrmStore` (companies→contacts→deals→pipeline→activity); `smoke-test.mjs` 16/16 proving **tenant isolation** + **RBAC** + pipeline + activity; registered everywhere; the roadmap page now points to the built app.
+
 **Still external (cannot be done from the repo without fabrication/credentials):**
 - **Live hosting** (the success metric) — provision host/DNS/secrets per `DEMO-INFRA-PLAN.md`, then `demos.json` status → `live`.
 - **Real screenshots** — capture from the live demos (never fabricated).
-- **Sign `plugin-htmx`** — `sign.mjs` refuses without `STREET_PLUGIN_SIGNING_KEY` (CI-only).
-- **HTMX-dashboard extension** and **CRM build** — real, scoped build work (`SHOWCASE-ROADMAP.md` items 8–9).
 
 ## 6. Success-criteria mapping
 
