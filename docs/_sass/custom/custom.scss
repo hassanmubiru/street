@@ -323,6 +323,10 @@ a.skip-to-main:focus, a.skip-to-main:active { background-color: var(--elevated) 
   a { color: var(--text-muted) !important; &:hover { color: var(--accent) !important; } } }
 .site-footer { background: var(--surface) !important; border-top:1px solid var(--border) !important; font-size:.8rem !important; color: var(--text-muted) !important;
   a { color: var(--text-muted) !important; &:hover { color: var(--accent) !important; } } }
+// Exactly one footer: the copyright lives once in the main content <footer>
+// (footer_custom.html). The theme also renders a nav-footer in the sidebar — now
+// an empty hidden element — so hide that bar to avoid a second, empty footer.
+.side-bar .site-footer { display: none !important; }
 // just-the-docs renders this as <a href="#top" id="back-to-top">, so target the id.
 #back-to-top { display:inline-flex !important; align-items:center !important; gap:.4rem !important;
   padding:.5rem .95rem !important; margin:.5rem 0 !important;
