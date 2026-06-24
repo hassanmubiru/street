@@ -12,7 +12,7 @@
       "source": "https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/saas",
       "scaffold": "street create my-saas --starter saas --with-admin-ui",
       "deploy": "deploy/cloud-run/service.yaml",
-      "docs": "/StreetJS/showcase/saas/",
+      "docs": "/showcase/saas/",
       "sandbox": true
     },
     {
