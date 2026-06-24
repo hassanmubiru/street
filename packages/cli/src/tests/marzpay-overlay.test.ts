@@ -83,6 +83,7 @@ const MARZPAY_FILES = [
   'src/modules/billing/marzpay-webhook.controller.ts',
   'src/modules/dashboard/billing-dashboard.controller.ts',
   'migrations/004_marzpay_billing.sql',
+  'migrations/005_marzpay_events.sql',
   '.env.marzpay.example',
 ];
 
