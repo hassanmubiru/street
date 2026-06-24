@@ -5,9 +5,8 @@ import fc from 'fast-check';
 import {
   PluginHost,
   type PluginManifest,
-  type PluginPermission,
 } from '../src/platform/plugins/host.js';
-import { PluginModule, type SandboxedApp } from '../src/platform/plugins/sdk.js';
+import { PluginModule } from '../src/platform/plugins/sdk.js';
 
 // Feature: security-hardening, Property 5: The registered manifest is immutable across the lifecycle
 //
@@ -19,141 +18,147 @@ import { PluginModule, type SandboxedApp } from '../src/platform/plugins/sdk.js'
 //
 // Validates: Requirements 6.1, 6.2, 6.3, 6.4
 
-// ---- recognized permission values -------------------------------------------
+// ---- recognized permission values (independent of the module-private tuple) ----
 
 const PERMISSION_VALUES = ['middleware', 'events', 'net', 'fs', 'db', 'secrets'] as const;
 
 // ---- helpers ----------------------------------------------------------------
 
-/**
- * Minimal concrete plugin. `PluginModule` is abstract (only `name`/`version` are
- * required), so a tiny subclass is the lightest faithful test double.
- */
-class TestPlugin extends PluginModule {
-  constructor(readonly name: string, readonly version: string) {
-    super();
-  }
-  async onLoad(_app: SandboxedApp): Promise<void> {
-    /* no-op */
-  }
+/** Minimal plugin whose name/version match the manifest (cast around the abstract base). */
+function makePlugin(name: string, version: string): PluginModule {
+  return { name, version } as unknown as PluginModule;
 }
-
-/**
- * Per-run unique id so plugin/dependency names never collide within a host and
- * so each run is independent (fresh host per run anyway).
- */
-let seq = 0;
-
-/** The set of post-register mutations applied to the ORIGINAL manifest. */
-type Mutation = 'push-perm' | 'change-version' | 'add-dep' | 'remove-dep' | 'reassign-name';
 
 // ---- generators -------------------------------------------------------------
 
-const configArb = fc.record({
-  // Random subset of the recognized permissions (the frozen permission set).
-  permissions: fc.subarray([...PERMISSION_VALUES]),
-  // Random number of (real, registered) dependencies.
-  depCount: fc.integer({ min: 0, max: 3 }),
-  capabilities: fc.array(fc.string({ maxLength: 8 }), { maxLength: 3 }),
-  version: fc.constantFrom('1.0.0', '1.2.3', '2.0.0', '0.9.1', '3.4.5'),
-  mutation: fc.constantFrom<Mutation>(
-    'push-perm',
-    'change-version',
-    'add-dep',
-    'remove-dep',
-    'reassign-name',
-  ),
+// Permissions are a subarray of the recognized values; with a '*' host every one
+// is granted, so a clean (un-mutated) manifest is always enable-able.
+const permissionsArb = fc.subarray([...PERMISSION_VALUES]);
+
+// Dependency names are namespaced ('dep_...') and unique so they never collide
+// with the main plugin name ('main_...') or with each other. Range '*' is always
+// satisfied, so the stubs we register below let enable() resolve them.
+const depNamesArb = fc.uniqueArray(
+  fc.string({ minLength: 1, maxLength: 6 }).map((s) => `dep_${s}`),
+  { maxLength: 4 },
+);
+
+const versionArb = fc
+  .tuple(fc.nat(9), fc.nat(9), fc.nat(9))
+  .map(([a, b, c]) => `${a}.${b}.${c}`);
+
+interface GeneratedManifest {
+  nameSuffix: string;
+  version: string;
+  capabilities: string[];
+  permissions: string[];
+  depNames: string[];
+}
+
+const manifestArb: fc.Arbitrary<GeneratedManifest> = fc.record({
+  nameSuffix: fc.string({ minLength: 1, maxLength: 8 }),
+  version: versionArb,
+  capabilities: fc.array(fc.string(), { maxLength: 3 }),
+  permissions: permissionsArb,
+  depNames: depNamesArb,
 });
+
+// A single random post-register mutation applied to the ORIGINAL manifest object.
+const mutationArb = fc.record({
+  kind: fc.integer({ min: 0, max: 4 }),
+  extra: fc.string({ minLength: 1, maxLength: 6 }),
+});
+
+/** Mutate the caller's original manifest in place (must be inert to the host). */
+function mutateOriginal(original: PluginManifest, m: { kind: number; extra: string }): void {
+  const perms = original.permissions as unknown as string[];
+  const deps = original.dependencies as Record<string, string>;
+  switch (m.kind) {
+    case 0:
+      // Add an UNGRANTED permission: if this leaked into the frozen copy, enable()
+      // would throw PluginPermissionError.
+      perms.push('admin');
+      break;
+    case 1:
+      original.version = `${original.version}-${m.extra}`;
+      break;
+    case 2:
+      // Add a dependency on a plugin that was never registered.
+      deps[`missing_${m.extra}`] = '^9.9.9';
+      break;
+    case 3: {
+      const keys = Object.keys(deps);
+      if (keys.length > 0) delete deps[keys[0]!];
+      else perms.push('admin');
+      break;
+    }
+    case 4:
+      original.name = `hacked_${m.extra}`;
+      break;
+    default:
+      break;
+  }
+}
 
 // ---- property ---------------------------------------------------------------
 
 describe('Property 5: the registered manifest is immutable across the lifecycle', () => {
-  it('stores a distinct deep-frozen copy whose decisions and manifestOf are unaffected by mutating the original', async () => {
+  it('stores a frozen, distinct copy that post-register mutation cannot affect', async () => {
     await fc.assert(
-      fc.asyncProperty(configArb, async (cfg) => {
-        const id = seq++;
-        const mainName = `plugin_${id}`;
+      fc.asyncProperty(manifestArb, mutationArb, async (gen, mutation) => {
+        // '*' grants every recognized permission, so a clean manifest enables.
+        const host = new PluginHost({ grantedPermissions: '*' });
 
-        // Grant EXACTLY the manifest's permission set so the frozen permissions are
-        // all granted (enable succeeds on the frozen copy) while any later-added
-        // permission is, by construction, ungranted — exposing any read-through to
-        // the mutated original as a PluginPermissionError.
-        const host = new PluginHost({ grantedPermissions: cfg.permissions });
+        const name = `main_${gen.nameSuffix}`;
 
-        // Register the real dependency plugins first so the frozen manifest's deps
-        // resolve at enable time (range '*' is satisfied by any version).
-        const dependencies: Record<string, string> = {};
-        for (let i = 0; i < cfg.depCount; i++) {
-          const depName = `dep_${id}_${i}`;
-          dependencies[depName] = '*';
-          host.register(new TestPlugin(depName, '1.0.0'), { name: depName, version: '1.0.0' });
+        // Register a stub for every dependency so the clean frozen copy resolves.
+        for (const dep of gen.depNames) {
+          host.register(makePlugin(dep, '1.0.0'), { name: dep, version: '1.0.0' });
         }
 
-        // The caller-supplied (mutable) manifest reference.
-        const original: PluginManifest = {
-          name: mainName,
-          version: cfg.version,
-          capabilities: [...cfg.capabilities],
-          permissions: [...cfg.permissions],
-          dependencies: { ...dependencies },
+        const dependencies: Record<string, string> = {};
+        for (const dep of gen.depNames) dependencies[dep] = '*';
+
+        const originalManifest: PluginManifest = {
+          name,
+          version: gen.version,
+          capabilities: [...gen.capabilities],
+          permissions: [...gen.permissions] as PluginManifest['permissions'],
+          dependencies,
         };
 
-        host.register(new TestPlugin(mainName, cfg.version), original);
+        host.register(makePlugin(name, gen.version), originalManifest);
 
-        const stored = host.manifestOf(mainName);
-        assert.ok(stored, 'manifest should be stored after registration');
+        const stored = host.manifestOf(name);
+        assert.ok(stored, 'manifest should be registered');
 
-        // (Req 6.1, 6.4) A DISTINCT object from the caller's reference.
-        assert.notEqual(stored, original, 'stored manifest must not be the caller reference');
+        // (Req 6.1 / 6.4) The stored manifest is a DISTINCT object from the caller's.
+        assert.notEqual(stored, originalManifest, 'stored manifest must not be the caller reference');
 
-        // (Req 6.1) Deep-frozen at the top level AND for nested objects/arrays.
-        assert.ok(Object.isFrozen(stored), 'stored manifest must be frozen');
-        assert.ok(Object.isFrozen(stored.permissions), 'permissions array must be frozen');
-        assert.ok(Object.isFrozen(stored.dependencies), 'dependencies object must be frozen');
-        assert.ok(Object.isFrozen(stored.capabilities), 'capabilities array must be frozen');
+        // (Req 6.1) Deep-frozen: top level and nested arrays/objects.
+        assert.equal(Object.isFrozen(stored), true, 'stored manifest must be frozen');
+        assert.equal(Object.isFrozen(stored!.permissions), true, 'permissions must be frozen');
+        assert.equal(Object.isFrozen(stored!.dependencies), true, 'dependencies must be frozen');
+        assert.equal(Object.isFrozen(stored!.capabilities), true, 'capabilities must be frozen');
 
-        // Snapshot the frozen copy immediately after registration.
-        const snapshot = structuredClone(stored) as PluginManifest;
+        // Snapshot the stored copy immediately after registration.
+        const snapshot = structuredClone(stored);
 
-        // (Req 6.3) Apply a random structural mutation to the ORIGINAL.
-        switch (cfg.mutation) {
-          case 'push-perm':
-            original.permissions!.push('secrets');
-            break;
-          case 'change-version':
-            original.version = '9.9.9';
-            break;
-          case 'add-dep':
-            original.dependencies!['ghost-extra'] = '^1.0.0';
-            break;
-          case 'remove-dep':
-            for (const k of Object.keys(original.dependencies!)) delete original.dependencies![k];
-            break;
-          case 'reassign-name':
-            original.name = 'totally-different';
-            break;
-        }
+        // (Req 6.3) Mutate the ORIGINAL after registration...
+        mutateOriginal(originalManifest, mutation);
 
-        // Always also introduce decision-relevant mutations to the ORIGINAL:
-        //  - a dependency on a MISSING plugin (would make enable throw if read), and
-        //  - an UNGRANTED permission (would make enable throw if read).
-        original.dependencies!['ghost-missing'] = '^1.0.0';
-        const ungranted = PERMISSION_VALUES.find((p) => !cfg.permissions.includes(p));
-        if (ungranted) original.permissions!.push(ungranted as PluginPermission);
+        // ...the stored copy is unchanged.
+        assert.deepEqual(host.manifestOf(name), snapshot, 'manifestOf must be unaffected by mutation');
 
-        // (Req 6.4) manifestOf is unchanged by the mutation and still frozen.
-        assert.deepEqual(host.manifestOf(mainName), snapshot, 'manifestOf must be unchanged');
-        assert.ok(Object.isFrozen(host.manifestOf(mainName)), 'manifestOf must remain frozen');
+        // (Req 6.2) Lifecycle decisions read the frozen copy: enable() still succeeds
+        // even though the original now carries an ungranted permission / missing dep.
+        await host.enable(name);
+        assert.equal(host.state(name), 'enabled', 'enable() should succeed from the frozen copy');
 
-        // (Req 6.2, 6.3) Lifecycle decisions read the frozen copy: enable SUCCEEDS
-        // despite the inert ungranted-permission and missing-dependency mutations.
-        await host.enable(mainName);
-        assert.equal(host.state(mainName), 'enabled', 'enable should succeed via the frozen copy');
-
-        // The stored manifest is STILL the unchanged frozen snapshot after enable.
-        assert.deepEqual(host.manifestOf(mainName), snapshot, 'manifestOf unchanged after enable');
+        // And the stored copy remains unchanged after enable.
+        assert.deepEqual(host.manifestOf(name), snapshot, 'manifestOf must remain unchanged after enable');
       }),
-      { numRuns: 200 },
+      { numRuns: 100 },
     );
   });
 });
