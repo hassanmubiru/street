@@ -5,12 +5,37 @@ import { createHash, verify as cryptoVerify } from 'node:crypto';
 import { request as httpsRequest } from 'node:https';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
+import path from 'node:path';
 import { Writable } from 'node:stream';
 
 export interface PluginInstallerOptions {
   registryUrl?: string;
   pluginsDir: string;
   publicKey?: string;
+}
+
+/**
+ * Returns the safe absolute destination for `entryName` under `destDir`, or
+ * `null` if the entry escapes containment. Pure — only `node:path`, no I/O.
+ *
+ * PS-1 path-containment guard. Strips a single leading "./" and "/"
+ * (preserving in-containment normalization, Req 3.2), rejects absolute paths
+ * and any ".." path segment, and finally requires that the resolved path is
+ * the extraction root itself or a descendant of it (Req 2.1, 2.2, 2.4).
+ */
+function resolveContained(destDir: string, entryName: string): string | null {
+  // Strip the existing leading "./" and "/" normalization (preserve Req 3.2).
+  const sanitized = entryName.replace(/^\.\//, '').replace(/^\//, '');
+  // Reject obvious traversal/absolute forms early.
+  if (path.isAbsolute(sanitized)) return null;
+  if (sanitized.split(/[\\/]/).includes('..')) return null;
+
+  const destRoot = path.resolve(destDir);
+  const resolved = path.resolve(destDir, sanitized);
+  if (resolved === destRoot || resolved.startsWith(destRoot + path.sep)) {
+    return resolved;
+  }
+  return null;
 }
 
 interface PluginManifest {
