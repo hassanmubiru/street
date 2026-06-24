@@ -8,10 +8,13 @@ description:  "Planned multi-tenant CRM reference app for StreetJS — to be bui
 
 # Multi-tenant CRM — roadmap
 
-> **Status: planned — not yet built.** This page is intentionally honest: there is
-> no CRM application in the repository today, so none is shown as if it existed.
-> When built, it will appear in the [Showcase](/StreetJS/showcase/) as a real,
-> runnable, CI-tested reference app like the others.
+> **✅ NOW BUILT.** This started as a roadmap item and has since shipped as a real,
+> CI-tested reference app. See **[Multi-tenant CRM](/StreetJS/showcase/crm/)** and
+> its source at
+> [`examples/reference-apps/crm`](https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/crm).
+> The original plan is kept below for history.
+
+---
 
 ## Why it's a roadmap item, not a demo
 
