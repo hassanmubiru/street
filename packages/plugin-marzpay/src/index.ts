@@ -848,6 +848,43 @@ export function formatUgandaMsisdn(value: string): string {
   return normalized;
 }
 
+/**
+ * The `marzpay.utils` namespace surface (Requirement 11).
+ *
+ * Exposes ONLY phone-number helpers (Req 11.5) — no unrelated SDK utilities:
+ *  - `isValidPhoneNumber(value)`: `true` when `value` is accepted by the
+ *    plugin's existing validation logic, `false` otherwise (Req 11.2).
+ *  - `formatPhoneNumber(value)`: the normalized canonical form, or a thrown
+ *    `PluginError` when `value` is rejected (Req 11.1, 11.4).
+ */
+export interface UtilsNamespace {
+  /** Normalize `value` to the canonical Uganda MSISDN form, or throw when invalid. */
+  formatPhoneNumber(value: string): string;
+  /** `true` when `value` is a valid phone number, `false` otherwise. */
+  isValidPhoneNumber(value: string): boolean;
+}
+
+/**
+ * Create the `marzpay.utils` namespace object.
+ *
+ * Both members delegate to the single internal phone-validation implementation
+ * (`normalizeUgandaMsisdn`) via the existing exported helpers — reusing that one
+ * source of truth rather than introducing a new validator (Requirement 11.3):
+ *  - `isValidPhoneNumber` → {@link isValidUgandaMsisdn}
+ *  - `formatPhoneNumber`  → {@link formatUgandaMsisdn}
+ *
+ * Because both delegate to the same normalizer, the output of `formatPhoneNumber`
+ * is always accepted by `isValidPhoneNumber` (round-trip consistency, Req 11.4).
+ * The returned object exposes ONLY these two helpers (Req 11.5). It is attached
+ * to the client as `marzpay.utils` in Task 5.1.
+ */
+export function createUtilsNamespace(): UtilsNamespace {
+  return {
+    formatPhoneNumber: (value: string): string => formatUgandaMsisdn(value),
+    isValidPhoneNumber: (value: string): boolean => isValidUgandaMsisdn(value),
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Transport seam (Task 7.1)
 // ---------------------------------------------------------------------------
