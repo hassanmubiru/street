@@ -25,6 +25,30 @@
 
 ---
 
+## Rotation status (2026)
+
+| Key | DER-SHA256 fingerprint | Status |
+| --- | --- | --- |
+| Leaked official key (in history `d7bbfc40`) | `df5e2726ecad5ffd992c1a182adff5999fdadca00366c02c092098c83cf0f540` | **DISTRUSTED** |
+| Old on-disk / marzpay key | `7de6474b332d48ff65a0202ef8b138c51db262e89af5ff8c2f93e8deab624919` | **RETIRED** |
+| **New official key (2026)** | `3ae9add05d71dc5a17992caf192b1e465bcb9b2f2633231df44dbe2db8444b84` | **ACTIVE** |
+
+| Step | State |
+| --- | --- |
+| 1. Generate new keypair | ✅ done (`keys/street-signing-2026.{key,pub}.pem`, `ed25519`) |
+| 2. Store private key as CI secret + backup | ⏳ operator — **TODO** |
+| 3. Update embedded anchor (`official-key.ts`) + rebuild core | ✅ done & verified (anchor = `3ae9add0…`) |
+| 4. Re-sign all 21 plugins under the new key | ⏳ operator — **TODO** (CI anchor-verify job RED until done) |
+| 5. Correct `.gitleaks.toml` (F-2) | ✅ done (allowlist removed, PEM rule added) |
+| 6. Security Advisory + changelog | ⏳ operator — **TODO** |
+| 7. Purge history + coordinated force-push | ⏳ operator — **TODO** (destructive) |
+| 8. Move on-disk keys out of the tree | ⏳ operator — **TODO** (key currently in `keys/`) |
+| 9. CI gate (`block-private-keys.yml` + anchor check) | ✅ done |
+
+> Throughout this runbook, **`<NEW_FINGERPRINT>` = `3ae9add05d71dc5a17992caf192b1e465bcb9b2f2633231df44dbe2db8444b84`**.
+
+---
+
 ## 0. Pre-flight
 
 ```bash
