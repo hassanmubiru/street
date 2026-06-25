@@ -318,9 +318,11 @@ Recommendations: add a request timeout to the Elastic provider; validate/allow-l
    with no TLS option in plugin config; credentials (AUTH/SCRAM/CONNECT) cross the
    wire without transport encryption unless the network is otherwise secured.
 
-6. **Signing topology — and a CRITICAL trust-anchor exposure.** All 21 plugins carry
-   a committed `manifest.signed.json`, and htmx has a dedicated CI signing workflow
-   (`sign-htmx.yml`) that signs from the official `STREET_PLUGIN_SIGNING_KEY` secret.
+6. **Signing topology — and a CRITICAL trust-anchor exposure.** A general CI
+   workflow (`publish-plugins.yml`) signs **all 21 plugins** from the official
+   `STREET_PLUGIN_SIGNING_KEY` secret and fails unless each manifest verifies
+   against the official key (`sign-htmx.yml` is a one-shot for the last plugin
+   that lacked a committed manifest). All 21 carry a committed `manifest.signed.json`.
    However, two repository-level defects (verified in `SECURITY-AUDIT.md`, F-1/F-3/F-7)
    dominate the plugin trust model and supersede any "signing is healthy" framing:
    - **The official signing private key is in pushed git history (Critical, F-1).**
