@@ -107,7 +107,12 @@ git mv .sqlite-smoke.mjs scripts/sqlite-smoke.mjs
 ```
 - Add `.gitignore` entries; then link standing docs from `SECURITY.md`. **Rollback:** `git mv` back, or `git revert`.
 
-### P1-4 Consolidate infra  ⏳  · effort: M · risk: MED (CI path updates)
+### P1-4 Consolidate infra  ⏳ DEFERRED TO OPERATOR · effort: M · risk: MED (CI path coupling)
+
+**Why deferred:** the infra paths are referenced by the Docker build and the test/
+integration harness, which cannot be verified without running CI. Execute on a
+branch and confirm the affected workflows are green before merge.
+
 ```bash
 mkdir -p infra/docker/compose infra/kubernetes infra/helm infra/examples infra/monitoring
 git mv docker-compose*.yml infra/docker/compose/
@@ -116,9 +121,21 @@ git mv deploy/k8s/* infra/kubernetes/  ; git mv deploy/helm/* infra/helm/
 git mv deploy/aws-ecs deploy/cloud-run deploy/cloudflare deploy/vercel infra/examples/
 git mv observability/* infra/monitoring/
 ```
-- Then update `-f` paths in `kafka-integration.yml`, `rabbitmq-integration.yml`,
-  `mongodb-integration.yml`, `deploy-verify.yml`, `docker-build`, and any `docker build -f`.
-  **Verify each workflow on a branch before merge.** **Rollback:** revert the PR.
+
+**Exact references to update (VERIFIED via grep):**
+| File | Change |
+|---|---|
+| `.github/workflows/ci-cd.yml` (docker-build, ~L769) | `docker build … .` → add `-f infra/docker/Dockerfile .` |
+| `scripts/test-setup.sh` | `run_compose up -d postgres` runs from repo root → add `-f infra/docker/compose/docker-compose.yml` |
+| `scripts/reliability/kafka-cold-start.sh` (~L136) | `docker compose -f docker-compose.kafka.yml` → `-f infra/docker/compose/docker-compose.kafka.yml` |
+| `scripts/post-publish-verify.sh` (~L156) | `"docker-compose.yml"` path entry → new path |
+| `.github/workflows/kafka-integration.yml` | update any compose `-f` paths (L86 is a comment only) |
+| `.github/workflows/deploy-verify.yml`, `scripts/cloud/*.mjs`, `scripts/ci/validate-yaml.mjs` | update `deploy/` → `infra/...` paths |
+| `.github/workflows/observability.yml`, `.github/workflows/ci-cd.yml`, `scripts/observability/*.mjs`, `scripts/tests/observability-validate-harness.test.mjs` | update `observability/` → `infra/monitoring/` |
+| `.github/zizmor.yml` comment + `scan-infra-identifiers` job | already tolerant of `infra/` (scans whichever of infra/deploy/observability exist) |
+
+**Rollback:** revert the PR. **Validation:** run `kafka-integration`,
+`deploy-verify`, `observability`, and the `docker-build` job on the branch.
 
 ### P1-5 Untrack generated artifacts  ⏳  · effort: S · risk: LOW
 ```bash
