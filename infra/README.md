@@ -1,7 +1,24 @@
-# StreetJS Deployment
+# StreetJS Infrastructure
 
-Production deployment artifacts and verification for StreetJS. Every target boots
-the same container/app, which exposes:
+Production deployment + monitoring assets for StreetJS, consolidated under `infra/`:
+
+```
+infra/
+├── docker/        # (Dockerfile + docker-compose*.yml remain at the repo root —
+│                  #  they have build-context/volume paths relative to root)
+├── kubernetes/    # k8s manifests (HPA example, probes)
+├── helm/street/   # Helm chart
+├── examples/      # aws-ecs, cloud-run, cloudflare, vercel
+└── monitoring/    # prometheus rules + grafana dashboards
+```
+
+> **Note:** the root `Dockerfile` and `docker-compose*.yml` are intentionally kept
+> at the repo root — their `build: context: .` and `./packages/...` volume paths
+> resolve relative to the root. Moving them requires `--project-directory .` +
+> `dockerfile:` overrides and Docker-tested verification (tracked in
+> `security/SECURITY-HARDENING-SPRINT.md` §P1-4).
+
+Every target boots the same container/app, which exposes:
 
 - `GET /health/live` — liveness (no dependencies)
 - `GET /health/ready` — readiness (includes a Postgres reachability check)
@@ -15,14 +32,14 @@ without `ALLOWED_ORIGINS` set (no accidental wildcard CORS). Always provide
 
 | Target | Artifact | Verification level |
 | --- | --- | --- |
-| Docker | `Dockerfile` | ✅ image builds; container boots (prod, clustered); `/health/live` + `/health/ready` → 200 |
-| Kubernetes / Helm | `deploy/helm/street/`, `deploy/k8s/` | manifests complete (startup/liveness/readiness probes on verified paths, Service, HPA) |
+| Docker | `Dockerfile` (repo root) | ✅ image builds; container boots (prod, clustered); `/health/live` + `/health/ready` → 200 |
+| Kubernetes / Helm | `infra/helm/street/`, `infra/kubernetes/` | manifests complete (startup/liveness/readiness probes on verified paths, Service, HPA) |
 | AWS Lambda | `@streetjs/edge` lambda adapter | ✅ adapter unit-tested |
 | Azure Functions | `@streetjs/edge` azure adapter | ✅ adapter unit-tested |
-| Google Cloud Run | `deploy/cloud-run/service.yaml` | manifest authored + YAML-validated |
-| Cloudflare Workers | `deploy/cloudflare/wrangler.toml` + `@streetjs/edge` worker adapter | config authored; adapter unit-tested |
-| AWS ECS (Fargate) | `deploy/aws-ecs/task-definition.json` | manifest authored + JSON-validated |
-| Vercel | `deploy/vercel/vercel.json` + `@streetjs/edge` | config authored |
+| Google Cloud Run | `infra/examples/cloud-run/service.yaml` | manifest authored + YAML-validated |
+| Cloudflare Workers | `infra/examples/cloudflare/wrangler.toml` + `@streetjs/edge` worker adapter | config authored; adapter unit-tested |
+| AWS ECS (Fargate) | `infra/examples/aws-ecs/task-definition.json` | manifest authored + JSON-validated |
+| Vercel | `infra/examples/vercel/vercel.json` + `@streetjs/edge` | config authored |
 
 ## Smoke test (any target)
 
