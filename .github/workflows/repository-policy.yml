@@ -44,13 +44,6 @@ jobs:
           .gitleaks.toml
           .dockerignore
           .env.example
-          Dockerfile
-          docker-compose.yml
-          docker-compose.kafka.yml
-          docker-compose.rabbitmq.yml
-          docker-compose.search.yml
-          docker-compose.storage.yml
-          docker-compose.test-db.yml
           BingSiteAuth.xml
           googledf528d4f2b039b20.html
           EOF
