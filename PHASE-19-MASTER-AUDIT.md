@@ -258,3 +258,213 @@ streetjs/
 - **REMOVE/GENERATE**: tracked generated artifacts (`sbom.json`, `release-inputs.json`, `verification-artifacts/**`) → produce in CI, attach to releases.
 - **REVIEW BEFORE PUBLIC**: scan `deploy/**` + `observability/**` for real account IDs/DNS/cluster names/monitoring URLs (RECOMMENDATION: add a CI grep gate).
 - **RECOMMENDATION**: add `infra/README.md` documenting that all manifests are templated examples.
+
+---
+
+# PHASE 7 — Repository Governance Charter
+
+> Normative rules. Adopt under `governance/CHARTER.md`; reference from `CONTRIBUTING.md` and `SECURITY.md`.
+
+1. **Root folder policy.** Root holds only: project metadata (README, LICENSE,
+   CHANGELOG, CITATION), governance entry files (SECURITY, GOVERNANCE, MAINTAINERS,
+   CONTRIBUTING, CODE_OF_CONDUCT), the workspace manifest + lockfile, tooling
+   dotfiles, and the standard directories. No strategy docs, no completed audits,
+   no generated artifacts, no scaffolds at root. Enforced by a CI `check-root` gate.
+2. **Security document policy.** All security analyses live under `security/`;
+   the public reporting policy stays in root `SECURITY.md` and links to them.
+   Security docs must never contain secret values (only fingerprints/paths).
+3. **Audit document policy.** Point-in-time reports live under `audits/<YYYY>/`;
+   immutable once published; superseded findings link forward to corrections.
+4. **Infrastructure policy.** All deploy/monitoring/container assets under `infra/`,
+   templated with placeholders only — no real account IDs, ARNs, DNS, cluster names,
+   or monitoring endpoints. CI greps for these on every PR.
+5. **Plugin publication policy.** A plugin may publish only via `publish-plugins.yml`
+   (CI), which signs from `STREET_PLUGIN_SIGNING_KEY` and verifies against
+   `officialPluginPublicKey()`. **No local `npm publish` of official plugins.** Every
+   plugin ships README + manifest.json + manifest.signed.json + manifest.pub + a
+   SECURITY pointer; tests + coverage gate required before first publish.
+6. **Release policy.** Releases are tag-triggered; version must match tag; provenance
+   (`--provenance`) required; SBOM generated and attached; changelog updated.
+7. **Signing policy.** Exactly **one** active official key; private half only in CI
+   secrets/KMS, never on a workstation or in the tree; scheduled rotation + documented
+   revocation; embedded anchor and all manifests must agree (CI-enforced).
+8. **Workflow policy.** Least-privilege `permissions:` (default `contents: read`);
+   pinned action SHAs; `persist-credentials: false`; zizmor clean; the `secrets-guard`
+   gate is rule #1 and gates the release chain.
+9. **Secret management policy.** Secrets live only in GitHub Actions secrets, a
+   secrets manager, or a local `.env` (gitignored). Never `*.pem/*.key` in the tree.
+   gitleaks + push protection + secret scanning enforce this server-side.
+10. **Documentation policy.** Public docs under `docs/`; internal strategy under
+    `plans/` (or a private repo); generated docs/artifacts produced in CI, not committed.
+
+---
+
+# PHASE 8 — CODEOWNERS
+
+**VERIFIED current state:** `.github/CODEOWNERS` exists but assigns a single owner
+(`@hassanmubiru`) to `*`, `/.github/`, `/packages/core/src/security/`,
+`/packages/core/src/database/`, `/SECURITY.md`. **GAP** — no explicit ownership for
+plugins, signing, infra, or verification artifacts.
+
+A complete proposal is written to **`.github/CODEOWNERS.proposed`** (not applied over
+the live file). Replace `@org/*-team` placeholders with real teams/handles, then move
+it over `.github/CODEOWNERS`:
+
+```
+*                                   @hassanmubiru
+
+# CI / supply chain — highest scrutiny
+/.github/                           @hassanmubiru @org/security-team
+/.github/workflows/                 @hassanmubiru @org/security-team
+/.github/workflows/publish-plugins.yml   @hassanmubiru @org/release-team
+/.github/workflows/sign-htmx.yml         @hassanmubiru @org/release-team
+/.github/workflows/block-private-keys.yml @hassanmubiru @org/security-team
+/.githooks/                         @hassanmubiru @org/security-team
+/.gitleaks.toml                     @hassanmubiru @org/security-team
+
+# Signing trust anchor — never change without security review
+/packages/core/src/platform/plugins/official-key.ts   @hassanmubiru @org/security-team
+
+# Security-sensitive core
+/packages/core/src/security/        @hassanmubiru @org/security-team
+/packages/core/src/database/        @hassanmubiru @org/security-team
+
+# Payment / identity plugins — elevated review
+/packages/plugin-marzpay/           @hassanmubiru @org/payments-team
+/packages/plugin-stripe/            @hassanmubiru @org/payments-team
+/packages/plugin-paypal/            @hassanmubiru @org/payments-team
+/packages/plugin-africastalking/    @hassanmubiru @org/payments-team
+/packages/plugin-auth0/             @hassanmubiru @org/identity-team
+/packages/plugin-clerk/             @hassanmubiru @org/identity-team
+/packages/plugin-firebase/          @hassanmubiru @org/identity-team
+
+# Infra & release evidence
+/deploy/                            @hassanmubiru @org/platform-team
+/infra/                             @hassanmubiru @org/platform-team
+/observability/                     @hassanmubiru @org/platform-team
+/verification-artifacts/            @hassanmubiru @org/release-team
+
+# Governance & security docs
+/SECURITY.md                        @hassanmubiru @org/security-team
+/GOVERNANCE.md  /MAINTAINERS.md     @hassanmubiru
+/security/                          @hassanmubiru @org/security-team
+```
+
+---
+
+# PHASE 9 — Security Automation Roadmap
+
+**VERIFIED already present:** CodeQL, OpenSSF Scorecard, gitleaks (`secret-scan.yml`
++ corrected `.gitleaks.toml`), Dependency Review, DAST, Dependabot, the new
+`secrets-guard`/`block-private-keys` gates, npm provenance, plugin signing + verify.
+
+| Horizon | Action | Status |
+|---|---|---|
+| **30 days** | Enable GitHub **Secret Scanning + Push Protection** (platform setting) | GAP — enable |
+| 30 days | Add **Trufflehog** full-history scan job (complements gitleaks) | GAP |
+| 30 days | Branch protection on `main`: required reviews (CODEOWNERS), required status checks incl. `secrets-guard`, linear history, no force-push | GAP — configure |
+| 30 days | Purge leaked key blob from history (runbook §7) | RISK open |
+| **90 days** | **SBOM** generated per release + attached (stop tracking `sbom.json`) | GAP |
+| 90 days | **Provenance/cosign verification** gate for published tarballs + install-time manifest verify docs | GAP |
+| 90 days | Per-plugin `SECURITY.md` + reporting path; coverage gate before publish | GAP |
+| 90 days | Infra-secrets CI grep (account IDs/DNS/cluster names in `infra/`) | GAP |
+| **180 days** | **Keyless signing** (Sigstore/cosign OIDC) or KMS/HSM-backed key; scheduled rotation + revocation policy | RECOMMENDATION |
+| 180 days | Recurring full-history secret scan + quarterly audit cadence | RECOMMENDATION |
+| 180 days | Pin all third-party actions by SHA + Dependabot for actions; enforce via zizmor | partially present |
+
+---
+
+# PHASE 10 — Final Report
+
+## 1. Executive Summary
+
+StreetJS has a genuinely strong security toolchain (CodeQL, Scorecard, gitleaks,
+dependency review, DAST, signed plugin manifests, provenance publishing) and a
+framework-grade package layout. **Since the prior audit, the single catastrophic
+finding — a leaked official signing key that was the trust anchor — has been
+remediated by a completed rotation:** the embedded anchor is now `3ae9add0`, all 21
+plugin manifests re-signed and verified against it (VERIFIED), a `secrets-guard`
+gate is rule #1 in CI, and `.gitleaks.toml` is corrected. The residual security work
+is hygiene: purge the (now-distrusted) leaked blob from history and relocate on-disk
+keys. The dominant *remaining* problems are **governance and organization**: a
+single-owner CODEOWNERS, no codified policies, and a root directory buried under ~45
+tracked docs, 6 compose files, 4 scaffold apps, SEO files, and tracked generated
+artifacts.
+
+## 2. Top 20 Risks
+
+1. (HIGH) Leaked key blob still in history (`d7bbfc40`) — distrusted but not purged.
+2. (HIGH) Two private keys on disk inside the tree (gitignored, untracked).
+3. (MED) `sbom.json`/`release-inputs.json` tracked → supply-chain drift.
+4. (MED) No platform Secret Scanning / Push Protection evidence.
+5. (MED) No per-plugin `SECURITY.md` (21/21 missing).
+6. (MED) 9 `node:https` plugins have no outbound timeout.
+7. (MED) Webhook-signature verifiers missing on stripe/twilio/paypal/sendgrid.
+8. (MED) SSRF: configurable-host plugins not allow-listed (openai/clerk/supabase/auth0).
+9. (MED) Single-owner CODEOWNERS → bus-factor + weak review separation.
+10. (MED) Root clutter obscures governance/security signal.
+11. (MED) `deploy/`/`observability/` lack a CI gate for real identifiers.
+12. (MED) Supabase service-role key usable in request path.
+13. (LOW) SEO tokens tracked in framework repo.
+14. (LOW) Hooks bypassable (`--no-verify`) — advisory only.
+15. (LOW) DB/messaging plugins default to plaintext (no TLS surfaced).
+16. (LOW) `verification-artifacts/**` tracked rather than CI-attached.
+17. (LOW) No SBOM/provenance verification gate at install side.
+18. (LOW) htmx template/partial names permit `..` traversal (developer-trust).
+19. (LOW) No scheduled key-rotation/revocation policy yet.
+20. (LOW) Branch-protection config not evidenced in-repo.
+
+## 3. Top 20 Improvements
+
+1. Purge history + coordinated force-push (runbook §7).
+2. Relocate both private keys out of the tree to a secrets manager.
+3. Enable Secret Scanning + Push Protection.
+4. Configure branch protection (CODEOWNERS reviews + required `secrets-guard`).
+5. Expand CODEOWNERS (proposed file delivered).
+6. Adopt the Governance Charter (Phase 7).
+7. Execute the root reorganization (`security/ audits/ plans/ infra/ governance/`).
+8. Untrack generated artifacts; generate SBOM in CI.
+9. Add per-plugin `SECURITY.md`/reporting pointer.
+10. Add outbound timeouts to the 9 HTTP plugins.
+11. Ship webhook verifiers for stripe/twilio (then paypal/sendgrid).
+12. Add SSRF host allow-list/validator for configurable-host plugins.
+13. Move SEO files to the website repo.
+14. Consolidate infra under `infra/` + `infra/README.md`.
+15. Add CI grep gate for real identifiers in infra.
+16. Add cosign/provenance verification gate.
+17. Add Trufflehog full-history scan.
+18. Surface TLS/SASL options for DB/messaging plugins.
+19. Harden htmx path-name handling; document raw-interpolation trust boundary.
+20. Establish scheduled rotation + revocation policy; pin all action SHAs.
+
+## 4–7. Scores
+
+| Dimension | Score | Basis |
+|---|---|---|
+| **Security** | **84 / 100** | Rotation complete + strong CI/signing/scanning; residual = unpurged history blob, on-disk keys, missing push protection, plugin timeout/webhook gaps |
+| **Governance** | **64 / 100** | Solid base docs (SECURITY/GOVERNANCE/MAINTAINERS/CONTRIBUTING/CoC, dependabot, templates) but single-owner CODEOWNERS and no codified policies |
+| **Repository Organization** | **58 / 100** | Framework-grade `packages/`/`docs/`/`examples/`/`rfcs/` undermined by heavy root clutter + tracked generated artifacts + scaffolds |
+| **Enterprise Readiness** | **80 / 100** | Broad CI, consistent signing, provenance; held back by org/governance gaps and history hygiene |
+
+## Final Decision: **GO WITH CONDITIONS**
+
+**Why.** The framework, CI security surface, and — critically — the plugin trust
+model are now sound: the rotation is verified complete and the previously-fatal
+leaked anchor is neutralised. That clears the only true blocker. The remaining items
+are real but **non-blocking and well-understood**: they are hygiene (purge history,
+move keys), governance (CODEOWNERS, charter, branch protection, push protection), and
+organization (root cleanup, untrack generated files). 
+
+**Conditions for unconditional GO (P0/P1):**
+1. Purge the leaked key blob from history and relocate both on-disk private keys.
+2. Enable Secret Scanning + Push Protection and branch protection with required
+   `secrets-guard` + CODEOWNERS review.
+3. Land the expanded CODEOWNERS and Governance Charter.
+4. Execute the root/infra reorganization and untrack generated artifacts.
+
+Detailed, sequenced execution with diffs, effort, and rollback is in
+**`SECURITY-HARDENING-SPRINT.md`**.
+
+*Read-only assessment. No code, CI, files, or git history were modified in producing
+this report; the only changes made elsewhere in this session (anchor rotation, CI
+gate, gitleaks fix) are documented in `SECURITY-AUDIT.md` and `KEY-ROTATION-RUNBOOK.md`.*
