@@ -6,7 +6,7 @@
 // dev dependencies after the root `npm ci`.
 //
 //   - Walks the tree, skipping node_modules/ and .git/.
-//   - Helm chart templates (deploy/helm/**/templates/**) are Go-templated
+//   - Helm chart templates (infra/helm/**/templates/**) are Go-templated
 //     ({{- ... }}), not valid YAML, so they are skipped.
 //   - Parses every document in each file (loadAll) to catch syntax errors.
 //   - For .github/workflows/*, the first document must be a mapping and should

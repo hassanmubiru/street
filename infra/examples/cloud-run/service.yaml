@@ -1,6 +1,6 @@
 # Google Cloud Run service for StreetJS (container target).
 # Deploy:
-#   gcloud run services replace deploy/cloud-run/service.yaml --region=$REGION
+#   gcloud run services replace infra/examples/cloud-run/service.yaml --region=$REGION
 # Rollback (Cloud Run keeps revisions):
 #   gcloud run services update-traffic streetjs --to-revisions=PREVIOUS=100 --region=$REGION
 apiVersion: serving.knative.dev/v1
