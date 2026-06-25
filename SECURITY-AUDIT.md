@@ -90,16 +90,15 @@ Risk is rated **High (72/100)** rather than Critical-maximum because the exposur
 
 **Design (correct):**
 
-- CI signs `@streetjs/plugin-htmx` from a GitHub Secret: `STREET_PLUGIN_SIGNING_KEY: ${{ secrets.STREET_PLUGIN_SIGNING_KEY }}` (`.github/workflows/sign-htmx.yml`). No committed key is referenced by that workflow.
-- The workflow verifies its own output against the official public key and fails the job if the manifest is not signed by the official key — a good integrity self-check.
+- A general CI workflow (`publish-plugins.yml`) builds, **Ed25519-signs, and publishes all 21 official plugins** from a GitHub Secret (`STREET_PLUGIN_SIGNING_KEY`), with npm provenance, and includes a **"Verify packed manifest is officially signed"** step that fails the job unless each packed manifest verifies against `officialPluginPublicKey()`. `sign-htmx.yml` is a separate **one-shot** workflow that signed `@streetjs/plugin-htmx` (the last plugin without a committed `manifest.signed.json`) and uploads the result as an artifact rather than pushing.
 - `sign.mjs` refuses to sign with an ephemeral key (fail-closed), preventing accidental "signed-with-throwaway-key" releases.
-- `main` is treated as protected; the signing workflow uploads an artifact rather than pushing, keeping release flow controlled.
+- `main` is treated as protected; the htmx signing workflow uploads an artifact rather than pushing, keeping release flow controlled.
 
 **Trust model (compromised by F-1):**
 
 - The committed private key `street-signing.key.pem` (in pushed history at `d7bbfc40`) has public half `df5e2726…`, an **exact match** for the embedded official trust anchor (`official-key.ts`) that `officialPluginPublicKey()` returns and consumers verify official plugins against (`registry.ts:89`). Because that private key is in pushed history, **any** signature that verifies against the official key — including `@streetjs/plugin-htmx`, whose `manifest.pub` is the official key — can no longer be assumed to be exclusively maintainer-produced. Anyone with the leaked key can mint valid "official" signatures.
 - **Note (corrected):** `@streetjs/plugin-marzpay@1.1.0` was **not** signed with the leaked key. Its `manifest.pub` is a distinct key (`7de6474b…`) whose private half was not found anywhere in history. The marzpay signature itself is therefore not forgeable from the leaked material — but see F-7: marzpay's key is not the official anchor, so it would not verify as official either.
-- **Process gap (F-3):** only htmx signs in CI. `plugin-marzpay@1.1.0` was signed via a **manual local publish** using an on-disk per-plugin key. Any signing path that touches a workstation re-exposes long-lived key material and is how leaks like F-1 happen.
+- **Process gap (F-3):** despite `publish-plugins.yml` signing all 21 plugins in CI and asserting each verifies against the official key, only `plugin-htmx`'s committed manifest actually matches that anchor (`df5e2726…`). `plugin-marzpay@1.1.0`'s committed manifest is `7de6474b…`, which would **fail** that workflow's own verify step — so it was signed via a **manual local publish** outside the CI gate, using an on-disk key. Any signing path that touches a workstation re-exposes long-lived key material and is how leaks like F-1 happen. The mismatch between the enforced anchor (`df5e2726…`) and 20 of 21 committed manifests is the half-finished rotation in F-7.
 
 **Required outcome:** the official public key currently distributed to plugin hosts/consumers must be **revoked and replaced**, and **all** official plugins re-signed under a new key whose private half lives **only** in CI secrets.
 
@@ -196,7 +195,7 @@ done
 
 1. **Rotate to a single new official key.** Generate **one** fresh Ed25519 keypair; store the private half **only** in GitHub Secrets (`STREET_PLUGIN_SIGNING_KEY`). Treat the embedded `df5e2726…` anchor (and the ad-hoc per-plugin keys such as marzpay's `7de6474b…`) as **compromised/distrusted**, and distribute the **new public key** to plugin hosts/consumers.
 2. **Update the embedded anchor and re-sign consistently.** Replace `OFFICIAL_PLUGIN_PUBLIC_KEY_PEM` in `packages/core/src/platform/plugins/official-key.ts` with the new public key, then **re-sign all 21 plugins** (htmx, marzpay, and the 19 others currently shipping distinct `manifest.pub` keys) with the single new official key in CI, and publish the new signed manifests. This completes the half-finished rotation in F-7 and ensures every plugin verifies against `officialPluginPublicKey()`.
-3. **Move ALL plugin signing into CI.** Generalize the `sign-htmx.yml` pattern so every official plugin signs from the CI secret. The private key must never again touch a developer machine (closes F-3).
+3. **Enforce that ALL publishing goes through the CI gate.** A general CI signing workflow (`publish-plugins.yml`) already signs every plugin from the CI secret and verifies against the official key — the gap is that `marzpay@1.1.0` was published *outside* it via a manual local publish. Disable/forbid local `npm publish` for official plugins (e.g. publish-time guard + branch protection) so the only signing path is CI and the private key never touches a workstation (closes F-3).
 4. **Purge history** of `street-signing.key.pem` and `street-signing.pub.pem`: `git filter-repo --invert-paths --path street-signing.key.pem --path street-signing.pub.pem` (or BFG), then **coordinate a force-push** with all contributors and have everyone re-clone. ⚠️ Purging does **not** undo exposure (existing clones/forks/CI caches retain the blob) — this is why rotation in step 1 is mandatory regardless.
 5. **Remove on-disk keys from the repo directory.** Move `street-signing.key.pem` (F-5) and `packages/plugin-marzpay/signing-key.pkcs8.pem` (F-4) into a secrets manager / outside the working tree.
 6. **Correct `.gitleaks.toml` (F-2):** delete the false "not the production key / purged from history" comment and the path allowlist for the signing key; apply snippet 8.1.
@@ -204,7 +203,7 @@ done
 ### Medium-term — within 30 days
 
 7. Apply enforcement snippets 8.1–8.3 through normal review; add a CI `block-private-keys` gate (8.2).
-8. Add signing to the publish pipeline for **every** plugin package and assert in CI that published manifests verify against the **new** official public key (extend the htmx self-check to all plugins).
+8. The publish pipeline (`publish-plugins.yml`) already signs every plugin and asserts published manifests verify against `officialPluginPublicKey()`; after rotation, confirm the CI secret matches the **new** embedded anchor so all 21 committed manifests verify (today only htmx matches). Add a CI check that fails if any committed `manifest.pub` differs from the embedded official key.
 9. Generate and attach an **SBOM** per release (CycloneDX/SPDX) and publish signing/build **attestations**; stop committing generated security reports.
 10. Document the incident and rotation in a GitHub Security Advisory and the changelog so downstream consumers know to trust the new key and distrust the old one.
 
