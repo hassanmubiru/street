@@ -486,7 +486,7 @@ Applied after this audit (see `SECURITY-HARDENING-SPRINT.md` for detail):
 | Root reorganization (`plans/ audits/ security/`) | Phase 5 | ✅ done (root `.md` 45→7) |
 | Untrack `sbom.json`/`release-inputs.json` | Phase 2 RISK | ✅ done |
 | Infra-identifier CI gate + TruffleHog + pre-push key-block | Phase 9 | ✅ done |
-| Infra consolidation under `infra/` | Phase 6 / P1-4 | ⏳ deferred (CI path coupling) |
+| Infra consolidation under `infra/` | Phase 6 / P1-4 | 🟡 partial — `deploy/`→`infra/`, `observability/`→`infra/monitoring/` done; compose+Dockerfile kept at root (relative-path coupling) |
 | Purge history, relocate keys, push/branch protection | Phase 9 P0 | ⏳ operator |
 
 ## Appendix B — New finding (VERIFIED during sprint)
