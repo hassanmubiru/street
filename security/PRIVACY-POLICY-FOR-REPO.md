@@ -120,4 +120,4 @@ git config core.hooksPath .githooks
 - [ ] No Tier 3 internal docs (strategy/roadmap/marketing, `CLAUDE.md`, `.kiro/specs/`) — these go to a private repo or local `plans/`.
 - [ ] `git diff --cached --name-only` reviewed file-by-file; nothing unexpected staged.
 - [ ] Real config values live in `.env` / GitHub Secrets / a secrets manager — not in source, tests, or docs.
-- [ ] If you discover a secret already in history, **stop** and follow §3: rotate, purge, relocate, and notify a maintainer per [`SECURITY.md`](./SECURITY.md).
+- [ ] If you discover a secret already in history, **stop** and follow §3: rotate, purge, relocate, and notify a maintainer per [`SECURITY.md`](../SECURITY.md).
