@@ -11,7 +11,7 @@
       "status": "source-only",
       "source": "https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/saas",
       "scaffold": "street create my-saas --starter saas --with-admin-ui",
-      "deploy": "deploy/cloud-run/service.yaml",
+      "deploy": "infra/examples/cloud-run/service.yaml",
       "docs": "/showcase/saas/",
       "sandbox": true
     },
@@ -24,7 +24,7 @@
       "status": "source-only",
       "source": "https://github.com/hassanmubiru/StreetJS/tree/main/examples/marzpay-saas",
       "package": "https://www.npmjs.com/package/@streetjs/plugin-marzpay",
-      "deploy": "deploy/cloud-run/service.yaml",
+      "deploy": "infra/examples/cloud-run/service.yaml",
       "docs": "/showcase/marzpay-billing/",
       "sandbox": true
     },
@@ -37,7 +37,7 @@
       "status": "source-only",
       "source": "https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/htmx-dashboard",
       "scaffold": "street create my-app --frontend htmx",
-      "deploy": "deploy/cloud-run/service.yaml",
+      "deploy": "infra/examples/cloud-run/service.yaml",
       "docs": "/showcase/htmx-dashboard/",
       "sandbox": true
     },
@@ -49,7 +49,7 @@
       "url": "",
       "status": "source-only",
       "source": "https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/realtime-chat",
-      "deploy": "deploy/helm/street",
+      "deploy": "infra/helm/street",
       "docs": "/showcase/realtime-chat/",
       "sandbox": true,
       "requiresWebSocket": true
@@ -62,7 +62,7 @@
       "url": "",
       "status": "source-only",
       "source": "https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/ai-assistant",
-      "deploy": "deploy/cloud-run/service.yaml",
+      "deploy": "infra/examples/cloud-run/service.yaml",
       "docs": "/showcase/ai-assistant/",
       "sandbox": true,
       "demoSafeMode": true
@@ -75,7 +75,7 @@
       "url": "",
       "status": "source-only",
       "source": "https://github.com/hassanmubiru/StreetJS/tree/main/examples/reference-apps/crm",
-      "deploy": "deploy/cloud-run/service.yaml",
+      "deploy": "infra/examples/cloud-run/service.yaml",
       "docs": "/showcase/crm/",
       "sandbox": true
     }

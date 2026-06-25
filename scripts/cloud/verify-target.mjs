@@ -18,7 +18,7 @@
 //
 // Usage:
 //   node scripts/cloud/verify-target.mjs --target kubernetes --base-url https://<url>
-//   DEPLOY_CMD="kubectl apply -k deploy/k8s" node scripts/cloud/verify-target.mjs \
+//   DEPLOY_CMD="kubectl apply -k infra/kubernetes" node scripts/cloud/verify-target.mjs \
 //     --target kubernetes --base-url https://<url> --checks scripts/cloud/checks.json
 //
 // Exit code mirrors the target status: 0 for VERIFIED, 1 otherwise (so CI fails
