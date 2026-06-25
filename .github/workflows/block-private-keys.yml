@@ -1,0 +1,81 @@
+name: Block private keys & verify signing anchor
+
+# Defense-in-depth gate added during the 2026 signing-key rotation
+# (see KEY-ROTATION-RUNBOOK.md / SECURITY-AUDIT.md F-1, F-6, F-7).
+#
+# Fails the build if:
+#   1. any private key / keystore file is tracked, or a BEGIN PRIVATE KEY blob
+#      appears in tracked content; and
+#   2. any committed packages/plugin-*/manifest.pub does not match the embedded
+#      official trust anchor (OFFICIAL_PLUGIN_PUBLIC_KEY_PEM).
+#
+# (2) catches key-drift like the half-finished rotation in F-7, where committed
+# manifests were signed by a key other than the embedded anchor.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  block-private-keys:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fail on tracked key / keystore files
+        run: |
+          if git ls-files | grep -E '\.(pem|key|p12|pfx)$'; then
+            echo "::error::A private key / keystore file is tracked. Remove it and rotate the credential."
+            exit 1
+          fi
+
+      - name: Fail on BEGIN PRIVATE KEY blobs in tracked content
+        run: |
+          if git grep -nI -e '-----BEGIN .*PRIVATE KEY-----' -- . ':(exclude)**/*.test.*'; then
+            echo "::error::Private key material detected in tracked content."
+            exit 1
+          fi
+
+  verify-signing-anchor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Every committed manifest.pub must match the embedded official anchor
+        run: |
+          node -e "
+            const { createPublicKey, createHash } = require('node:crypto');
+            const fs = require('node:fs');
+            const path = require('node:path');
+            const fp = (pem) => createHash('sha256')
+              .update(createPublicKey(pem).export({ type: 'spki', format: 'der' }))
+              .digest('hex');
+            const anchorSrc = fs.readFileSync('packages/core/src/platform/plugins/official-key.ts', 'utf8');
+            const anchorPem = anchorSrc.match(/-----BEGIN PUBLIC KEY-----[\s\S]*?-----END PUBLIC KEY-----/)[0];
+            const anchor = fp(anchorPem);
+            console.log('embedded anchor:', anchor);
+            let bad = 0;
+            for (const dir of fs.readdirSync('packages')) {
+              if (!dir.startsWith('plugin-')) continue;
+              const pub = path.join('packages', dir, 'manifest.pub');
+              if (!fs.existsSync(pub)) continue;
+              const f = fp(fs.readFileSync(pub, 'utf8'));
+              const ok = f === anchor;
+              console.log((ok ? 'OK   ' : 'FAIL ') + pub + ' ' + f);
+              if (!ok) bad++;
+            }
+            if (bad) {
+              console.error('::error::' + bad + ' plugin manifest.pub file(s) do not match the embedded official anchor');
+              process.exit(1);
+            }
+          "
