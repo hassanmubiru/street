@@ -36,8 +36,8 @@
 - `dependency-review.yml` blocks PRs introducing vulnerable/incompatible deps.
 - High-severity `npm audit` gate (`policy-checks` job).
 - Third-party GitHub Actions pinned by commit SHA (core workflows); newer security
-  workflows pin `actions/checkout` by SHA (gitleaks/trufflehog SHA-pinning is a
-  tracked follow-up).
+  workflows pin `actions/checkout` by SHA (gitleaks runs as the free CLI in
+  `secret-scan.yml`; trufflehog is SHA-pinned there).
 
 ## Secret scanning
 - `.gitleaks.toml` (6 explicit rules incl. PEM private-key + cloud creds) via
