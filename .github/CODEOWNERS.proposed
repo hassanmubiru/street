@@ -1,0 +1,50 @@
+# PROPOSED CODEOWNERS — review, replace @org/*-team placeholders with real
+# teams/handles, then move over .github/CODEOWNERS. Last matching pattern wins,
+# so specific rules are placed AFTER the catch-all.
+#
+# Requires branch protection with "Require review from Code Owners" to take effect.
+
+*                                   @hassanmubiru
+
+# ── CI / supply chain — highest scrutiny ───────────────────────────────
+/.github/                           @hassanmubiru @org/security-team
+/.github/workflows/                 @hassanmubiru @org/security-team
+/.github/workflows/publish-plugins.yml    @hassanmubiru @org/release-team
+/.github/workflows/sign-htmx.yml          @hassanmubiru @org/release-team
+/.github/workflows/block-private-keys.yml @hassanmubiru @org/security-team
+/.github/workflows/ci-cd.yml              @hassanmubiru @org/security-team
+/.githooks/                         @hassanmubiru @org/security-team
+/.gitleaks.toml                     @hassanmubiru @org/security-team
+
+# ── Signing trust anchor — never change without security review ────────
+/packages/core/src/platform/plugins/official-key.ts   @hassanmubiru @org/security-team
+/packages/core/src/platform/plugins/registry.ts        @hassanmubiru @org/security-team
+
+# ── Security-sensitive core ────────────────────────────────────────────
+/packages/core/src/security/        @hassanmubiru @org/security-team
+/packages/core/src/database/        @hassanmubiru @org/security-team
+
+# ── Payment plugins — elevated review ──────────────────────────────────
+/packages/plugin-marzpay/           @hassanmubiru @org/payments-team
+/packages/plugin-stripe/            @hassanmubiru @org/payments-team
+/packages/plugin-paypal/            @hassanmubiru @org/payments-team
+/packages/plugin-africastalking/    @hassanmubiru @org/payments-team
+
+# ── Identity plugins ───────────────────────────────────────────────────
+/packages/plugin-auth0/             @hassanmubiru @org/identity-team
+/packages/plugin-clerk/             @hassanmubiru @org/identity-team
+/packages/plugin-firebase/          @hassanmubiru @org/identity-team
+/packages/plugin-supabase/          @hassanmubiru @org/identity-team
+
+# ── Infra & release evidence ───────────────────────────────────────────
+/deploy/                            @hassanmubiru @org/platform-team
+/infra/                             @hassanmubiru @org/platform-team
+/observability/                     @hassanmubiru @org/platform-team
+/verification-artifacts/            @hassanmubiru @org/release-team
+
+# ── Governance & security docs ─────────────────────────────────────────
+/SECURITY.md                        @hassanmubiru @org/security-team
+/GOVERNANCE.md                      @hassanmubiru
+/MAINTAINERS.md                     @hassanmubiru
+/security/                          @hassanmubiru @org/security-team
+/governance/                        @hassanmubiru
