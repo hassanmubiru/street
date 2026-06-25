@@ -81,3 +81,32 @@ jobs:
               process.exit(1);
             }
           "
+
+  scan-infra-identifiers:
+    name: Scan infra for real identifiers
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Fail on real cloud identifiers in infra/deploy/observability
+        run: |
+          # Infra assets must be TEMPLATED examples only — no real AWS account IDs
+          # (12-digit), ARNs, internal DNS, cluster names, or monitoring URLs.
+          # Scans only if the directories exist (deploy/observability may move to infra/).
+          targets=""
+          for d in infra deploy observability; do [ -d "$d" ] && targets="$targets $d"; done
+          [ -z "$targets" ] && { echo "no infra dirs present — skipping"; exit 0; }
+          bad=0
+          # 12-digit AWS account IDs and ARNs containing one.
+          if grep -rInE 'arn:aws[a-z-]*:[a-z0-9-]*:[a-z0-9-]*:[0-9]{12}:' $targets; then
+            echo "::error::ARN containing a real account ID found in infra assets."; bad=1; fi
+          if grep -rInE '\b[0-9]{12}\b' $targets | grep -viE 'example|0{12}|1234567890|placeholder'; then
+            echo "::error::Possible real 12-digit AWS account ID in infra assets."; bad=1; fi
+          # Internal DNS / cluster hints.
+          if grep -rInE '\.(internal|local|cluster\.local|ec2\.internal)\b' $targets | grep -viE 'example|placeholder'; then
+            echo "::error::Possible internal DNS / cluster name in infra assets."; bad=1; fi
+          [ "$bad" -eq 0 ] && echo "infra identifier scan clean ✔"
+          exit $bad
