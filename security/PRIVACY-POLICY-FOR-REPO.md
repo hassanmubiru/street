@@ -2,7 +2,7 @@
 
 > **Status:** Normative policy for the public `streetJS` framework repository.
 > **Audience:** Contributors and maintainers.
-> **Related:** [`CONTRIBUTING.md`](./CONTRIBUTING.md) · [`SECURITY.md`](./SECURITY.md) · [`SECURITY-AUDIT-2026.md`](./SECURITY-AUDIT-2026.md) · [`.gitignore`](./.gitignore) · [`.gitleaks.toml`](./.gitleaks.toml)
+> **Related:** [`CONTRIBUTING.md`](../CONTRIBUTING.md) · [`SECURITY.md`](../SECURITY.md) · [`SECURITY-AUDIT-2026.md`](../audits/SECURITY-AUDIT-2026.md) · [`.gitignore`](../.gitignore) · [`.gitleaks.toml`](../.gitleaks.toml)
 
 ## 1. Purpose & scope
 
