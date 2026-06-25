@@ -53,4 +53,4 @@ Searched tracked files for: `token`, `apikey`, `api_key`, `secret`, `password`,
 - `.gitignore` blocks RESTRICTED patterns; `.gitleaks.toml` (6 rules) + `secret-scan.yml`.
 - `secrets-guard` (rule #1) + `block-private-keys.yml` + `security-baseline.yml`
   forbidden-files job + `repository-policy.yml` no-restricted-tracked job.
-- `trufflehog.yml` weekly full-history scan.
+- `trufflesecurity/trufflehog` (SHA-pinned, `--only-verified`, full history) runs in `secret-scan.yml` on every push/PR.
