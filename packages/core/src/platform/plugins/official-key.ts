@@ -10,7 +10,7 @@ import { createPublicKey, type KeyObject } from 'node:crypto';
 
 /** PEM (SPKI) of the official StreetJS plugin-signing public key. */
 export const OFFICIAL_PLUGIN_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
-MCowBQYDK2VwAyEA4IqlSB2iIgXeWGpZKxNJNpNbR3vwgzQJslrDe6fckW4=
+MCowBQYDK2VwAyEAesx0CLiPXWuE11CRff7MZMMWHtQ2LMQa1XLmtIeKRoY=
 -----END PUBLIC KEY-----
 `;
 
