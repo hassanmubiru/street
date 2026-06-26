@@ -11,6 +11,9 @@ import { request as httpsRequest } from 'node:https';
 export const OPENAI_PLUGIN_NAME = 'street-plugin-openai';
 export const OPENAI_PLUGIN_VERSION = '1.0.0';
 
+/** Default outbound-request timeout (ms) when config omits `timeoutMs`. */
+export const OPENAI_DEFAULT_TIMEOUT_MS = 30_000;
+
 export interface OpenAiPluginConfig {
   apiKey: string;
   /** Optional organization id (sent as OpenAI-Organization). */
@@ -19,6 +22,8 @@ export interface OpenAiPluginConfig {
   baseUrl?: string;
   /** State key under which the client is injected. Default 'openai'. */
   stateKey?: string;
+  /** Outbound HTTP timeout in ms (default 30000). */
+  timeoutMs?: number;
 }
 
 export interface OpenAiHttpRequest {
