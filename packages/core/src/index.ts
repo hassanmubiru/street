@@ -535,19 +535,22 @@ export type {
 } from './platform/plugins/local-registry.js';
 export {
   SendGridPlugin, SendGridClient, sendGridPluginManifest, validateSendGridConfig,
-  SENDGRID_PLUGIN_NAME, SENDGRID_PLUGIN_VERSION,
+  SENDGRID_PLUGIN_NAME, SENDGRID_PLUGIN_VERSION, SENDGRID_DEFAULT_TIMEOUT_MS,
 } from './platform/plugins/official/sendgrid.js';
 export type { SendGridPluginConfig, MailMessage, SendGridRequest } from './platform/plugins/official/sendgrid.js';
 export {
-  StripePlugin, StripeClient, stripePluginManifest, validateStripeConfig, STRIPE_PLUGIN_NAME, STRIPE_PLUGIN_VERSION,
+  StripePlugin, StripeClient, stripePluginManifest, validateStripeConfig, verifyStripeWebhook,
+  STRIPE_PLUGIN_NAME, STRIPE_PLUGIN_VERSION, STRIPE_DEFAULT_TIMEOUT_MS,
 } from './platform/plugins/official/stripe.js';
 export type { StripePluginConfig, StripeHttpRequest } from './platform/plugins/official/stripe.js';
 export {
-  TwilioPlugin, TwilioClient, twilioPluginManifest, validateTwilioConfig, TWILIO_PLUGIN_NAME, TWILIO_PLUGIN_VERSION,
+  TwilioPlugin, TwilioClient, twilioPluginManifest, validateTwilioConfig, verifyTwilioSignature,
+  TWILIO_PLUGIN_NAME, TWILIO_PLUGIN_VERSION, TWILIO_DEFAULT_TIMEOUT_MS,
 } from './platform/plugins/official/twilio.js';
 export type { TwilioPluginConfig, TwilioHttpRequest, SmsMessage } from './platform/plugins/official/twilio.js';
 export {
-  Auth0Plugin, Auth0Client, auth0PluginManifest, validateAuth0Config, AUTH0_PLUGIN_NAME, AUTH0_PLUGIN_VERSION,
+  Auth0Plugin, Auth0Client, auth0PluginManifest, validateAuth0Config,
+  AUTH0_PLUGIN_NAME, AUTH0_PLUGIN_VERSION, AUTH0_DEFAULT_TIMEOUT_MS,
 } from './platform/plugins/official/auth0.js';
 export type { Auth0PluginConfig, Auth0HttpRequest } from './platform/plugins/official/auth0.js';
 export {

@@ -32,12 +32,16 @@ export function validateAuth0Config(input: unknown): Auth0PluginConfig {
   for (const k of ['audience', 'stateKey']) {
     if (o[k] !== undefined && typeof o[k] !== 'string') throw new PluginError(`Auth0 plugin config: "${k}" must be a string`);
   }
+  if (o['timeoutMs'] !== undefined && (typeof o['timeoutMs'] !== 'number' || !Number.isInteger(o['timeoutMs']) || o['timeoutMs'] <= 0)) {
+    throw new PluginError('Auth0 plugin config: "timeoutMs" must be a positive integer (milliseconds)');
+  }
   // Normalise domain: strip protocol and trailing slash.
   const domain = (o['domain'] as string).replace(/^https?:\/\//, '').replace(/\/$/, '');
   return {
     domain, clientId: o['clientId'] as string, clientSecret: o['clientSecret'] as string,
     ...(o['audience'] !== undefined ? { audience: o['audience'] as string } : {}),
     ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}),
+    ...(o['timeoutMs'] !== undefined ? { timeoutMs: o['timeoutMs'] as number } : {}),
   };
 }
 
@@ -64,10 +68,13 @@ export class Auth0Client {
 
   async getToken(audience?: string): Promise<number> {
     const r = this.buildTokenRequest(audience); const u = new URL(r.url);
+    const timeoutMs = this.config.timeoutMs ?? AUTH0_DEFAULT_TIMEOUT_MS;
     return new Promise<number>((resolve, reject) => {
-      const req = httpsRequest({ method: r.method, hostname: u.hostname, path: u.pathname, headers: { ...r.headers, 'content-length': Buffer.byteLength(r.body).toString() } },
+      const req = httpsRequest({ method: r.method, hostname: u.hostname, path: u.pathname, timeout: timeoutMs, headers: { ...r.headers, 'content-length': Buffer.byteLength(r.body).toString() } },
         (res) => { res.resume(); res.once('end', () => resolve(res.statusCode ?? 0)); });
-      req.once('error', reject); req.end(r.body);
+      req.once('error', reject);
+      req.once('timeout', () => req.destroy(new PluginError(`Auth0: request timed out after ${timeoutMs}ms`)));
+      req.end(r.body);
     });
   }
 }
