@@ -60,11 +60,15 @@ export function validateOpenAiConfig(input: unknown): OpenAiPluginConfig {
   if (o['baseUrl'] !== undefined && !/^https:\/\//.test(o['baseUrl'] as string)) {
     throw new PluginError('OpenAI plugin config: "baseUrl" must be an https URL');
   }
+  if (o['timeoutMs'] !== undefined && (typeof o['timeoutMs'] !== 'number' || !Number.isInteger(o['timeoutMs']) || o['timeoutMs'] <= 0)) {
+    throw new PluginError('OpenAI plugin config: "timeoutMs" must be a positive integer (milliseconds)');
+  }
   return {
     apiKey: o['apiKey'] as string,
     ...(o['organization'] !== undefined ? { organization: o['organization'] as string } : {}),
     ...(o['baseUrl'] !== undefined ? { baseUrl: o['baseUrl'] as string } : {}),
     ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}),
+    ...(o['timeoutMs'] !== undefined ? { timeoutMs: o['timeoutMs'] as number } : {}),
   };
 }
 
@@ -133,9 +137,10 @@ export class OpenAiClient {
 
   private send(req: OpenAiHttpRequest): Promise<{ status: number; body: string }> {
     const u = new URL(req.url);
+    const timeoutMs = this.config.timeoutMs ?? OPENAI_DEFAULT_TIMEOUT_MS;
     return new Promise((resolve, reject) => {
       const r = httpsRequest(
-        { method: req.method, hostname: u.hostname, path: u.pathname + u.search, headers: req.headers },
+        { method: req.method, hostname: u.hostname, path: u.pathname + u.search, timeout: timeoutMs, headers: req.headers },
         (res) => {
           let data = '';
           res.on('data', (c) => (data += c));
@@ -143,6 +148,7 @@ export class OpenAiClient {
         },
       );
       r.on('error', (e) => reject(new PluginError(`OpenAI request failed: ${e.message}`)));
+      r.once('timeout', () => r.destroy(new PluginError(`OpenAI request timed out after ${timeoutMs}ms`)));
       r.end(req.body);
     });
   }

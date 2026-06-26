@@ -11,6 +11,9 @@ import { request as httpsRequest } from 'node:https';
 export const CLERK_PLUGIN_NAME = 'street-plugin-clerk';
 export const CLERK_PLUGIN_VERSION = '1.0.0';
 
+/** Default outbound-request timeout (ms) when config omits `timeoutMs`. */
+export const CLERK_DEFAULT_TIMEOUT_MS = 30_000;
+
 export interface ClerkPluginConfig {
   /** Clerk backend secret key (sk_test_… / sk_live_…). */
   secretKey: string;
@@ -18,6 +21,8 @@ export interface ClerkPluginConfig {
   baseUrl?: string;
   /** State key under which the client is injected. Default 'clerk'. */
   stateKey?: string;
+  /** Outbound HTTP timeout in ms (default 30000). */
+  timeoutMs?: number;
 }
 
 export interface ClerkHttpRequest {
