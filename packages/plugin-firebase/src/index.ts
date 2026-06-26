@@ -12,11 +12,16 @@ import { request as httpsRequest } from 'node:https';
 export const FIREBASE_PLUGIN_NAME = 'street-plugin-firebase';
 export const FIREBASE_PLUGIN_VERSION = '1.0.0';
 
+/** Default outbound-request timeout (ms) when config omits `timeoutMs`. */
+export const FIREBASE_DEFAULT_TIMEOUT_MS = 30_000;
+
 export interface FirebasePluginConfig {
   /** Firebase Web API key. */
   apiKey: string;
   /** State key under which the client is injected. Default 'firebase'. */
   stateKey?: string;
+  /** Outbound HTTP timeout in ms (default 30000). */
+  timeoutMs?: number;
 }
 
 export interface FirebaseHttpRequest {
@@ -48,9 +53,13 @@ export function validateFirebaseConfig(input: unknown): FirebasePluginConfig {
   if (o['stateKey'] !== undefined && typeof o['stateKey'] !== 'string') {
     throw new PluginError('Firebase plugin config: "stateKey" must be a string');
   }
+  if (o['timeoutMs'] !== undefined && (typeof o['timeoutMs'] !== 'number' || !Number.isInteger(o['timeoutMs']) || o['timeoutMs'] <= 0)) {
+    throw new PluginError('Firebase plugin config: "timeoutMs" must be a positive integer (milliseconds)');
+  }
   return {
     apiKey: o['apiKey'] as string,
     ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}),
+    ...(o['timeoutMs'] !== undefined ? { timeoutMs: o['timeoutMs'] as number } : {}),
   };
 }
 
@@ -110,9 +119,10 @@ export class FirebaseAuthClient {
 
   private send(req: FirebaseHttpRequest): Promise<{ status: number; body: string }> {
     const u = new URL(req.url);
+    const timeoutMs = this.config.timeoutMs ?? FIREBASE_DEFAULT_TIMEOUT_MS;
     return new Promise((resolve, reject) => {
       const r = httpsRequest(
-        { method: req.method, hostname: u.hostname, path: u.pathname + u.search, headers: req.headers },
+        { method: req.method, hostname: u.hostname, path: u.pathname + u.search, timeout: timeoutMs, headers: req.headers },
         (res) => {
           let data = '';
           res.on('data', (c) => (data += c));
@@ -120,6 +130,7 @@ export class FirebaseAuthClient {
         },
       );
       r.on('error', (e) => reject(new PluginError(`Firebase request failed: ${e.message}`)));
+      r.once('timeout', () => r.destroy(new PluginError(`Firebase request timed out after ${timeoutMs}ms`)));
       r.end(req.body);
     });
   }
