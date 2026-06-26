@@ -16,6 +16,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: vendor-contract-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   contract-tests:
     runs-on: ubuntu-latest

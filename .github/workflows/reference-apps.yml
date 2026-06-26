@@ -17,6 +17,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: reference-apps-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   reference-apps:
     runs-on: ubuntu-latest

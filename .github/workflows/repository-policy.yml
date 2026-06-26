@@ -13,6 +13,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: repository-policy-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   root-folder-allowlist:
     name: Root folder allowlist
