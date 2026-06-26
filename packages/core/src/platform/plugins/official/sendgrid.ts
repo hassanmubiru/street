@@ -11,12 +11,17 @@ import type { MiddlewareFn } from '../../../core/types.js';
 export const SENDGRID_PLUGIN_NAME = 'street-plugin-sendgrid';
 export const SENDGRID_PLUGIN_VERSION = '1.0.0';
 
+/** Default outbound-request timeout (ms) when config omits `timeoutMs`. */
+export const SENDGRID_DEFAULT_TIMEOUT_MS = 30_000;
+
 export interface SendGridPluginConfig {
   apiKey: string;
   /** Default sender address used when a message omits `from`. */
   defaultFrom?: string;
   /** State key under which the mail client is injected. Default 'mail'. */
   stateKey?: string;
+  /** Outbound HTTP timeout in ms (default 30000). */
+  timeoutMs?: number;
 }
 
 export interface MailMessage {

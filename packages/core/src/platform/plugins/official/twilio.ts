@@ -34,11 +34,44 @@ export function validateTwilioConfig(input: unknown): TwilioPluginConfig {
   for (const k of ['defaultFrom', 'stateKey']) {
     if (o[k] !== undefined && typeof o[k] !== 'string') throw new PluginError(`Twilio plugin config: "${k}" must be a string`);
   }
+  if (o['timeoutMs'] !== undefined && (typeof o['timeoutMs'] !== 'number' || !Number.isInteger(o['timeoutMs']) || o['timeoutMs'] <= 0)) {
+    throw new PluginError('Twilio plugin config: "timeoutMs" must be a positive integer (milliseconds)');
+  }
   return {
     accountSid: o['accountSid'] as string, authToken: o['authToken'] as string,
     ...(o['defaultFrom'] !== undefined ? { defaultFrom: o['defaultFrom'] as string } : {}),
     ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}),
+    ...(o['timeoutMs'] !== undefined ? { timeoutMs: o['timeoutMs'] as number } : {}),
   };
+}
+
+/**
+ * Verify a Twilio request signature (the `X-Twilio-Signature` header). Pure
+ * crypto, no network. Twilio signs the full request URL with the POST params
+ * appended in lexicographic key order (key immediately followed by value),
+ * HMAC-SHA1 with your account auth token, base64-encoded. The comparison is
+ * constant-time. Returns `true` only on a match.
+ *
+ * @param authToken  Twilio account auth token (the signing secret).
+ * @param url        The full URL Twilio requested (exactly as configured).
+ * @param params     The POST form parameters Twilio sent.
+ * @param signature  The `X-Twilio-Signature` header value.
+ */
+export function verifyTwilioSignature(
+  authToken: string,
+  url: string,
+  params: Record<string, string>,
+  signature: string,
+): boolean {
+  if (typeof authToken !== 'string' || authToken === '' || typeof url !== 'string' || typeof signature !== 'string' || signature === '') {
+    return false;
+  }
+  let data = url;
+  for (const key of Object.keys(params).sort()) data += key + params[key];
+  const expected = createHmac('sha1', authToken).update(Buffer.from(data, 'utf8')).digest();
+  let provided: Buffer;
+  try { provided = Buffer.from(signature, 'base64'); } catch { return false; }
+  return provided.length === expected.length && timingSafeEqual(provided, expected);
 }
 
 export class TwilioClient {
@@ -62,10 +95,13 @@ export class TwilioClient {
 
   async send(msg: SmsMessage): Promise<number> {
     const r = this.buildSendSmsRequest(msg); const u = new URL(r.url);
+    const timeoutMs = this.config.timeoutMs ?? TWILIO_DEFAULT_TIMEOUT_MS;
     return new Promise<number>((resolve, reject) => {
-      const req = httpsRequest({ method: r.method, hostname: u.hostname, path: u.pathname, headers: { ...r.headers, 'content-length': Buffer.byteLength(r.body).toString() } },
+      const req = httpsRequest({ method: r.method, hostname: u.hostname, path: u.pathname, timeout: timeoutMs, headers: { ...r.headers, 'content-length': Buffer.byteLength(r.body).toString() } },
         (res) => { res.resume(); res.once('end', () => resolve(res.statusCode ?? 0)); });
-      req.once('error', reject); req.end(r.body);
+      req.once('error', reject);
+      req.once('timeout', () => req.destroy(new PluginError(`Twilio: request timed out after ${timeoutMs}ms`)));
+      req.end(r.body);
     });
   }
 }
