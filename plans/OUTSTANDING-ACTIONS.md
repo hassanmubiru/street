@@ -1,0 +1,67 @@
+# StreetJS — Outstanding Actions (Master Register)
+
+> Single consolidated to-do aggregating every open item across all audit, security,
+> and governance docs. Owner tags:
+> **[OPERATOR]** platform/destructive (GitHub settings, history, secrets) ·
+> **[MAINTAINER]** repo edit (docs/config, non-runtime) ·
+> **[RUNTIME]** plugin/core code change (out of governance scope — separate PR).
+>
+> Everything below is what remains; all governance/organization/CI/docs hardening
+> already applied is recorded in `audits/STREETJS-FULL-AUDIT-REPORT.md` and the
+> `CHANGELOG.md` `[Unreleased]` section.
+
+## P0 — Critical
+| # | Action | Owner | Source | Done when |
+|---|---|---|---|---|
+| 1 | Enable **branch protection** on `main` (require Code-Owner review + status checks `secrets-guard`/`build-and-test`/`verify-signing-anchor`/`secret-scan`/`codeql`, linear history, no force-push) | [OPERATOR] | `security/BRANCH-PROTECTION-REVIEW.md`, `OPENSSF-REVIEW.md`, `SLSA-ASSESSMENT.md` | Settings applied + a blocked direct push confirms |
+| 2 | Enable **Secret Scanning + Push Protection** (GitHub setting) | [OPERATOR] | `OPENSSF-REVIEW.md`, `TRUST-CENTER.md` | Toggles on in repo security settings |
+| 3 | **Purge leaked key blob** from history (`git filter-repo` on a mirror + coordinated force-push + re-clone) | [OPERATOR] | `security/KEY-ROTATION-RUNBOOK.md` §7 | `git log --all -- street-signing.key.pem` empty; gitleaks commit-allowlist entry removed |
+| 4 | **Relocate on-disk private keys** (`street-signing.key.pem`, `keys/`) to a secrets manager | [OPERATOR] | `KEY-ROTATION-RUNBOOK.md` §8, `SECURITY-CLASSIFICATION.md` | No key files in the working tree |
+| 5 | Enable **signed commits** requirement | [OPERATOR] | `CONTRIBUTOR-GOVERNANCE.md`, threat model | Branch rule requires signatures |
+
+## P1 — High
+| # | Action | Owner | Source | Done when |
+|---|---|---|---|---|
+| 6 | Fill `@org/*-team` handles in `.github/CODEOWNERS.proposed`, then `git mv` over `.github/CODEOWNERS` | [MAINTAINER] | `CONTRIBUTOR-GOVERNANCE.md` | Live CODEOWNERS uses teams |
+| 7 | `npm install` in the 4 `web/` apps; commit `package-lock.json` (activates Dependabot, finalizes vite fix) | [MAINTAINER] | cleanup plan, Dependabot | Lockfiles committed; Dependabot tracks them |
+| 8 | Add **outbound HTTP timeouts** to the 9 `node:https` plugins (stripe, paypal, twilio, sendgrid, openai, auth0, clerk, firebase, supabase) | [RUNTIME] | `PLUGIN-SECURITY-REPORT.md`, `PLUGIN-MATURITY-MATRIX.md` | Each client enforces a timeout; tests added |
+| 9 | Ship **webhook verifiers** for stripe (`Stripe-Signature`) + twilio (`X-Twilio-Signature`), then paypal + sendgrid | [RUNTIME] | `PLUGIN-SECURITY-AUDIT.md`, `OWASP-ASVS-MAPPING.md` V13 | Constant-time verifier + tests per plugin |
+| 10 | Relocate `app-*` scaffolds → `examples/scaffold-*` (update `zizmor.yml`, Dependabot dirs, any CI refs) | [MAINTAINER] | `REPOSITORY-CLEANUP-PLAN.md`, `DOCKER-REVIEW.md` | `app-*` gone from root; CI green |
+| 11 | Move SEO files (`BingSiteAuth.xml`, `googledf*.html`) to the website repo, then `git rm` here | [OPERATOR] | cleanup plan, `SECURITY-CLASSIFICATION.md` | Files removed; root allowlist updated |
+
+## P2 — Medium
+| # | Action | Owner | Source |
+|---|---|---|---|
+| 12 | Migrate plugin signing to **keyless (Sigstore/OIDC)** or KMS/HSM (reaches SLSA L3, removes long-lived key) | [OPERATOR]+[MAINTAINER] | `SLSA-ASSESSMENT.md`, `SECURITY-ROADMAP.md` |
+| 13 | Add **provenance/manifest verification gate** at publish/consume (`npm audit signatures` / cosign verify) | [MAINTAINER] | `SLSA-ASSESSMENT.md`, `NPM-PUBLISH-SECURITY-REVIEW.md` |
+| 14 | **Generate `verification-artifacts/` in CI** (stop tracking) + keep SBOM as release asset | [MAINTAINER] | `SECURITY-CLASSIFICATION.md`, `REPOSITORY-ORGANIZATION.md` |
+| 15 | Surface **TLS options** for redis/mongodb/nats/kafka/rabbitmq | [RUNTIME] | `OWASP-ASVS-MAPPING.md` V9, `PLUGIN-SECURITY-AUDIT.md` |
+| 16 | Bind local compose DB ports to `127.0.0.1` | [MAINTAINER] | `INFRASTRUCTURE-SECURITY-REVIEW.md` |
+| 17 | **Versioned + searchable docs** (Algolia/Pagefind) | [MAINTAINER] | `ENTERPRISE-READINESS-2026.md` |
+| 18 | Fuzzing depth / OSS-Fuzz onboarding; expand chaos testing | [MAINTAINER] | `OPENSSF-REVIEW.md`, `SECURITY-ROADMAP.md` |
+| 19 | Security **dashboard** (surface Scorecard/alerts) | [MAINTAINER] | `SECURITY-ROADMAP.md` |
+| 20 | Add a real **PGP key** to `SECURITY.md` (replace placeholder; never commit the private key) | [OPERATOR] | `SECURITY.md` |
+| 21 | Per-plugin **example apps** + raise coverage gates (promote ◑→✅ in maturity matrix) | [RUNTIME]+[MAINTAINER] | `PLUGIN-MATURITY-MATRIX.md` |
+| 22 | Standardize CI `retention-days` + `concurrency` across workflows | [MAINTAINER] | `STREETJS-FULL-AUDIT-REPORT.md` Phase 12 |
+| 23 | Fix latent bug: `scripts/cloud/prereqs.mjs` cloudflare path (`deploy/cloudflare-workers` → `infra/examples/cloudflare`) | [MAINTAINER] | `PHASE-19-MASTER-AUDIT.md` B-1 |
+
+## P3 — Long-term
+| # | Action | Source |
+|---|---|---|
+| 24 | SOC 2 readiness | `SECURITY-ROADMAP.md` |
+| 25 | ISO 27001 alignment | `SECURITY-ROADMAP.md` |
+| 26 | OpenSSF Best Practices badge | `OPENSSF-REVIEW.md`, roadmap |
+| 27 | Security Champions program + dual-control releases | `CONTRIBUTOR-GOVERNANCE.md`, threat model |
+| 28 | Grow MAINTAINERS / security team (reduces bus-factor + social-engineering risk) | threat model, SSDF PO.2 |
+
+## Sequencing
+1. **P0 first** (branch/push protection, history purge, key relocation) — these unlock the biggest score gains (Security 70→86, SLSA L2→L3 path) and close the only HIGH residuals.
+2. **P1 governance/org** in one branch (CODEOWNERS teams, lockfiles, app-* move, SEO removal); **P1 runtime** (timeouts, webhook verifiers) as a separate plugin PR.
+3. **P2/P3** iteratively.
+
+## Notes
+- **[RUNTIME]** items (8, 9, 15, 21) require touching plugin code — explicitly out of
+  scope for the governance passes (which must not modify `packages/core`); they are
+  documented here for a dedicated, tested plugin PR.
+- Verification of P0 platform items can't be done from the repo; export them as
+  settings-as-code (e.g. an `allstar`/repo-settings file) for auditability.
