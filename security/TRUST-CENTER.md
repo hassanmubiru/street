@@ -93,7 +93,9 @@ affected/patched versions, CVSS v3.1, and remediation. See `SECURITY.md`.
 ```bash
 # npm provenance attestation
 npm audit signatures
-# (planned) verify plugin manifest against the official key — see KEY-ROTATION-RUNBOOK
+# Verify every official plugin manifest against the embedded official key:
+npm run verify:signatures            # scripts/security/verify-release.mjs
+npm run verify:signatures -- --provenance   # also runs `npm audit signatures`
 ```
 Release artifacts are cosign/Sigstore-signed; packages publish with npm provenance.
 
