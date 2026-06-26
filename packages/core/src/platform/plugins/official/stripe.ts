@@ -3,6 +3,7 @@
 // request building (bearer auth + form-encoded body) for the Stripe REST API.
 
 import { request as httpsRequest } from 'node:https';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { PluginModule, type SandboxedApp } from '../sdk.js';
 import { PluginError, type PluginManifest } from '../host.js';
 import type { MiddlewareFn } from '../../../core/types.js';
@@ -10,7 +11,10 @@ import type { MiddlewareFn } from '../../../core/types.js';
 export const STRIPE_PLUGIN_NAME = 'street-plugin-stripe';
 export const STRIPE_PLUGIN_VERSION = '1.0.0';
 
-export interface StripePluginConfig { apiKey: string; stateKey?: string; }
+/** Default outbound-request timeout (ms) when config omits `timeoutMs`. */
+export const STRIPE_DEFAULT_TIMEOUT_MS = 30_000;
+
+export interface StripePluginConfig { apiKey: string; stateKey?: string; timeoutMs?: number; }
 export interface StripeHttpRequest { method: 'POST'; url: string; headers: Record<string, string>; body: string; }
 
 export function stripePluginManifest(): PluginManifest {
