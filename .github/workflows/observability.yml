@@ -60,3 +60,4 @@ jobs:
         with:
           name: observability-validate-verification
           path: verification-artifacts/observability/
+          retention-days: 30

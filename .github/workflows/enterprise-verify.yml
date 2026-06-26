@@ -51,3 +51,4 @@ jobs:
         with:
           name: enterprise-api-verification
           path: verification-artifacts/enterprise/
+          retention-days: 30
