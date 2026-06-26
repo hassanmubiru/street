@@ -31,7 +31,54 @@ export function validateStripeConfig(input: unknown): StripePluginConfig {
     throw new PluginError('Stripe plugin config: "apiKey" is required and must be a non-empty string');
   }
   if (o['stateKey'] !== undefined && typeof o['stateKey'] !== 'string') throw new PluginError('Stripe plugin config: "stateKey" must be a string');
-  return { apiKey: o['apiKey'], ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}) };
+  if (o['timeoutMs'] !== undefined && (typeof o['timeoutMs'] !== 'number' || !Number.isInteger(o['timeoutMs']) || o['timeoutMs'] <= 0)) {
+    throw new PluginError('Stripe plugin config: "timeoutMs" must be a positive integer (milliseconds)');
+  }
+  return {
+    apiKey: o['apiKey'],
+    ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}),
+    ...(o['timeoutMs'] !== undefined ? { timeoutMs: o['timeoutMs'] as number } : {}),
+  };
+}
+
+/**
+ * Verify a Stripe webhook signature (the `Stripe-Signature` header) against the
+ * raw request body and your endpoint signing secret. Pure crypto, no network.
+ *
+ * Implements Stripe's scheme: the header is `t=<unix>,v1=<hex>[,v1=<hex>...]`;
+ * the signed payload is `${t}.${rawBody}` HMAC-SHA256'd with the secret. The
+ * comparison is constant-time and the timestamp must be within `toleranceSec`
+ * (default 300s) of now to reject replays. Returns `true` only on a match.
+ */
+export function verifyStripeWebhook(
+  rawBody: string | Buffer,
+  signatureHeader: string,
+  signingSecret: string,
+  toleranceSec = 300,
+): boolean {
+  if (typeof signatureHeader !== 'string' || signatureHeader === '' || typeof signingSecret !== 'string' || signingSecret === '') {
+    return false;
+  }
+  let t = '';
+  const v1: string[] = [];
+  for (const part of signatureHeader.split(',')) {
+    const idx = part.indexOf('=');
+    if (idx === -1) continue;
+    const k = part.slice(0, idx).trim();
+    const val = part.slice(idx + 1).trim();
+    if (k === 't') t = val;
+    else if (k === 'v1') v1.push(val);
+  }
+  const ts = Number(t);
+  if (!t || !Number.isFinite(ts) || v1.length === 0) return false;
+  if (toleranceSec > 0 && Math.abs(Math.floor(Date.now() / 1000) - ts) > toleranceSec) return false;
+  const payload = Buffer.isBuffer(rawBody) ? rawBody.toString('utf8') : rawBody;
+  const expected = createHmac('sha256', signingSecret).update(`${t}.${payload}`, 'utf8').digest();
+  return v1.some((sig) => {
+    let provided: Buffer;
+    try { provided = Buffer.from(sig, 'hex'); } catch { return false; }
+    return provided.length === expected.length && timingSafeEqual(provided, expected);
+  });
 }
 
 export class StripeClient {
@@ -59,10 +106,13 @@ export class StripeClient {
   async post(resource: string, params: Record<string, string | number>): Promise<number> {
     const r = this.buildRequest(resource, params);
     const u = new URL(r.url);
+    const timeoutMs = this.config.timeoutMs ?? STRIPE_DEFAULT_TIMEOUT_MS;
     return new Promise<number>((resolve, reject) => {
-      const req = httpsRequest({ method: r.method, hostname: u.hostname, path: u.pathname, headers: { ...r.headers, 'content-length': Buffer.byteLength(r.body).toString() } },
+      const req = httpsRequest({ method: r.method, hostname: u.hostname, path: u.pathname, timeout: timeoutMs, headers: { ...r.headers, 'content-length': Buffer.byteLength(r.body).toString() } },
         (res) => { res.resume(); res.once('end', () => resolve(res.statusCode ?? 0)); });
-      req.once('error', reject); req.end(r.body);
+      req.once('error', reject);
+      req.once('timeout', () => req.destroy(new PluginError(`Stripe: request timed out after ${timeoutMs}ms`)));
+      req.end(r.body);
     });
   }
 }

@@ -3,6 +3,7 @@
 // request building (HTTP Basic auth + form-encoded body) for the Twilio REST API.
 
 import { request as httpsRequest } from 'node:https';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { PluginModule, type SandboxedApp } from '../sdk.js';
 import { PluginError, type PluginManifest } from '../host.js';
 import type { MiddlewareFn } from '../../../core/types.js';
@@ -10,7 +11,10 @@ import type { MiddlewareFn } from '../../../core/types.js';
 export const TWILIO_PLUGIN_NAME = 'street-plugin-twilio';
 export const TWILIO_PLUGIN_VERSION = '1.0.0';
 
-export interface TwilioPluginConfig { accountSid: string; authToken: string; defaultFrom?: string; stateKey?: string; }
+/** Default outbound-request timeout (ms) when config omits `timeoutMs`. */
+export const TWILIO_DEFAULT_TIMEOUT_MS = 30_000;
+
+export interface TwilioPluginConfig { accountSid: string; authToken: string; defaultFrom?: string; stateKey?: string; timeoutMs?: number; }
 export interface TwilioHttpRequest { method: 'POST'; url: string; headers: Record<string, string>; body: string; }
 export interface SmsMessage { to: string; body: string; from?: string; }
 
