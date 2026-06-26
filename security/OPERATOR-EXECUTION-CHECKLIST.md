@@ -164,5 +164,3 @@ domain, not here.
 - Re-run OpenSSF Scorecard (`scorecard.yml`) — Branch-Protection / Signed-Releases
   / Token-Permissions should rise once #1/#2 land.
 - Tick these off in `plans/OUTSTANDING-ACTIONS.md` P0 and note the date.
-```
-```
