@@ -21,6 +21,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Added CI security gates: `secrets-guard` (rule #1 in `ci-cd.yml`, gates the
   release chain), `block-private-keys.yml`, `repository-policy.yml`,
   `security-baseline.yml`.
+- Added `verify-signatures.yml` — a path-filtered gate that runs
+  `npm run verify:signatures` (fatal: every plugin `manifest.signed.json`
+  signature must verify against the embedded official anchor, beyond the
+  fingerprint-only `verify-signing-anchor` check) plus an informational
+  `npm audit signatures` dependency-tree provenance pass.
 - Hardened `.gitleaks.toml` (PEM private-key + cloud-credential rules; removed the
   false signing-key allowlist; commit-scoped accept for the known historical blob),
   `.gitignore` (RESTRICTED + local-artifact patterns), and `dependabot.yml`
