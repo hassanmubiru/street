@@ -122,3 +122,13 @@ gcp-*.json
 *.keystore
 # npm auth (only the redacted .npmrc without _authToken should be tracked)
 .npmrc.local
+
+# ── Phase 5 additions: local artifacts & editor/runtime files ──
+# (.vscode/settings.json + .vscode/extensions.json are intentionally TRACKED as
+#  shared editor config and are NOT ignored here.)
+.idea/
+playwright-report/
+logs/
+*.sqlite
+*.sqlite3
+*.db
