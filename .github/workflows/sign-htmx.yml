@@ -68,3 +68,4 @@ jobs:
             docs/_data/plugins.json
             docs/plugins/registry/htmx.md
           if-no-files-found: error
+          retention-days: 90

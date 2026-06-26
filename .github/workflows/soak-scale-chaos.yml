@@ -43,6 +43,7 @@ jobs:
         with:
           name: soak-artifacts
           path: artifacts/*
+          retention-days: 30
 
   ws-scale:
     runs-on: ubuntu-latest
@@ -73,6 +74,7 @@ jobs:
         with:
           name: ws-scale-${{ matrix.connections }}
           path: artifacts/ws-scale.json
+          retention-days: 30
 
   chaos:
     runs-on: ubuntu-latest
