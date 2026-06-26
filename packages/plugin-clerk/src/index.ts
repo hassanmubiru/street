@@ -124,6 +124,7 @@ export class ClerkClient {
         },
       );
       r.on('error', (e) => reject(new PluginError(`Clerk request failed: ${e.message}`)));
+      r.once('timeout', () => r.destroy(new PluginError(`Clerk request timed out after ${timeoutMs}ms`)));
       r.end(req.body);
     });
   }
