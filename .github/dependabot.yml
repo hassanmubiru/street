@@ -53,8 +53,9 @@ updates:
   # Frontend SPA sub-apps (scaffold samples + examples) have their OWN
   # package.json outside the root npm workspace, so the root npm entry above does
   # not cover them. Track them explicitly (e.g. the vite dev-server advisories).
-  # NOTE: Dependabot needs a committed lockfile in each dir to resolve versions —
-  # run `npm install` in each and commit package-lock.json.
+  # A committed package-lock.json exists in each dir so Dependabot can resolve
+  # versions (generated via `npm install --package-lock-only`; vite pinned ≥6.4.3,
+  # `npm audit` reports 0 vulnerabilities).
   - package-ecosystem: "npm"
     directories:
       - "/examples/scaffold-react/web"
