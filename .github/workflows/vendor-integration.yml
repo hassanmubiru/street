@@ -90,3 +90,4 @@ jobs:
           name: plugin-verification-artifacts
           path: verification-artifacts/plugins/
           if-no-files-found: warn
+          retention-days: 30
