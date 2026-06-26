@@ -50,11 +50,51 @@ updates:
     cooldown:
       default-days: 7
 
+  # Frontend SPA sub-apps (scaffold samples + examples) have their OWN
+  # package.json outside the root npm workspace, so the root npm entry above does
+  # not cover them. Track them explicitly (e.g. the vite dev-server advisories).
+  # NOTE: Dependabot needs a committed lockfile in each dir to resolve versions —
+  # run `npm install` in each and commit package-lock.json.
+  - package-ecosystem: "npm"
+    directories:
+      - "/app-react/web"
+      - "/app-next/web"
+      - "/examples/marzpay-react/web"
+      - "/examples/marzpay-next/web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "UTC"
+    groups:
+      web-development-dependencies:
+        dependency-type: "development"
+        patterns:
+          - "*"
+      web-production-dependencies:
+        dependency-type: "production"
+        patterns:
+          - "*"
+    labels:
+      - "dependencies"
+      - "npm"
+      - "frontend"
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    cooldown:
+      default-days: 7
+
   # Keep the SHA-pinned Docker base images current. Base images are pinned by
   # digest (Scorecard Pinned-Dependencies); Dependabot raises PRs to bump the
   # digests so pinning never means shipping a stale, vulnerable base layer.
   - package-ecosystem: "docker"
-    directory: "/"
+    directories:
+      - "/infra/docker"
+      - "/app-htmx"
+      - "/app-next"
+      - "/app-none"
+      - "/app-react"
+      - "/demos"
     schedule:
       interval: "weekly"
       day: "monday"
