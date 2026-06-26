@@ -252,3 +252,4 @@ jobs:
         with:
           name: release-scorecard-artifact-${{ github.sha }}
           path: verification-artifacts/release/
+          retention-days: 90
