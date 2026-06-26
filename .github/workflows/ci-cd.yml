@@ -284,6 +284,7 @@ jobs:
         with:
           name: cli-coverage-${{ matrix.node }}-${{ github.sha }}
           path: packages/cli/coverage/
+          retention-days: 14
 
       - name: Run migration integration with coverage
         run: npm run coverage:pg -w packages/cli
@@ -360,6 +361,7 @@ jobs:
         with:
           name: upgrade-codemods-artifact-${{ github.sha }}
           path: verification-artifacts/upgrade/
+          retention-days: 30
 
   # ── system-tests: Parallelized system-level test suites ────────────────
   # Purpose:   Run comprehensive system-level tests across all 6 suites in
@@ -1082,6 +1084,7 @@ jobs:
         with:
           name: sbom-${{ github.ref_name }}
           path: sbom-${{ github.ref_name }}.json
+          retention-days: 90
 
       # ── Signed GitHub Release (tag pushes only) ──────────────────────────
       # npm provenance (above) attests the published packages, but the OpenSSF
