@@ -127,9 +127,10 @@ export class PayPalClient {
 
   private send(req: PayPalHttpRequest): Promise<{ status: number; body: string }> {
     const u = new URL(req.url);
+    const timeoutMs = this.config.timeoutMs ?? PAYPAL_DEFAULT_TIMEOUT_MS;
     return new Promise((resolve, reject) => {
       const r = httpsRequest(
-        { method: req.method, hostname: u.hostname, path: u.pathname + u.search, headers: req.headers },
+        { method: req.method, hostname: u.hostname, path: u.pathname + u.search, timeout: timeoutMs, headers: req.headers },
         (res) => {
           let data = '';
           res.on('data', (c) => (data += c));
@@ -137,6 +138,7 @@ export class PayPalClient {
         },
       );
       r.on('error', (e) => reject(new PluginError(`PayPal request failed: ${e.message}`)));
+      r.once('timeout', () => r.destroy(new PluginError(`PayPal request timed out after ${timeoutMs}ms`)));
       r.end(req.body);
     });
   }
