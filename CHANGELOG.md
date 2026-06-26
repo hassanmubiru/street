@@ -66,6 +66,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `security/SECURITY-CLASSIFICATION.md`, `security/PLUGIN-SECURITY-STANDARD.md`,
   and audit deliverables under `audits/` and `security/`.
 
+### Docs
+- Added a **Security Dashboard** (`docs/security/dashboard.md`) surfacing live CI,
+  CodeQL, OpenSSF Scorecard, and provenance badges plus a control-posture table
+  linking each gate to its workflow, the live GitHub Security tabs, and canonical
+  evidence (operator-setting / live-count values are marked UNVERIFIED, never
+  fabricated).
+- Added a **Versions** page (`docs/versions.md` + "Versions" aux-nav link)
+  documenting the docs-versioning policy (latest-tracking + tagged historical
+  source + immutable changelog) and tying the displayed `site.version` to the
+  support matrix and changelog.
+- Enhanced just-the-docs search config (h3 indexing, content previews, `s` focus
+  shortcut) — docs were already client-side searchable; this tunes result
+  quality. Gave `docs/enterprise/support-matrix.md` the front matter it was
+  missing so it now renders as a styled, searchable page under Enterprise.
+
 ---
 
 ## [1.0.25] - 2026-06-22
