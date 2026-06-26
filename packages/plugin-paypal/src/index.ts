@@ -60,11 +60,15 @@ export function validatePayPalConfig(input: unknown): PayPalPluginConfig {
   if (o['stateKey'] !== undefined && typeof o['stateKey'] !== 'string') {
     throw new PluginError('PayPal plugin config: "stateKey" must be a string');
   }
+  if (o['timeoutMs'] !== undefined && (typeof o['timeoutMs'] !== 'number' || !Number.isInteger(o['timeoutMs']) || o['timeoutMs'] <= 0)) {
+    throw new PluginError('PayPal plugin config: "timeoutMs" must be a positive integer (milliseconds)');
+  }
   return {
     clientId: o['clientId'] as string,
     clientSecret: o['clientSecret'] as string,
     ...(o['environment'] !== undefined ? { environment: o['environment'] as 'sandbox' | 'live' } : {}),
     ...(o['stateKey'] !== undefined ? { stateKey: o['stateKey'] as string } : {}),
+    ...(o['timeoutMs'] !== undefined ? { timeoutMs: o['timeoutMs'] as number } : {}),
   };
 }
 
