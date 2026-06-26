@@ -102,3 +102,68 @@ gaps, platform branch/push protection pending.
 - ✅ No workflows removed (only added: `security-baseline.yml`; others extended).
 - ✅ Plugin signing + provenance preserved (anchor verified).
 - ✅ Marketplace data (`docs/_data`) references updated, not broken.
+
+---
+
+## Appendix — Phase 1 folder audit (VERIFIED)
+
+| Top-level | Purpose | Public? | Disposition |
+|---|---|---|---|
+| `.github/` | CI, CODEOWNERS, templates, dependabot | yes | keep |
+| `.githooks/` | pre-commit/pre-push (tag + key guards) | yes | keep |
+| `.vscode/` | shared editor config (`settings.json`, `extensions.json` tracked) | yes | keep (not ignored) |
+| `app-htmx/ app-next/ app-none/ app-react/` | generated `street create` scaffold samples | yes | **move → `examples/scaffold-*`** (or regenerate in CI) |
+| `audits/` | point-in-time reports | yes | keep |
+| `benchmarks/` | perf harness | yes | keep |
+| `ci/` | pack-smoke fixtures | yes | keep |
+| `dast/` | DAST config | yes | keep |
+| `demos/` | demo apps | yes | keep |
+| `docs/` | documentation site | yes | keep |
+| `examples/` | example apps (13) | yes | keep |
+| `governance/` | charter, org, this report's policies | yes | keep |
+| `infra/` | docker/compose/k8s/helm/examples/monitoring | yes | keep |
+| `packages/` | 49 packages (21 plugins, core, cli, …) | yes | keep |
+| `plans/` | internal strategy/roadmap | INTERNAL | keep (or private repo) |
+| `rfcs/` | design proposals | yes | keep |
+| `scripts/` | build/release/codegen | yes | keep |
+| `security/` | reviews, runbooks, classification | yes | keep |
+| `verification-artifacts/` | CI certification evidence | yes | **generate in CI** (currently tracked) |
+| `keys/`, `*.pem`, `.env` | secrets | **SECRET** | gitignored; relocate out of tree |
+| root `Dockerfile`/`docker-compose*` | (moved) | — | now under `infra/docker/` |
+| `BingSiteAuth.xml`, `googledf*.html` | website SEO tokens | INTERNAL | move → website repo |
+
+## Appendix — Phase 12 CI hardening (VERIFIED)
+
+| Control | State |
+|---|---|
+| Least-privilege permissions | ✅ all 38 workflows declare `permissions:`; default `contents: read` |
+| Pinned actions | ✅ core + new workflows SHA-pin `actions/*`; gitleaks via free CLI; trufflehog SHA-pinned |
+| Concurrency | ◑ 8/38 use `concurrency:` (CI/publish/pages); fine for the long-running ones |
+| `pull_request_target` | ✅ none (no privileged-fork-PR risk) |
+| npm provenance | ✅ `--provenance` + `id-token: write` (publish-plugins/frontend/orm/ci-cd) |
+| Signed releases | ✅ cosign/Sigstore (`ci-cd.yml`); plugin manifests Ed25519-signed + verified |
+| Dependency review / CodeQL / Scorecard / secret scanning | ✅ present (`dependency-review.yml`, `codeql.yml`, `scorecard.yml`, `secret-scan.yml`) |
+| Artifact retention | ◑ 3 workflows set `retention-days`; consider standardizing |
+| Release gate | ✅ `secrets-guard` is rule #1; `build-and-test` needs it; docker/publish chain off it |
+
+## 14-Phase completion matrix
+
+| Phase | Deliverable / check | Status |
+|---|---|---|
+| 1 Repository audit | folder table (above) + `governance/REPOSITORY-ORGANIZATION.md` | ✅ |
+| 2 Public/Private | `security/SECURITY-CLASSIFICATION.md` | ✅ |
+| 3 Organization | reorg done + `governance/REPOSITORY-ORGANIZATION.md` | ✅ |
+| 4 Docker audit | `audits/DOCKER-REVIEW.md` | ✅ |
+| 5 .gitignore | gaps added (`.idea/`, `playwright-report/`, `*.sqlite`, `*.db`, …) | ✅ |
+| 6 Secret detection | `.gitleaks.toml` (6 rules + commit allowlist) | ✅ |
+| 7 Dependabot | npm web apps + docker dirs added | ✅ |
+| 8 Security policy | `SECURITY.md` + plugin-reporting + CVE + encrypted reporting | ✅ |
+| 9 Plugin security | `audits/PLUGIN-SECURITY-REPORT.md` (0 eval/exec/any) | ✅ |
+| 10 Doc cleanup | root 45→7; `plans/REPOSITORY-CLEANUP-PLAN.md` | ✅ |
+| 11 Repository policy | `repository-policy.yml` + no-plugin-dockerfiles gate | ✅ |
+| 12 CI hardening | verification table (above) | ✅ |
+| 13 Enterprise readiness | `audits/ENTERPRISE-READINESS-COMPARISON.md` | ✅ |
+| 14 Deliverables | all produced | ✅ |
+
+All applied changes are governance/organization/CI/docs/security only — no
+`packages/core` runtime, no public API, no published-package path changed.
