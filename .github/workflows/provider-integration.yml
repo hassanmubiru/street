@@ -16,6 +16,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: provider-integration-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Search providers: Postgres FTS + Meilisearch (both implemented & tested).
   search-providers:

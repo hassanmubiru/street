@@ -35,6 +35,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: platform-leadership-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   platform-leadership:
     name: Platform Leadership exit-criteria aggregation

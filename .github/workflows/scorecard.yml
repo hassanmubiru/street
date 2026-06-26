@@ -15,6 +15,11 @@ on:
 # Least-privilege default; the analysis job elevates only what it needs.
 permissions: read-all
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: scorecard-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analysis:
     name: Scorecard analysis

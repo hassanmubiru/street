@@ -17,6 +17,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: security-baseline-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   plugin-security-standard:
     name: Plugin security standard

@@ -19,6 +19,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: soak-scale-chaos-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   soak:
     runs-on: ubuntu-latest

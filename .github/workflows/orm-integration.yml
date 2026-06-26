@@ -17,6 +17,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: orm-integration-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   orm-integration:
     runs-on: ubuntu-latest

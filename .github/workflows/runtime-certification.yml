@@ -16,6 +16,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: runtime-certification-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   certify:
     runs-on: ubuntu-latest

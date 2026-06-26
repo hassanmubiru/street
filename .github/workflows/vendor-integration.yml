@@ -13,6 +13,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: vendor-integration-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   vendor:
     runs-on: ubuntu-latest

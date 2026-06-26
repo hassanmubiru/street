@@ -12,6 +12,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: rabbitmq-integration-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   rabbitmq-integration:
     runs-on: ubuntu-latest

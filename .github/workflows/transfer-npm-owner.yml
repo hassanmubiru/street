@@ -24,6 +24,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: transfer-npm-owner-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   add-owner:
     runs-on: ubuntu-latest

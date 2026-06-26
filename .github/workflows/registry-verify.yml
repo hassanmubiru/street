@@ -24,6 +24,11 @@ on:
 permissions:
   contents: read
 
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: registry-verify-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   registry-e2e:
     runs-on: ubuntu-latest
