@@ -11,6 +11,9 @@ import { request as httpsRequest } from 'node:https';
 export const PAYPAL_PLUGIN_NAME = 'street-plugin-paypal';
 export const PAYPAL_PLUGIN_VERSION = '1.0.0';
 
+/** Default outbound-request timeout (ms) when config omits `timeoutMs`. */
+export const PAYPAL_DEFAULT_TIMEOUT_MS = 30_000;
+
 /** Configuration schema for the PayPal plugin. */
 export interface PayPalPluginConfig {
   clientId: string;
@@ -19,6 +22,8 @@ export interface PayPalPluginConfig {
   environment?: 'sandbox' | 'live';
   /** State key under which the client is injected. Default 'paypal'. */
   stateKey?: string;
+  /** Outbound HTTP timeout in ms (default 30000). */
+  timeoutMs?: number;
 }
 
 /** A fully-described outbound HTTPS request (pure, offline-verifiable). */
