@@ -67,6 +67,7 @@ jobs:
         with:
           name: dast-reports
           path: dast-reports/
+          retention-days: 30
 
       - name: Upload DAST verification artifact
         if: always()
@@ -74,3 +75,4 @@ jobs:
         with:
           name: dast-verification-artifact
           path: verification-artifacts/dast/
+          retention-days: 30
