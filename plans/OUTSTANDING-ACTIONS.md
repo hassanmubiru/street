@@ -73,13 +73,12 @@
 3. **P2/P3** iteratively.
 
 ## Notes
-- **[RUNTIME]** items #8 (timeouts) and #9 (stripe/twilio webhook verifiers) are
-  **done**, and #15 (TLS options) is **partial** (redis + mongodb done) —
+- **[RUNTIME]** items #8 (timeouts, 9 plugins), #9 (all 4 webhook verifiers), and
+  #15 (TLS for all 5 redis/mongodb/kafka/rabbitmq/nats) are **done** —
   implemented additively in `packages/core` + the separate plugin packages, with
   tests, after the no-touch-core constraint was explicitly lifted for these
-  scoped, tested changes. Remaining [RUNTIME] work: #15's nats STARTTLS +
-  kafka/rabbitmq transport TLS (need a live-TLS test env), #9's secondary
-  paypal/sendgrid verifiers, and #21 (per-plugin examples).
+  scoped, tested changes. The only remaining [RUNTIME] item is #21 (per-plugin
+  example apps + raised coverage gates), which is incremental and in progress.
 - Verification of P0 platform items can't be done from the repo; export them as
   settings-as-code (e.g. an `allstar`/repo-settings file) for auditability. See
   `security/OPERATOR-EXECUTION-CHECKLIST.md` for the sequenced `gh` commands.

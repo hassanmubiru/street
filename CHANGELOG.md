@@ -22,18 +22,21 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
   `timeoutMs` config field (default 30000) enforced via `req.setTimeout` +
   `destroy`, so a hung upstream now fails fast instead of leaking a socket.
   Omitting `timeoutMs` preserves prior behaviour for fast requests.
-- **Webhook signature verifiers** exported from `streetjs`:
-  `verifyStripeWebhook` (constant-time HMAC-SHA256 over `t.payload` with replay
-  tolerance) and `verifyTwilioSignature` (constant-time HMAC-SHA1 over the URL +
-  lexicographically-sorted params). Pure crypto, no network.
+- **Webhook signature verifiers** exported for all four signing providers:
+  `verifyStripeWebhook` (HMAC-SHA256 over `t.payload`, replay tolerance) and
+  `verifyTwilioSignature` (HMAC-SHA1 over URL + sorted params) from `streetjs`;
+  `verifySendGridWebhook` (ECDSA-P256 event webhook) from `streetjs`; and
+  `verifyPayPalWebhook` (RSA-SHA256, local transmission-cert verification) from
+  `@streetjs/plugin-paypal`. All constant-time; pure crypto, no network.
 - New per-plugin tests cover timeout-config validation and the verifiers; all
   builds + suites pass and all 21 plugin manifest signatures still verify against
   the embedded official anchor (plugin source is not part of the signed manifest).
 - **TLS connection options** (`tls`, `tlsRejectUnauthorized`, `tlsServerName`,
-  `tlsCa`; default plain TCP) added to the **redis** and **mongodb** plugins,
-  which use connect-from-start TLS via `node:tls`. (NATS STARTTLS and
-  Kafka/RabbitMQ SASL_SSL/AMQPS are deferred — they need protocol-aware upgrades
-  and a live-TLS test environment to verify, so were not shipped unverified.)
+  `tlsCa`; default plain TCP) added to **redis**, **mongodb**, **kafka**
+  (SSL/SASL_SSL), **rabbitmq** (AMQPS), and **nats**. redis/mongodb/kafka/rabbitmq
+  use connect-from-start `tls.connect()`; nats performs the protocol STARTTLS
+  upgrade after the plaintext `INFO`. Config validation is unit-tested per plugin;
+  plaintext paths are unchanged.
 
 ### Security
 - **Rotated the official plugin-signing key** (embedded anchor in
