@@ -55,3 +55,24 @@ if (failed.length) {
   process.exit(1);
 }
 console.log('All plugin offline suites passed.');
+
+// Syntax-check every committed example so the runnable examples can't bit-rot.
+console.log(`\n──────── example syntax check (node --check) ────────`);
+const badExamples = [];
+let checked = 0;
+for (const p of readdirSync(pkgsDir).filter((d) => d.startsWith('plugin-'))) {
+  const exDir = join(pkgsDir, p, 'example');
+  if (!existsSync(exDir)) continue;
+  for (const f of readdirSync(exDir).filter((n) => n.endsWith('.mjs') || n.endsWith('.js'))) {
+    const file = join(exDir, f);
+    checked++;
+    try { execFileSync('node', ['--check', file], { stdio: 'ignore' }); }
+    catch { badExamples.push(`${p}/example/${f}`); }
+  }
+}
+if (badExamples.length) {
+  console.error(`example syntax FAILED: ${badExamples.join(', ')}`);
+  process.exit(1);
+}
+console.log(`example syntax OK — ${checked} example file(s) parse.`);
+
