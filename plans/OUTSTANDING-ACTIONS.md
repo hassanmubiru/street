@@ -72,8 +72,11 @@
 3. **P2/P3** iteratively.
 
 ## Notes
-- **[RUNTIME]** items (8, 9, 15, 21) require touching plugin code — explicitly out of
-  scope for the governance passes (which must not modify `packages/core`); they are
-  documented here for a dedicated, tested plugin PR.
+- **[RUNTIME]** items #8 (timeouts) and #9 (stripe/twilio webhook verifiers) are
+  **done** — implemented additively in `packages/core` + the 5 separate plugin
+  packages, with tests, after the no-touch-core constraint was explicitly lifted
+  for this scoped, tested change. Remaining [RUNTIME] work: #15 (TLS options) and
+  #9's secondary paypal/sendgrid verifiers + #21 (per-plugin examples).
 - Verification of P0 platform items can't be done from the repo; export them as
-  settings-as-code (e.g. an `allstar`/repo-settings file) for auditability.
+  settings-as-code (e.g. an `allstar`/repo-settings file) for auditability. See
+  `security/OPERATOR-EXECUTION-CHECKLIST.md` for the sequenced `gh` commands.
