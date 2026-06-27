@@ -30,11 +30,22 @@ window (they rewrite history / move secrets), then the rest. Branch protection
 ## #2 — Secret scanning + push protection  *(do first; non-disruptive)*
 
 ```bash
-gh api -X PATCH "repos/$OWNER/$REPO" \
-  -f 'security_and_analysis[secret_scanning][status]=enabled' \
-  -f 'security_and_analysis[secret_scanning_push_protection][status]=enabled' \
-  -f 'security_and_analysis[dependabot_security_updates][status]=enabled'
+# Nested `security_and_analysis` must be sent as a JSON body — `gh api -f`
+# cannot build nested objects (bracket strings are sent literally → 404/422).
+gh api --method PATCH "repos/$OWNER/$REPO" --input - <<'JSON'
+{
+  "security_and_analysis": {
+    "secret_scanning": { "status": "enabled" },
+    "secret_scanning_push_protection": { "status": "enabled" },
+    "dependabot_security_updates": { "status": "enabled" }
+  }
+}
+JSON
 ```
+
+> Public repos: secret scanning + push protection are free. Private repos require
+> GitHub Advanced Security (otherwise this returns 403/422). A `404` usually means
+> the `repos/` prefix is missing or the path has a stray space.
 
 **Done when:** the three toggles read `enabled` in *Settings → Code security*.
 Verify: `gh api "repos/$OWNER/$REPO" --jq '.security_and_analysis'`.
