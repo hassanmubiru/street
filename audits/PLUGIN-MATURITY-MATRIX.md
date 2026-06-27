@@ -10,20 +10,25 @@
 | marzpay | ✅ | ✅ | ✅ ~97% | ◑ fail-closed+re-verify | ✅ | ⬜ (by design) | ✅ | ✅ overlay | ✅ marzpay-react/next | ✅ |
 | africastalking | ✅ | ✅ | ◑ | ◑ shared-secret | ✅ | ✅ | ✅ | ◑ | ◑ | ◑ |
 | htmx | ✅ | ✅ | ◑ | N-A | N-A | N-A | ✅ escape | N-A | ✅ app-htmx | ✅ |
-| stripe | ✅ | ✅ | ◑ | ⬜ verifier missing | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| paypal | ✅ | ✅ | ◑ | ⬜ | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| sendgrid | ✅ | ✅ | ◑ | ⬜ event verify | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| twilio | ✅ | ✅ | ◑ | ⬜ X-Twilio-Sig | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| openai | ✅ | ✅ | ◑ | N-A | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| auth0 | ✅ | ✅ | ◑ | N-A | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| clerk | ✅ | ✅ | ◑ | N-A | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| firebase | ✅ | ✅ | ◑ | N-A | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
-| supabase | ✅ | ✅ | ◑ | N-A | ⬜ | ⬜ | ✅ | N-A | ◑ | ◑ |
+| stripe | ✅ | ✅ | ◑ | ✅ HMAC-SHA256 (`verifyStripeWebhook`) | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| paypal | ✅ | ✅ | ◑ | ⬜ (cert-chain) | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| sendgrid | ✅ | ✅ | ◑ | ⬜ event (ECDSA) | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| twilio | ✅ | ✅ | ◑ | ✅ HMAC-SHA1 (`verifyTwilioSignature`) | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| openai | ✅ | ✅ | ◑ | N-A | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| auth0 | ✅ | ✅ | ◑ | N-A | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| clerk | ✅ | ✅ | ◑ | N-A | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| firebase | ✅ | ✅ | ◑ | N-A | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
+| supabase | ✅ | ✅ | ◑ | N-A | ✅ `timeoutMs` | ⬜ | ✅ | N-A | ◑ | ◑ |
 | s3 / r2 | ✅ | ✅ | ◑ | N-A | ◑ adapter | ⬜ | ✅ | N-A | ◑ | ◑ |
-| mongodb | ✅ | ✅ | ◑ | N-A | ✅ | N-A | ✅ | N-A | ◑ | ◑ |
+| mongodb | ✅ | ✅ | ◑ | N-A | ✅ | N-A | ✅ + ✅ TLS | N-A | ◑ | ◑ |
 | postgres / mysql | ✅ | ✅ | ◑ | N-A | ✅ pool | N-A | ✅ | N-A | ◑ | ◑ |
-| redis | ✅ | ✅ | ◑ | N-A | ✅ | N-A | ✅ | N-A | ◑ | ◑ |
+| redis | ✅ | ✅ | ◑ | N-A | ✅ | N-A | ✅ + ✅ TLS | N-A | ◑ | ◑ |
 | kafka / rabbitmq / nats | ✅ | ✅ | ◑ | N-A | ✅ connect | N-A | ✅ | N-A | ◑ | ◑ |
+
+> **TLS (opt-in connection encryption):** redis + mongodb expose `tls` /
+> `tlsRejectUnauthorized` / `tlsServerName` / `tlsCa` (default plain TCP). nats
+> (STARTTLS) and kafka/rabbitmq (SASL_SSL/AMQPS, via core transports) are pending
+> a live-TLS test environment. See `plans/OUTSTANDING-ACTIONS.md` #15.
 
 ## Documentation & security review
 - **Documentation:** ✅ all 21 ship `README.md` + `SECURITY.md`.
