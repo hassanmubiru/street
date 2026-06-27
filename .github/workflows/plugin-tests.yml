@@ -1,0 +1,48 @@
+# .github/workflows/plugin-tests.yml
+# Offline unit tests for the official plugin packages (Outstanding Action #21 /
+# CI-evidence baseline). Builds @streetjs/core then builds + runs the node:test
+# suite of every packages/plugin-* that declares a `test` script — including the
+# timeout, TLS-config, and webhook-verifier validation tests. Offline only: no
+# network and no service containers, so it is deterministic and fast.
+#
+# This complements ci-cd.yml (core + CLI) and the live integration workflows
+# (vendor-integration, *-integration), which require credentials/containers.
+name: plugin-tests
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'packages/plugin-*/**'
+      - 'packages/core/**'
+      - 'scripts/test-plugins-offline.mjs'
+      - '.github/workflows/plugin-tests.yml'
+  pull_request:
+    paths:
+      - 'packages/plugin-*/**'
+      - 'packages/core/**'
+      - 'scripts/test-plugins-offline.mjs'
+      - '.github/workflows/plugin-tests.yml'
+
+permissions:
+  contents: read
+
+# ── Concurrency ────────────────────────────────────────────────
+concurrency:
+  group: plugin-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  plugin-offline-tests:
+    name: Plugin offline tests (build + node:test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+        with:
+          node-version: '20'
+      - name: Run offline plugin test suites
+        run: npm run test:plugins-offline
