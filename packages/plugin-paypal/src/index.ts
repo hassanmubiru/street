@@ -78,6 +78,72 @@ export function baseUrl(environment: 'sandbox' | 'live' = 'sandbox'): string {
   return environment === 'live' ? 'https://api-m.paypal.com' : 'https://api-m.sandbox.paypal.com';
 }
 
+/** CRC32 (IEEE 802.3) of a buffer as an unsigned 32-bit integer. */
+function crc32(buf: Buffer): number {
+  let crc = -1;
+  for (let i = 0; i < buf.length; i++) {
+    crc ^= buf[i]!;
+    for (let j = 0; j < 8; j++) crc = (crc >>> 1) ^ (0xed_b8_83_20 & -(crc & 1));
+  }
+  return (crc ^ -1) >>> 0;
+}
+
+/** The signed transmission fields from a PayPal webhook's `Paypal-*` headers. */
+export interface PayPalWebhookHeaders {
+  /** `Paypal-Transmission-Id` */
+  transmissionId: string;
+  /** `Paypal-Transmission-Time` */
+  transmissionTime: string;
+  /** Your configured webhook id (from the PayPal dashboard / create-webhook API). */
+  webhookId: string;
+  /** `Paypal-Transmission-Sig` (base64 RSA-SHA256 signature). */
+  signature: string;
+}
+
+/**
+ * Verify a PayPal webhook signature locally (no API round-trip). Pure crypto.
+ *
+ * PayPal signs `transmissionId|transmissionTime|webhookId|crc32(rawBody)` with
+ * RSA-SHA256, using the cert at `Paypal-Cert-Url`. The caller is responsible for
+ * fetching + chain-validating that cert (it is an https paypal.com URL) and
+ * passing the cert PEM here; this function does the offline signature check.
+ * Accepts a certificate PEM or a bare public-key PEM. Returns `true` only on a
+ * valid signature.
+ */
+export function verifyPayPalWebhook(
+  certOrPublicKeyPem: string,
+  headers: PayPalWebhookHeaders,
+  rawBody: string | Buffer,
+): boolean {
+  if (typeof certOrPublicKeyPem !== 'string' || certOrPublicKeyPem === '' || headers === null || typeof headers !== 'object') {
+    return false;
+  }
+  const { transmissionId, transmissionTime, webhookId, signature } = headers;
+  if (!transmissionId || !transmissionTime || !webhookId || typeof signature !== 'string' || signature === '') {
+    return false;
+  }
+  let key;
+  try {
+    key = certOrPublicKeyPem.includes('BEGIN CERTIFICATE')
+      ? new X509Certificate(certOrPublicKeyPem).publicKey
+      : createPublicKey(certOrPublicKeyPem);
+  } catch {
+    return false;
+  }
+  const body = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody, 'utf8');
+  const data = `${transmissionId}|${transmissionTime}|${webhookId}|${crc32(body)}`;
+  let sig: Buffer;
+  try { sig = Buffer.from(signature, 'base64'); } catch { return false; }
+  try {
+    const v = createVerify('RSA-SHA256');
+    v.update(data, 'utf8');
+    v.end();
+    return v.verify(key, sig);
+  } catch {
+    return false;
+  }
+}
+
 /** Build the OAuth2 client-credentials token request (Basic auth, form body). */
 export function buildTokenRequest(cfg: PayPalPluginConfig): PayPalHttpRequest {
   const env = cfg.environment ?? 'sandbox';
