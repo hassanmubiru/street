@@ -25,6 +25,7 @@ export class KafkaClient {
   private readonly bootstrap: Array<{ host: string; port: number }>;
   private readonly clientId: string;
   private readonly connTimeout: number;
+  private readonly tlsOpts: Pick<KafkaConnectionOptions, 'tls' | 'tlsRejectUnauthorized' | 'tlsServerName' | 'tlsCa'>;
   private readonly connections = new Map<string, KafkaConnection>();
   private meta: ClusterMeta | null = null;
 
@@ -36,13 +37,19 @@ export class KafkaClient {
     });
     this.clientId = opts.clientId ?? 'street-kafka';
     this.connTimeout = opts.connectTimeoutMs ?? 10_000;
+    this.tlsOpts = {
+      ...(opts.tls !== undefined ? { tls: opts.tls } : {}),
+      ...(opts.tlsRejectUnauthorized !== undefined ? { tlsRejectUnauthorized: opts.tlsRejectUnauthorized } : {}),
+      ...(opts.tlsServerName !== undefined ? { tlsServerName: opts.tlsServerName } : {}),
+      ...(opts.tlsCa !== undefined ? { tlsCa: opts.tlsCa } : {}),
+    };
   }
 
   private async _conn(host: string, port: number): Promise<KafkaConnection> {
     const key = `${host}:${port}`;
     let conn = this.connections.get(key);
     if (conn?.connected) return conn;
-    conn = new KafkaConnection({ host, port, clientId: this.clientId, connectTimeoutMs: this.connTimeout });
+    conn = new KafkaConnection({ host, port, clientId: this.clientId, connectTimeoutMs: this.connTimeout, ...this.tlsOpts });
     await conn.connect();
     this.connections.set(key, conn);
     return conn;
