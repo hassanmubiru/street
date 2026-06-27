@@ -9,9 +9,26 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-> Repository-level governance, security, and organization hardening. **No
-> `@streetjs/core` runtime, public API, or published-package path changed** — these
-> are repo structure, CI, and security-control changes only (backward compatible).
+> Repository-level governance, security, and organization hardening, plus
+> **additive, backward-compatible** plugin security hardening. No existing
+> `@streetjs/core` public API, signature, or published-package path was changed
+> or removed — the runtime changes below only **add** optional config fields and
+> new exported functions (existing callers are unaffected).
+
+### Plugin security (additive, backward-compatible runtime)
+- **Outbound HTTP timeouts** on all 9 official `node:https` plugins — stripe,
+  twilio, sendgrid, auth0 (in `@streetjs/core`) and paypal, openai, clerk,
+  firebase, supabase (separate packages). Each client gained an optional
+  `timeoutMs` config field (default 30000) enforced via `req.setTimeout` +
+  `destroy`, so a hung upstream now fails fast instead of leaking a socket.
+  Omitting `timeoutMs` preserves prior behaviour for fast requests.
+- **Webhook signature verifiers** exported from `streetjs`:
+  `verifyStripeWebhook` (constant-time HMAC-SHA256 over `t.payload` with replay
+  tolerance) and `verifyTwilioSignature` (constant-time HMAC-SHA1 over the URL +
+  lexicographically-sorted params). Pure crypto, no network.
+- New per-plugin tests cover timeout-config validation and the verifiers; all
+  builds + suites pass and all 21 plugin manifest signatures still verify against
+  the embedded official anchor (plugin source is not part of the signed manifest).
 
 ### Security
 - **Rotated the official plugin-signing key** (embedded anchor in
