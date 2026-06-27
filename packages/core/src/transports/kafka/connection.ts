@@ -4,6 +4,7 @@
 // versions this client needs.
 
 import { createConnection, type Socket } from 'node:net';
+import { connect as tlsConnect } from 'node:tls';
 import { KafkaWriter, KafkaReader } from './primitives.js';
 
 export interface KafkaBroker { nodeId: number; host: string; port: number; }
@@ -13,6 +14,14 @@ export interface KafkaConnectionOptions {
   port?: number;
   clientId?: string;
   connectTimeoutMs?: number;
+  /** Connect over TLS (Kafka SSL / SASL_SSL listener). Default false. */
+  tls?: boolean;
+  /** When TLS is on, verify the broker certificate chain. Default true. */
+  tlsRejectUnauthorized?: boolean;
+  /** When TLS is on, the SNI server name (defaults to `host`). */
+  tlsServerName?: string;
+  /** When TLS is on, a PEM CA bundle to trust. */
+  tlsCa?: string;
 }
 
 // API keys
