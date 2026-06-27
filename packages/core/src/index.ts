@@ -534,7 +534,7 @@ export type {
   RegistryRecord, InstallThroughRegistryOptions, InstallThroughRegistryResult,
 } from './platform/plugins/local-registry.js';
 export {
-  SendGridPlugin, SendGridClient, sendGridPluginManifest, validateSendGridConfig,
+  SendGridPlugin, SendGridClient, sendGridPluginManifest, validateSendGridConfig, verifySendGridWebhook,
   SENDGRID_PLUGIN_NAME, SENDGRID_PLUGIN_VERSION, SENDGRID_DEFAULT_TIMEOUT_MS,
 } from './platform/plugins/official/sendgrid.js';
 export type { SendGridPluginConfig, MailMessage, SendGridRequest } from './platform/plugins/official/sendgrid.js';
