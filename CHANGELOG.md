@@ -29,6 +29,11 @@ Versioning follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - New per-plugin tests cover timeout-config validation and the verifiers; all
   builds + suites pass and all 21 plugin manifest signatures still verify against
   the embedded official anchor (plugin source is not part of the signed manifest).
+- **TLS connection options** (`tls`, `tlsRejectUnauthorized`, `tlsServerName`,
+  `tlsCa`; default plain TCP) added to the **redis** and **mongodb** plugins,
+  which use connect-from-start TLS via `node:tls`. (NATS STARTTLS and
+  Kafka/RabbitMQ SASL_SSL/AMQPS are deferred — they need protocol-aware upgrades
+  and a live-TLS test environment to verify, so were not shipped unverified.)
 
 ### Security
 - **Rotated the official plugin-signing key** (embedded anchor in
