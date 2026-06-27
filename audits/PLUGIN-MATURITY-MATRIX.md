@@ -30,6 +30,8 @@
 > and is syntax-checked in CI via `npm run test:plugins-offline`. ✅ = a full
 > standalone example application (marzpay → `examples/marzpay-react|next`; htmx →
 > `examples/scaffold-*`). Promoting ◑→✅ requires a standalone app per plugin.
+
+> **TLS (opt-in connection encryption):** redis + mongodb + **kafka** (SSL/SASL_SSL)
 > + **rabbitmq** (AMQPS) + **nats** (STARTTLS) all expose `tls` /
 > `tlsRejectUnauthorized` / `tlsServerName` / `tlsCa` (default plain TCP). redis,
 > mongodb, kafka, rabbitmq use connect-from-start TLS; nats performs the protocol
