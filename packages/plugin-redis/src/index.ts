@@ -193,14 +193,11 @@ export class RedisClient {
   async connect(): Promise<void> {
     if (this.socket) return;
     await new Promise<void>((resolve, reject) => {
-      const sock = new Socket();
       const onError = (err: Error): void => {
         sock.destroy();
         reject(new PluginError(`Redis connect failed: ${err.message}`));
       };
-      sock.setTimeout(this.timeout, () => onError(new Error('connect timeout')));
-      sock.once('error', onError);
-      sock.connect(this.config.port, this.config.host, () => {
+      const onConnected = (): void => {
         sock.setTimeout(0);
         sock.removeListener('error', onError);
         sock.on('data', (chunk: Buffer | string) => this.onData(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk)));
@@ -208,7 +205,24 @@ export class RedisClient {
         sock.on('close', () => this.failAll(new Error('connection closed')));
         this.socket = sock;
         resolve();
-      });
+      };
+      let sock: Socket;
+      if (this.config.tls) {
+        sock = tlsConnect({
+          host: this.config.host,
+          port: this.config.port,
+          rejectUnauthorized: this.config.tlsRejectUnauthorized ?? true,
+          servername: this.config.tlsServerName ?? this.config.host,
+          ...(this.config.tlsCa !== undefined ? { ca: this.config.tlsCa } : {}),
+        }, onConnected);
+        sock.setTimeout(this.timeout, () => onError(new Error('connect timeout')));
+        sock.once('error', onError);
+      } else {
+        sock = new Socket();
+        sock.setTimeout(this.timeout, () => onError(new Error('connect timeout')));
+        sock.once('error', onError);
+        sock.connect(this.config.port, this.config.host, onConnected);
+      }
     });
 
     if (this.config.password !== undefined) {
