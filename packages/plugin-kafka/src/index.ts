@@ -29,6 +29,14 @@ export interface KafkaPluginConfig {
   connectTimeoutMs?: number;
   /** State key under which the transport is injected. Default 'kafka'. */
   stateKey?: string;
+  /** Connect over TLS (Kafka SSL / SASL_SSL listener). Default false. */
+  tls?: boolean;
+  /** When TLS is on, verify the broker certificate chain. Default true. */
+  tlsRejectUnauthorized?: boolean;
+  /** When TLS is on, the SNI server name (defaults to the broker host). */
+  tlsServerName?: string;
+  /** When TLS is on, a PEM CA bundle to trust. */
+  tlsCa?: string;
 }
 
 /** The unsigned manifest for the Kafka plugin (sign it via the build step). */
