@@ -71,6 +71,44 @@ export function validateSendGridConfig(input: unknown): SendGridPluginConfig {
   };
 }
 
+/**
+ * Verify a SendGrid Event Webhook signature. Pure crypto, no network.
+ *
+ * SendGrid signs `${timestamp}${rawBody}` with ECDSA (P-256, SHA-256). The
+ * `X-Twilio-Email-Event-Webhook-Signature` header is a base64 DER signature and
+ * `X-Twilio-Email-Event-Webhook-Timestamp` is the timestamp. `publicKey` is the
+ * Base64 (DER SPKI) verification key from the SendGrid Mail Settings UI, or a
+ * full PEM. Returns `true` only on a valid signature.
+ */
+export function verifySendGridWebhook(
+  publicKey: string,
+  rawBody: string | Buffer,
+  signature: string,
+  timestamp: string,
+): boolean {
+  if (typeof publicKey !== 'string' || publicKey === '' || typeof signature !== 'string' || signature === '' || typeof timestamp !== 'string' || timestamp === '') {
+    return false;
+  }
+  let key;
+  try {
+    const pem = publicKey.includes('-----BEGIN')
+      ? publicKey
+      : `-----BEGIN PUBLIC KEY-----\n${publicKey.replace(/\s+/g, '')}\n-----END PUBLIC KEY-----\n`;
+    key = createPublicKey(pem);
+  } catch {
+    return false;
+  }
+  const body = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(rawBody, 'utf8');
+  const data = Buffer.concat([Buffer.from(timestamp, 'utf8'), body]);
+  let sig: Buffer;
+  try { sig = Buffer.from(signature, 'base64'); } catch { return false; }
+  try {
+    return cryptoVerify('sha256', data, key, sig);
+  } catch {
+    return false;
+  }
+}
+
 /** A minimal SendGrid mail client. Request-building is pure and testable offline. */
 export class SendGridClient {
   constructor(private readonly config: SendGridPluginConfig) {}
