@@ -92,6 +92,10 @@ export function validateNatsConfig(input: unknown): NatsPluginConfig {
     ...(o['tlsRejectUnauthorized'] !== undefined ? { tlsRejectUnauthorized: o['tlsRejectUnauthorized'] as boolean } : {}),
     ...(o['tlsServerName'] !== undefined ? { tlsServerName: o['tlsServerName'] as string } : {}),
     ...(o['tlsCa'] !== undefined ? { tlsCa: o['tlsCa'] as string } : {}),
+    ...(o['tls'] !== undefined ? { tls: o['tls'] as boolean } : {}),
+    ...(o['tlsRejectUnauthorized'] !== undefined ? { tlsRejectUnauthorized: o['tlsRejectUnauthorized'] as boolean } : {}),
+    ...(o['tlsServerName'] !== undefined ? { tlsServerName: o['tlsServerName'] as string } : {}),
+    ...(o['tlsCa'] !== undefined ? { tlsCa: o['tlsCa'] as string } : {}),
   };
 }
 
