@@ -166,8 +166,7 @@ new StripePlugin({ apiKey: process.env['STRIPE_API_KEY']!, timeoutMs: 10_000 });
 
 ## Status & roadmap
 
-Verifiers ship for **Stripe** and **Twilio** today. PayPal (transmission
-cert-chain) and SendGrid (ECDSA event webhook) verifiers are tracked in
-[plans/OUTSTANDING-ACTIONS.md](https://github.com/hassanmubiru/StreetJS/blob/main/plans/OUTSTANDING-ACTIONS.md)
-(#9). See the [Plugin Maturity Matrix](https://github.com/hassanmubiru/StreetJS/blob/main/audits/PLUGIN-MATURITY-MATRIX.md)
+Verifiers ship for **Stripe**, **Twilio**, **SendGrid** (ECDSA event webhook),
+and **PayPal** (local cert verification). See the
+[Plugin Maturity Matrix](https://github.com/hassanmubiru/StreetJS/blob/main/audits/PLUGIN-MATURITY-MATRIX.md)
 for per-plugin status.
