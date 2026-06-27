@@ -273,11 +273,14 @@ export class NatsClient {
   async connect(): Promise<void> {
     if (this.socket) return;
     await new Promise<void>((resolve, reject) => {
+      const sock = new Socket();
       const onError = (err: Error): void => {
         sock.destroy();
         reject(new PluginError(`NATS connect failed: ${err.message}`));
       };
-      const onConnected = (): void => {
+      sock.setTimeout(this.timeout, () => onError(new Error('connect timeout')));
+      sock.once('error', onError);
+      sock.connect(this.config.port, this.config.host, () => {
         sock.setTimeout(0);
         sock.removeListener('error', onError);
         sock.on('data', (chunk: Buffer | string) =>
@@ -286,24 +289,7 @@ export class NatsClient {
         sock.on('close', () => this.failAll(new Error('connection closed')));
         this.socket = sock;
         resolve();
-      };
-      let sock: Socket;
-      if (this.config.tls) {
-        sock = tlsConnect({
-          host: this.config.host,
-          port: this.config.port,
-          rejectUnauthorized: this.config.tlsRejectUnauthorized ?? true,
-          servername: this.config.tlsServerName ?? this.config.host,
-          ...(this.config.tlsCa !== undefined ? { ca: this.config.tlsCa } : {}),
-        }, onConnected);
-        sock.setTimeout(this.timeout, () => onError(new Error('connect timeout')));
-        sock.once('error', onError);
-      } else {
-        sock = new Socket();
-        sock.setTimeout(this.timeout, () => onError(new Error('connect timeout')));
-        sock.once('error', onError);
-        sock.connect(this.config.port, this.config.host, onConnected);
-      }
+      });
     });
 
     // Greet: advertise CONNECT options, then round-trip a PING to confirm.
