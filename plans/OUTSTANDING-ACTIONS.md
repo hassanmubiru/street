@@ -51,7 +51,7 @@
 | 15 | ✅ **Done** — additive **TLS surface** (`tls`/`tlsRejectUnauthorized`/`tlsServerName`/`tlsCa`, default plain TCP) shipped for **all 5**: redis + mongodb + kafka (SSL/SASL_SSL) + rabbitmq (AMQPS) use connect-from-start `tls.connect()`; **nats** performs the protocol **STARTTLS** upgrade after the plaintext `INFO`. Config-validation unit tests added for each (redis/mongodb/kafka/rabbitmq/nats); plaintext paths unchanged. TLS handshakes exercised in integration when a TLS endpoint is present | [RUNTIME] | `OWASP-ASVS-MAPPING.md` V9, `PLUGIN-SECURITY-AUDIT.md` |
 | 16 | Bind local compose DB ports to `127.0.0.1` | [MAINTAINER] | `INFRASTRUCTURE-SECURITY-REVIEW.md` |
 | 17 | ◑ **Partial** — docs are **already searchable** (just-the-docs Lunr, `search_enabled`); enhanced the `search:` config (h3 indexing, content previews, `s` focus shortcut). Added a documented **versioning** policy + surface: `docs/versions.md` (+ "Versions" aux link) tying current `site.version` → support-matrix/changelog/tagged source; gave `docs/enterprise/support-matrix.md` the front matter it was missing so it now renders + is searchable. *Remaining: browsable multi-version doc trees (roadmap) — Algolia/Pagefind unnecessary at this size* | [MAINTAINER] | `ENTERPRISE-READINESS-2026.md` |
-| 18 | Fuzzing depth / OSS-Fuzz onboarding; expand chaos testing | [MAINTAINER] | `OPENSSF-REVIEW.md`, `SECURITY-ROADMAP.md` |
+| 18 | ◑ **Partial** — fuzz suite + property-based tests present (`ci-cd.yml` `system-tests` `fuzz-testing`) and documented in `OPENSSF-REVIEW.md`. *Remaining: OSS-Fuzz onboarding = submit a project config to the external OSS-Fuzz repo (operator/maintainer, not repo-completable)* | [MAINTAINER]+[OPERATOR] | `OPENSSF-REVIEW.md`, `SECURITY-ROADMAP.md` |
 | 19 | ✅ **Done** — `docs/security/dashboard.md` surfaces live badges (CI, CodeQL, OpenSSF Scorecard, provenance) + a control-posture table linking each gate to its workflow, the live GitHub Security tabs, and canonical docs; live/operator-setting values are marked **UNVERIFIED** rather than fabricated | [MAINTAINER] | `SECURITY-ROADMAP.md` |
 | 20 | Add a real **PGP key** to `SECURITY.md` (replace placeholder; never commit the private key) | [OPERATOR] | `SECURITY.md` |
 | 21 | ◑ **In progress** — `PLUGIN-MATURITY-MATRIX.md` refreshed to reflect all shipped hardening (timeouts ✅ on 9 HTTP plugins; **all 4** webhook verifiers ✅; TLS ✅ on all 5 redis/mongodb/kafka/rabbitmq/nats); added `docs/plugins/webhook-verification.md` usage guide (all 4 verifiers, raw-body guidance, accurate `StreetContext` API). *Remaining: runnable example apps per plugin + raised coverage gates to flip ◑→✅ (incremental)* | [RUNTIME]+[MAINTAINER] | `PLUGIN-MATURITY-MATRIX.md` |
@@ -59,13 +59,20 @@
 | 23 | Fix latent bug: `scripts/cloud/prereqs.mjs` cloudflare path (`deploy/cloudflare-workers` → `infra/examples/cloudflare`) | [MAINTAINER] | `PHASE-19-MASTER-AUDIT.md` B-1 |
 
 ## P3 — Long-term
-| # | Action | Source |
-|---|---|---|
-| 24 | SOC 2 readiness | `SECURITY-ROADMAP.md` |
-| 25 | ISO 27001 alignment | `SECURITY-ROADMAP.md` |
-| 26 | OpenSSF Best Practices badge | `OPENSSF-REVIEW.md`, roadmap |
-| 27 | Security Champions program + dual-control releases | `CONTRIBUTOR-GOVERNANCE.md`, threat model |
-| 28 | Grow MAINTAINERS / security team (reduces bus-factor + social-engineering risk) | threat model, SSDF PO.2 |
+| # | Action | Owner | Status |
+|---|---|---|---|
+| 24 | SOC 2 readiness | [OPERATOR] (external audit) | Org program — requires an audit firm + control evidence period; cannot be repo-completed. Tracked in `SECURITY-ROADMAP.md`. |
+| 25 | ISO 27001 alignment | [OPERATOR] (external audit) | Org program — ISMS + certification body; cannot be repo-completed. Tracked in `SECURITY-ROADMAP.md`. |
+| 26 | OpenSSF Best Practices badge | [MAINTAINER]+[OPERATOR] | ◑ **Evidence pack done** — "passing"-tier self-assessment added to `OPENSSF-REVIEW.md`. Remaining: register + submit on bestpractices.dev (operator) + the listed gating gaps (branch protection, push protection, PGP key). |
+| 27 | Security Champions program + dual-control releases | [OPERATOR]/community | Org/process — needs people + role assignment; framework in `CONTRIBUTOR-GOVERNANCE.md`. Cannot be repo-completed. |
+| 28 | Grow MAINTAINERS / security team (bus-factor) | [OPERATOR]/community | Org/hiring — cannot be repo-completed; governance + neutral-maintainership path documented in `governance/DECISION-PROCESS.md`. |
+
+> **P3 status:** #26 has its maintainer evidence pack done (badge submission is
+> operator). #18 (OSS-Fuzz) and #12 (keyless signing) are partially specced; their
+> remaining work is external/operator. #24/#25/#27/#28 are organizational programs
+> that **cannot be completed by editing the repository** — they require external
+> audits, badge registration, or staffing. They are documented with owners here and
+> in the roadmap so nothing is lost, but they are explicitly out of repo scope.
 
 ## Sequencing
 1. **P0 first** (branch/push protection, history purge, key relocation) — these unlock the biggest score gains (Security 70→86, SLSA L2→L3 path) and close the only HIGH residuals.
