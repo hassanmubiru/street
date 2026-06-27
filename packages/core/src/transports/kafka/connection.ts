@@ -33,7 +33,8 @@ export const API = {
 
 export class KafkaConnection {
   private socket: Socket | null = null;
-  private readonly opts: Required<KafkaConnectionOptions>;
+  private readonly opts: Required<Pick<KafkaConnectionOptions, 'host' | 'port' | 'clientId' | 'connectTimeoutMs'>>;
+  private readonly tls: { enabled: boolean; rejectUnauthorized: boolean; servername?: string; ca?: string };
   private corr = 0;
   private buf: Buffer = Buffer.alloc(0);
   private readonly pending = new Map<number, (body: Buffer) => void>();
@@ -45,11 +46,25 @@ export class KafkaConnection {
       clientId: opts.clientId ?? 'street-kafka',
       connectTimeoutMs: opts.connectTimeoutMs ?? 10_000,
     };
+    this.tls = {
+      enabled: opts.tls === true,
+      rejectUnauthorized: opts.tlsRejectUnauthorized ?? true,
+      ...(opts.tlsServerName !== undefined ? { servername: opts.tlsServerName } : {}),
+      ...(opts.tlsCa !== undefined ? { ca: opts.tlsCa } : {}),
+    };
   }
 
   async connect(): Promise<void> {
     await new Promise<void>((resolve, reject) => {
-      const sock = createConnection({ host: this.opts.host, port: this.opts.port }, () => resolve());
+      const sock: Socket = this.tls.enabled
+        ? tlsConnect({
+            host: this.opts.host,
+            port: this.opts.port,
+            rejectUnauthorized: this.tls.rejectUnauthorized,
+            servername: this.tls.servername ?? this.opts.host,
+            ...(this.tls.ca !== undefined ? { ca: this.tls.ca } : {}),
+          }, () => resolve())
+        : createConnection({ host: this.opts.host, port: this.opts.port }, () => resolve());
       const to = setTimeout(() => { sock.destroy(); reject(new Error('Kafka connect timeout')); }, this.opts.connectTimeoutMs);
       to.unref();
       sock.on('connect', () => clearTimeout(to));
