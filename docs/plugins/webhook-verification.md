@@ -32,25 +32,40 @@ returns `true` only when the HMAC-SHA256 over `${timestamp}.${rawBody}` matches 
 `v1` signature **and** the timestamp is within tolerance (default 300s, replay
 protection).
 
+Stripe signs the **exact bytes** it sent, so verify against the raw body — not a
+re-serialized object. StreetJS parses `ctx.body`, so read the raw bytes from the
+underlying request (`ctx.req`) in the webhook handler:
+
 ```typescript
 import { verifyStripeWebhook } from 'streetjs';
+import type { StreetContext } from 'streetjs';
+import type { IncomingMessage } from 'node:http';
 
 // Endpoint signing secret from the Stripe dashboard (whsec_…). Keep it in env.
 const STRIPE_WEBHOOK_SECRET = process.env['STRIPE_WEBHOOK_SECRET']!;
 
+/** Collect the raw request bytes (Stripe verification needs the exact body). */
+function readRawBody(req: IncomingMessage): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (c) => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+}
+
 async function stripeWebhook(ctx: StreetContext): Promise<void> {
-  const raw = ctx.rawBody;                       // the exact bytes Stripe sent
+  const raw = await readRawBody(ctx.req);
   const sig = ctx.headers['stripe-signature'] ?? '';
 
   if (!verifyStripeWebhook(raw, sig, STRIPE_WEBHOOK_SECRET)) {
-    ctx.status = 400;
-    ctx.body = { error: 'invalid signature' };
-    return;                                       // reject forged / stale events
+    ctx.json({ error: 'invalid signature' }, 400);   // reject forged / stale events
+    return;
   }
 
-  const event = JSON.parse(typeof raw === 'string' ? raw : raw.toString('utf8'));
+  const event = JSON.parse(raw.toString('utf8'));
   // …handle event.type (payment_intent.succeeded, etc.) — now trusted.
-  ctx.status = 200;
+  ctx.send(200);
 }
 ```
 
@@ -67,22 +82,23 @@ lexicographic key order** matches the header.
 
 ```typescript
 import { verifyTwilioSignature } from 'streetjs';
+import type { StreetContext } from 'streetjs';
 
 const TWILIO_AUTH_TOKEN = process.env['TWILIO_AUTH_TOKEN']!;
 
 async function twilioWebhook(ctx: StreetContext): Promise<void> {
   // The URL must be EXACTLY what you configured in the Twilio console
-  // (scheme + host + path + query), including any proxy-rewritten host.
+  // (scheme + host + path), including any proxy-rewritten host.
   const url = `https://${ctx.headers['host']}${ctx.path}`;
   const params = ctx.body as Record<string, string>;   // parsed form fields
   const sig = ctx.headers['x-twilio-signature'] ?? '';
 
   if (!verifyTwilioSignature(TWILIO_AUTH_TOKEN, url, params, sig)) {
-    ctx.status = 403;
-    return;                                              // reject forged requests
+    ctx.send(403);                                       // reject forged requests
+    return;
   }
   // …trusted Twilio callback (SMS status, inbound message, etc.)
-  ctx.status = 200;
+  ctx.send(200);
 }
 ```
 

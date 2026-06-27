@@ -54,7 +54,7 @@
 | 18 | Fuzzing depth / OSS-Fuzz onboarding; expand chaos testing | [MAINTAINER] | `OPENSSF-REVIEW.md`, `SECURITY-ROADMAP.md` |
 | 19 | ✅ **Done** — `docs/security/dashboard.md` surfaces live badges (CI, CodeQL, OpenSSF Scorecard, provenance) + a control-posture table linking each gate to its workflow, the live GitHub Security tabs, and canonical docs; live/operator-setting values are marked **UNVERIFIED** rather than fabricated | [MAINTAINER] | `SECURITY-ROADMAP.md` |
 | 20 | Add a real **PGP key** to `SECURITY.md` (replace placeholder; never commit the private key) | [OPERATOR] | `SECURITY.md` |
-| 21 | Per-plugin **example apps** + raise coverage gates (promote ◑→✅ in maturity matrix) | [RUNTIME]+[MAINTAINER] | `PLUGIN-MATURITY-MATRIX.md` |
+| 21 | ◑ **In progress** — `PLUGIN-MATURITY-MATRIX.md` refreshed to reflect shipped hardening (timeouts ✅ on all 9 HTTP plugins, stripe/twilio webhook verifiers ✅, redis/mongodb TLS ✅); added `docs/plugins/webhook-verification.md` usage guide (Stripe + Twilio verifier wiring, raw-body guidance, accurate `StreetContext` API). *Remaining: runnable example apps per plugin + raised coverage gates to flip ◑→✅* | [RUNTIME]+[MAINTAINER] | `PLUGIN-MATURITY-MATRIX.md` |
 | 22 | ✅ **Done** — Standardize CI `retention-days` + `concurrency` across workflows (see Completed section) | [MAINTAINER] | `STREETJS-FULL-AUDIT-REPORT.md` Phase 12 |
 | 23 | Fix latent bug: `scripts/cloud/prereqs.mjs` cloudflare path (`deploy/cloudflare-workers` → `infra/examples/cloudflare`) | [MAINTAINER] | `PHASE-19-MASTER-AUDIT.md` B-1 |
 
