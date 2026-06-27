@@ -4,6 +4,7 @@
 // offline-verifiable; the network send uses node:https. Dependency-free.
 
 import { request as httpsRequest } from 'node:https';
+import { verify as cryptoVerify, createPublicKey } from 'node:crypto';
 import { PluginModule, type SandboxedApp } from '../sdk.js';
 import { PluginError, type PluginManifest } from '../host.js';
 import type { MiddlewareFn } from '../../../core/types.js';
