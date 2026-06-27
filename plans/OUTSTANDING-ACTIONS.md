@@ -27,7 +27,7 @@
 | # | Action | Owner | Source | Done when |
 |---|---|---|---|---|
 | 1 | Enable **branch protection** on `main` (require Code-Owner review + status checks `secrets-guard`/`build-and-test`/`verify-signing-anchor`/`secret-scan`/`codeql`, linear history, no force-push) | [OPERATOR] | `security/BRANCH-PROTECTION-REVIEW.md`, `OPENSSF-REVIEW.md`, `SLSA-ASSESSMENT.md` | Settings applied + a blocked direct push confirms |
-| 2 | Enable **Secret Scanning + Push Protection** (GitHub setting) | [OPERATOR] | `OPENSSF-REVIEW.md`, `TRUST-CENTER.md` | Toggles on in repo security settings |
+| 2 | ✅ **Done (operator-verified 2026-06-27)** — Secret Scanning + Push Protection + Dependabot security updates enabled. Evidence: `gh api repos/hassanmubiru/StreetJS --jq '.security_and_analysis'` → `secret_scanning`, `secret_scanning_push_protection`, `dependabot_security_updates` all `enabled`. *(Optional, still off: `secret_scanning_non_provider_patterns`, `secret_scanning_validity_checks`.)* | [OPERATOR] | `OPENSSF-REVIEW.md`, `TRUST-CENTER.md` | Toggles on in repo security settings |
 | 3 | **Purge leaked key blob** from history (`git filter-repo` on a mirror + coordinated force-push + re-clone) | [OPERATOR] | `security/KEY-ROTATION-RUNBOOK.md` §7 | `git log --all -- street-signing.key.pem` empty; gitleaks commit-allowlist entry removed |
 | 4 | **Relocate on-disk private keys** (`street-signing.key.pem`, `keys/`) to a secrets manager | [OPERATOR] | `KEY-ROTATION-RUNBOOK.md` §8, `SECURITY-CLASSIFICATION.md` | No key files in the working tree |
 | 5 | Enable **signed commits** requirement | [OPERATOR] | `CONTRIBUTOR-GOVERNANCE.md`, threat model | Branch rule requires signatures |
