@@ -37,12 +37,14 @@
 
 ## Maturity tiers
 - **Reference (Enterprise-ready):** marzpay, htmx.
-- **Solid:** africastalking, DB/messaging plugins (timeouts present), s3/r2.
-- **Needs hardening for enterprise:** the `node:https` HTTP plugins (stripe, paypal,
-  twilio, sendgrid, openai, auth0, clerk, firebase, supabase) — add outbound timeouts
-  and (where the provider signs) webhook verifiers.
+- **Solid:** africastalking, DB/messaging plugins (timeouts present; redis+mongodb
+  add opt-in TLS), s3/r2.
+- **Hardened (timeouts shipped; webhook verifiers where the provider signs):** the
+  `node:https` HTTP plugins now all enforce outbound `timeoutMs`; stripe + twilio
+  ship constant-time webhook verifiers. Remaining to reach ✅ enterprise-ready:
+  per-plugin example apps, raised coverage gates, and the paypal/sendgrid verifiers.
 
 ## Top cross-plugin actions (runtime change, tracked separately)
-1. Outbound timeout on the 9 HTTP plugins.
-2. Webhook verifiers: stripe, twilio, paypal, sendgrid.
-3. Per-plugin example apps + raised coverage gates to promote ◑ → ✅.
+1. ✅ **Done** — outbound timeout on all 9 HTTP plugins (`timeoutMs`, default 30s).
+2. ◑ **Substantial** — webhook verifiers: stripe + twilio shipped; paypal + sendgrid pending.
+3. ◑ **In progress** — per-plugin example apps + raised coverage gates to promote ◑ → ✅.
