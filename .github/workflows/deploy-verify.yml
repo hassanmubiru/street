@@ -78,6 +78,12 @@ jobs:
 
       - name: Create kind cluster
         uses: helm/kind-action@ef37e7f390d99f746eb8b610417061a60e82a6cc # v1.14.0
+        with:
+          # Pin the cluster name so `kind load` / kubectl (which default to the
+          # cluster named "kind") target this cluster. Without this, the action
+          # defaults to "chart-testing" and the load step fails with
+          # "no nodes found for cluster kind".
+          cluster_name: kind
 
       - name: Load image + apply manifest
         run: |
