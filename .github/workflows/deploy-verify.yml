@@ -62,14 +62,14 @@ jobs:
       # ── Live Kubernetes verification on an ephemeral kind cluster ────────────
       - name: Generate + validate manifest
         run: |
-          node -e "
-            const { generateManifest, validateDeploymentManifest } = require('streetjs');
-            const fs = require('fs');
+          node --input-type=module -e "
+            import { generateManifest, validateDeploymentManifest } from 'streetjs';
+            import { writeFileSync } from 'node:fs';
             const cfg = { name: 'street-app', image: 'street-app:ci', port: 8080, replicas: 1 };
             const m = generateManifest('kubernetes', cfg);
             const v = validateDeploymentManifest('kubernetes', m);
             if (!v.valid) { console.error(v.errors.join('\n')); process.exit(1); }
-            fs.writeFileSync('k8s.yaml', m);
+            writeFileSync('k8s.yaml', m);
             console.log('manifest validated');
           "
 
